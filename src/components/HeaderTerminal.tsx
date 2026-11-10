@@ -16,6 +16,7 @@ import {
   LogOut,
   Sliders,
   Crown,
+  BellRing,
 } from 'lucide-react';
 import { sound } from '../audio/soundEngine';
 import { UserSession } from '../types/news';
@@ -31,6 +32,7 @@ interface HeaderTerminalProps {
   onOpenNews: () => void;
   onOpenTopMovers: () => void;
   onOpenWhale: () => void;
+  onOpenAlerts: () => void;
   onOpenAuth: () => void;
   onOpenTA: () => void;
   session: UserSession;
@@ -47,6 +49,7 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
   onOpenNews,
   onOpenTopMovers,
   onOpenWhale,
+  onOpenAlerts,
   onOpenAuth,
   onOpenTA,
   session,
@@ -170,6 +173,19 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
           >
             <Crown className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">KOL & WHALE</span>
+          </button>
+
+          {/* Price Alert Button */}
+          <button
+            onClick={() => {
+              sound.playClick();
+              onOpenAlerts();
+            }}
+            className="flex items-center gap-1.5 bg-[#0d121c] hover:bg-[#151d2d] border border-[#232f48] hover:border-red-400/50 text-slate-200 px-2.5 py-1.5 rounded text-xs font-mono font-medium transition-colors shadow-md cursor-pointer"
+            title="Pusat Alert & Notifikasi setiap koin naik atau turun $1"
+          >
+            <BellRing className="w-3.5 h-3.5 text-red-400 animate-bounce" />
+            <span className="hidden sm:inline">ALERT $1</span>
           </button>
 
           {/* Funding & Long/Short Button */}

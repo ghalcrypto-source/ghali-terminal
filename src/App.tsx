@@ -12,6 +12,7 @@ import { AuthModal } from './components/AuthModal';
 import { LoginGate } from './components/LoginGate';
 import { TechnicalAnalysisPanel } from './components/TechnicalAnalysisPanel';
 import { WhaleIntelligenceModal } from './components/WhaleIntelligenceModal';
+import { PriceAlertManager } from './components/PriceAlertManager';
 import { FinishId, CameraPreset } from './types/contrarian';
 import { UserSession } from './types/news';
 import { PartInfo } from './three/MonolithScene';
@@ -55,6 +56,7 @@ export default function App() {
   const [isNewsOpen, setIsNewsOpen] = useState(false);
   const [isTopMoversOpen, setIsTopMoversOpen] = useState(false);
   const [isWhaleOpen, setIsWhaleOpen] = useState(false);
+  const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isTAOpen, setIsTAOpen] = useState(false);
   const [inverterAsset, setInverterAsset] = useState('Hyperscaler AI Infrastructure');
@@ -95,6 +97,7 @@ export default function App() {
     setIsNewsOpen(false);
     setIsTopMoversOpen(false);
     setIsWhaleOpen(false);
+    setIsAlertsOpen(false);
     setIsTAOpen(false);
     setIsInverterOpen(true);
   };
@@ -133,6 +136,7 @@ export default function App() {
         onOpenNews={() => setIsNewsOpen(true)}
         onOpenTopMovers={() => setIsTopMoversOpen(true)}
         onOpenWhale={() => setIsWhaleOpen(true)}
+        onOpenAlerts={() => setIsAlertsOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
         onOpenTA={() => setIsTAOpen(true)}
         session={session}
@@ -285,6 +289,13 @@ export default function App() {
         onClose={() => setIsWhaleOpen(false)}
         onLoadToChart={handleLoadToChart}
         onSelectForInversion={handleOpenInverterWithAsset}
+      />
+
+      {/* 11. Price Alert Manager ($1 fluctuation detector & custom alerts) */}
+      <PriceAlertManager
+        isOpen={isAlertsOpen}
+        onClose={() => setIsAlertsOpen(false)}
+        onSelectCoinToChart={handleLoadToChart}
       />
     </main>
   );

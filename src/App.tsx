@@ -9,6 +9,9 @@ import { ExchangeContrarianPanel } from './components/ExchangeContrarianPanel';
 import { NewsFeedModal } from './components/NewsFeedModal';
 import { TopMoversModal } from './components/TopMoversModal';
 import { AuthModal } from './components/AuthModal';
+import { LoginGate } from './components/LoginGate';
+import { TechnicalAnalysisPanel } from './components/TechnicalAnalysisPanel';
+import { WhaleIntelligenceModal } from './components/WhaleIntelligenceModal';
 import { FinishId, CameraPreset } from './types/contrarian';
 import { UserSession } from './types/news';
 import { PartInfo } from './three/MonolithScene';
@@ -24,17 +27,22 @@ export default function App() {
   const [hoveredPart, setHoveredPart] = useState<PartInfo | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // User authentication session state
+  // User authentication session state - defaults to requiring login if no saved session
   const [session, setSession] = useState<UserSession>(() => {
     try {
       const saved = localStorage.getItem('contrarian_session');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.isLoggedIn === 'boolean') {
+          return parsed;
+        }
+      }
     } catch (_) {}
     return {
-      isLoggedIn: true,
-      traderName: 'Ghal_Contrarian_Desk',
+      isLoggedIn: false, // Mandatory login wall on entry
+      traderName: '',
       role: 'Head of Macro Derivatives',
-      avatarSeed: 'ghal',
+      avatarSeed: 'gate',
       connectedExchanges: ['BINANCE', 'BITGET'],
       riskPreference: 'CONVEX ASYMMETRIC',
     };
@@ -46,7 +54,9 @@ export default function App() {
   const [isExchangeSentimentOpen, setIsExchangeSentimentOpen] = useState(false);
   const [isNewsOpen, setIsNewsOpen] = useState(false);
   const [isTopMoversOpen, setIsTopMoversOpen] = useState(false);
+  const [isWhaleOpen, setIsWhaleOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isTAOpen, setIsTAOpen] = useState(false);
   const [inverterAsset, setInverterAsset] = useState('Hyperscaler AI Infrastructure');
   const [chartTargetSymbol, setChartTargetSymbol] = useState('BTCUSDT');
 
@@ -64,15 +74,15 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    const guest: UserSession = {
+    const loggedOut: UserSession = {
       isLoggedIn: false,
-      traderName: 'Trader_Guest',
-      role: 'Macro Observer',
+      traderName: '',
+      role: 'Observer',
       avatarSeed: 'guest',
       connectedExchanges: [],
       riskPreference: 'CONVEX ASYMMETRIC',
     };
-    setSession(guest);
+    setSession(loggedOut);
     try {
       localStorage.removeItem('contrarian_session');
     } catch (_) {}
@@ -84,12 +94,15 @@ export default function App() {
     setIsExchangeSentimentOpen(false);
     setIsNewsOpen(false);
     setIsTopMoversOpen(false);
+    setIsWhaleOpen(false);
+    setIsTAOpen(false);
     setIsInverterOpen(true);
   };
 
   const handleLoadToChart = (symbol: string) => {
     sound.playSonarPing();
-    setChartTargetSymbol(symbol);
+    const formatted = symbol.endsWith('USDT') ? symbol : `${symbol}USDT`;
+    setChartTargetSymbol(formatted);
     if (viewMode === 'monolith') {
       setViewMode('multichart');
     }
@@ -100,9 +113,14 @@ export default function App() {
     setHoveredPart(part);
   };
 
+  // If user is not logged in, render the mandatory Login Gate
+  if (!session.isLoggedIn) {
+    return <LoginGate onLoginSuccess={handleLogin} />;
+  }
+
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-[#07090e] font-sans flex flex-col">
-      {/* 1. Top Header Terminal Bar with News, Movers, Auth */}
+      {/* 1. Top Header Terminal Bar with News, Movers, TA, Auth */}
       <HeaderTerminal
         viewMode={viewMode}
         onChangeViewMode={setViewMode}
@@ -114,7 +132,9 @@ export default function App() {
         onOpenExchangeSentiment={() => setIsExchangeSentimentOpen(true)}
         onOpenNews={() => setIsNewsOpen(true)}
         onOpenTopMovers={() => setIsTopMoversOpen(true)}
+        onOpenWhale={() => setIsWhaleOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenTA={() => setIsTAOpen(true)}
         session={session}
         soundEnabled={soundEnabled}
         onToggleSound={toggleSound}
@@ -150,10 +170,16 @@ export default function App() {
           </div>
         )}
 
-        {/* MODE B: MULTICHART (BINANCE & BITGET) */}
+        {/* MODE B: MULTICHART (BINANCE & BITGET // 50 COINS) */}
         {viewMode === 'multichart' && (
           <div className="w-full h-full relative flex">
-            <MultiChartGrid externalSymbol={chartTargetSymbol} />
+            <MultiChartGrid
+              externalSymbol={chartTargetSymbol}
+              onOpenTA={(sym) => {
+                setChartTargetSymbol(sym);
+                setIsTAOpen(true);
+              }}
+            />
           </div>
         )}
 
@@ -188,7 +214,13 @@ export default function App() {
 
             {/* Multichart Grid in Right 7 Columns */}
             <div className="lg:col-span-7 h-[calc(100%-320px)] lg:h-full relative">
-              <MultiChartGrid externalSymbol={chartTargetSymbol} />
+              <MultiChartGrid
+                externalSymbol={chartTargetSymbol}
+                onOpenTA={(sym) => {
+                  setChartTargetSymbol(sym);
+                  setIsTAOpen(true);
+                }}
+              />
             </div>
           </div>
         )}
@@ -237,6 +269,22 @@ export default function App() {
         session={session}
         onLogin={handleLogin}
         onLogout={handleLogout}
+      />
+
+      {/* 9. Technical Analysis Suite (Fibonacci, EMA, StochRSI, Path) */}
+      <TechnicalAnalysisPanel
+        isOpen={isTAOpen}
+        onClose={() => setIsTAOpen(false)}
+        activeSymbol={chartTargetSymbol}
+        onApplyCoinToChart={handleLoadToChart}
+      />
+
+      {/* 10. KOL & Smart Money Whale Intelligence Desk */}
+      <WhaleIntelligenceModal
+        isOpen={isWhaleOpen}
+        onClose={() => setIsWhaleOpen(false)}
+        onLoadToChart={handleLoadToChart}
+        onSelectForInversion={handleOpenInverterWithAsset}
       />
     </main>
   );

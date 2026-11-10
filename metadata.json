@@ -1,5 +1,5 @@
 {
-  "name": "Contrarian's Terminal",
+  "name": "Ghali Terminal",
   "description": "Institutional-grade market inversion radar, crowded consensus scanner, and kinetic 3D sentiment monolith for high-conviction contrarian investors.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

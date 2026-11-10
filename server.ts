@@ -504,6 +504,172 @@ app.get('/api/crypto/movers', (_req: Request, res: Response) => {
   });
 });
 
+// KOL and Whale Intelligence Desk endpoint
+app.get('/api/crypto/whale-intelligence', (_req: Request, res: Response) => {
+  const whaleData = [
+    {
+      id: 'whale-1',
+      authorName: 'Arthur Hayes',
+      authorHandle: '@CryptoHayes',
+      authorType: 'KOL',
+      avatarBg: '#f59e0b',
+      targetCoin: 'BTC',
+      coinPair: 'BTCUSDT',
+      timestamp: '15m ago',
+      stance: 'HEAVY ACCUMULATION',
+      title: 'Global Sovereign Refinancing Wall & Central Bank Stealth Easing',
+      analysisText:
+        'The US Treasury refunding schedule and Japanese debt rollover require unprecedented monetary accommodation. Commercial banks cannot absorb bond supply without reserve expansion. Bitcoin is the only un-cancellable collateral asset. Local 5% corrections are mandatory spot accumulations.',
+      onChainTelemetry: {
+        actionValueUSD: '$45.0M',
+        flowDirection: 'OUTFLOW_COLD_STORAGE',
+        exchangeDestination: 'Coinbase Custody / OTC Desk',
+      },
+      contrarianTake:
+        'Retail is paralyzed by daily rate hike rhetoric, while macro sovereign desks are accumulating spot inventory into physical cold custody.',
+      keyLevels: {
+        entryOrSupport: '$91,200',
+        targetPrice: '$135,000',
+        invalidationStop: '$84,500',
+      },
+    },
+    {
+      id: 'whale-2',
+      authorName: 'Lookonchain Radar',
+      authorHandle: '@lookonchain',
+      authorType: 'ONCHAIN_TRACKER',
+      avatarBg: '#06b6d4',
+      targetCoin: 'ETH',
+      coinPair: 'ETHUSDT',
+      timestamp: '32m ago',
+      stance: 'HEAVY ACCUMULATION',
+      title: 'Smart Money Whale 0x741... Absorbed 22,400 ETH from Binance',
+      analysisText:
+        'Whale wallet 0x741a... just withdrew 22,400 ETH ($76.4M) from Binance into a multi-sig vault. Over the past 7 days, this single entity accumulated 68,000 ETH with an average execution price of $3,380. No exchange deposit addresses have been linked.',
+      onChainTelemetry: {
+        walletAddress: '0x741a89c...39f',
+        actionValueUSD: '$76.4M',
+        flowDirection: 'OUTFLOW_COLD_STORAGE',
+        exchangeDestination: 'Binance Hot Wallet -> Safe MultiSig',
+      },
+      contrarianTake:
+        'Sentiment on Twitter/X claims Ethereum is structurally dead due to L2 fee cannibalization; meanwhile smart money is executing institutional-scale spot absorption.',
+      keyLevels: {
+        entryOrSupport: '$3,320',
+        targetPrice: '$4,500',
+        invalidationStop: '$3,050',
+      },
+    },
+    {
+      id: 'whale-3',
+      authorName: 'Hyperliquid Whale #882',
+      authorHandle: '@Whale_Tier1',
+      authorType: 'SMART_MONEY_WHALE',
+      avatarBg: '#10b981',
+      targetCoin: 'SUI',
+      coinPair: 'SUIUSDT',
+      timestamp: '1h ago',
+      stance: 'PARABOLIC BREAKOUT',
+      title: '$28.5M Leveraged Perp Long Position on SUI with Zero Stop Tightening',
+      analysisText:
+        'Whale #882 built an aggregate $28.5M 15x long position on SUI perpetuals across Binance and Hyperliquid. Open interest delta shows aggressive market orders absorbing all ask liquidity up to $3.60. Current unrealized PnL is +$3.4M.',
+      onChainTelemetry: {
+        actionValueUSD: '$28.5M',
+        flowDirection: 'LEVERAGED_POSITION',
+        exchangeDestination: 'Binance Futures & Hyperliquid DEX',
+      },
+      contrarianTake:
+        'Retail crowd is actively shorting new highs expecting mean reversion, providing fuel for an aggressive cascading short squeeze.',
+      keyLevels: {
+        entryOrSupport: '$3.25',
+        targetPrice: '$4.80',
+        invalidationStop: '$2.88',
+      },
+    },
+    {
+      id: 'whale-4',
+      authorName: 'Andrew Kang',
+      authorHandle: '@Rewkang',
+      authorType: 'KOL',
+      avatarBg: '#a855f7',
+      targetCoin: 'TAO',
+      coinPair: 'TAOUSDT',
+      timestamp: '2h ago',
+      stance: 'HEAVY ACCUMULATION',
+      title: 'Decentralized AI Subnet Monetization & Compute Valuation Multiple',
+      analysisText:
+        'Decentralized machine learning inference demand is decoupling from speculative crypto cycles. Bittensor subnet validator revenues grew 240% quarter-over-quarter. Valuation is mispriced relative to centralized hyperscaler price-to-compute multiples.',
+      onChainTelemetry: {
+        actionValueUSD: '$12.8M',
+        flowDirection: 'OUTFLOW_COLD_STORAGE',
+        exchangeDestination: 'Institutional Staking Validator Node',
+      },
+      contrarianTake:
+        'Silicon Valley VCs dismiss crypto compute as toy networks, completely missing the censorship-resistant open-source developer migration.',
+      keyLevels: {
+        entryOrSupport: '$540',
+        targetPrice: '$980',
+        invalidationStop: '$460',
+      },
+    },
+    {
+      id: 'whale-5',
+      authorName: 'Whale Alert Bot',
+      authorHandle: '@whale_alert',
+      authorType: 'ONCHAIN_TRACKER',
+      avatarBg: '#ef4444',
+      targetCoin: 'DOGE',
+      coinPair: 'DOGEUSDT',
+      timestamp: '3h ago',
+      stance: 'SHORT SQUEEZE WARNING',
+      title: 'Dormant 2017 Wallet Moved 450,000,000 DOGE ($173M) to Bitget Cold Storage',
+      analysisText:
+        '450 Million DOGE dormant for 4.2 years was consolidated across 6 child addresses and directed into custody clusters. Funding rate on Bitget dropped into negative territory (-0.015%), indicating heavy speculative short bets front-running potential dump.',
+      onChainTelemetry: {
+        walletAddress: 'D84jFq9...7kx',
+        actionValueUSD: '$173.0M',
+        flowDirection: 'INFLOW_EXCHANGE',
+        exchangeDestination: 'Bitget OTC Deposit Vault',
+      },
+      contrarianTake:
+        'Crowd is piling into aggressive leveraged shorts expecting immediate market dumping. Historical whale transfers of this scale frequently execute a violent counter-squeeze before distributing.',
+      keyLevels: {
+        entryOrSupport: '$0.360',
+        targetPrice: '$0.485',
+        invalidationStop: '$0.325',
+      },
+    },
+    {
+      id: 'whale-6',
+      authorName: 'Wintermute Macro Desk',
+      authorHandle: '@Wintermute_Desk',
+      authorType: 'MARKET_MAKER',
+      avatarBg: '#3b82f6',
+      targetCoin: 'SOL',
+      coinPair: 'SOLUSDT',
+      timestamp: '4h ago',
+      stance: 'HEAVY ACCUMULATION',
+      title: 'Cross-Exchange Spot Arbitrage & Institutional Custody Outflows',
+      analysisText:
+        'Bid-ask depth on Solana perp books has tightened to record institutional spreads. Systematic market making desk tracking shows sustained net positive spot delta on Binance and Bitget despite broader market chop.',
+      onChainTelemetry: {
+        actionValueUSD: '$52.0M',
+        flowDirection: 'OUTFLOW_COLD_STORAGE',
+        exchangeDestination: 'Binance & Bitget Liquidity Pools',
+      },
+      contrarianTake:
+        'Retail traders are flipping 5-minute meme tokens, while institutional liquidity providers accumulate underlying L1 gas collateral.',
+      keyLevels: {
+        entryOrSupport: '$208',
+        targetPrice: '$285',
+        invalidationStop: '$188',
+      },
+    },
+  ];
+
+  res.json({ success: true, timestamp: Date.now(), items: whaleData });
+});
+
 // Radar scan endpoint
 app.get('/api/contrarian/radar', (_req: Request, res: Response) => {
   res.json({ success: true, items: PRESET_RADAR });

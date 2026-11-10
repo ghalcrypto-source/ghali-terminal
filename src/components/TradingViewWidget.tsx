@@ -6,7 +6,7 @@ interface TradingViewWidgetProps {
   exchange: ExchangeId;
   interval: string; // e.g. '15', '60', '240', 'D'
   isFutures: boolean;
-  autosize?: boolean;
+  indicators?: string[]; // e.g. ['EMA', 'RSI', 'StochRSI', 'MACD']
 }
 
 export const TradingViewWidget: React.FC<TradingViewWidgetProps> = memo(({
@@ -14,12 +14,10 @@ export const TradingViewWidget: React.FC<TradingViewWidgetProps> = memo(({
   exchange,
   interval,
   isFutures,
+  indicators = ['EMA', 'RSI', 'StochRSI'],
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Construct standard TradingView symbol name
-  // Binance Spot: BINANCE:BTCUSDT, Binance Futures: BINANCE:BTCUSDT.P
-  // Bitget Spot: BITGET:BTCUSDT, Bitget Futures: BITGET:BTCUSDT.P
   const formattedSymbol = (() => {
     const cleanSym = symbol.toUpperCase().replace('/', '');
     if (exchange === 'BITGET') {
@@ -29,6 +27,28 @@ export const TradingViewWidget: React.FC<TradingViewWidgetProps> = memo(({
   })();
 
   const containerId = `tv_chart_${exchange}_${symbol.replace(/[^a-zA-Z0-9]/g, '_')}_${isFutures ? 'perp' : 'spot'}`;
+
+  // Map indicator names to TradingView study IDs
+  const studiesList = indicators
+    .map((ind) => {
+      switch (ind) {
+        case 'EMA':
+          return 'STD;EMA';
+        case 'RSI':
+          return 'STD;RSI';
+        case 'StochRSI':
+          return 'STD;Stochastic_RSI';
+        case 'MACD':
+          return 'STD;MACD';
+        case 'Bollinger':
+          return 'STD;Bollinger_Bands';
+        case 'Volume':
+          return 'STD;Volume';
+        default:
+          return null;
+      }
+    })
+    .filter(Boolean) as string[];
 
   useEffect(() => {
     let script: HTMLScriptElement | null = null;
@@ -60,11 +80,14 @@ export const TradingViewWidget: React.FC<TradingViewWidgetProps> = memo(({
       backgroundColor: '#0a0d14',
       gridColor: 'rgba(255, 255, 255, 0.04)',
       hide_top_toolbar: false,
+      hide_side_toolbar: false, // ENABLES TRENDLINE, FIBONACCI, PATH, BRUSH, SHAPES
+      withdateranges: true,
       hide_legend: false,
-      save_image: false,
+      save_image: true,
       calendar: false,
       hide_volume: false,
       support_host: 'https://www.tradingview.com',
+      studies: studiesList,
     });
 
     currentContainer.appendChild(script);
@@ -74,14 +97,14 @@ export const TradingViewWidget: React.FC<TradingViewWidgetProps> = memo(({
         currentContainer.innerHTML = '';
       }
     };
-  }, [formattedSymbol, interval]);
+  }, [formattedSymbol, interval, indicators.join(',')]);
 
   return (
     <div
       ref={containerRef}
       id={containerId}
       className="tradingview-widget-container w-full h-full bg-[#0a0d14]"
-      style={{ minHeight: '280px' }}
+      style={{ minHeight: '300px' }}
     />
   );
 });

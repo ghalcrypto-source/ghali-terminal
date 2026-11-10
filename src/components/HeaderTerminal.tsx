@@ -14,6 +14,8 @@ import {
   UserCheck,
   User,
   LogOut,
+  Sliders,
+  Crown,
 } from 'lucide-react';
 import { sound } from '../audio/soundEngine';
 import { UserSession } from '../types/news';
@@ -28,7 +30,9 @@ interface HeaderTerminalProps {
   onOpenExchangeSentiment: () => void;
   onOpenNews: () => void;
   onOpenTopMovers: () => void;
+  onOpenWhale: () => void;
   onOpenAuth: () => void;
+  onOpenTA: () => void;
   session: UserSession;
   soundEnabled: boolean;
   onToggleSound: () => void;
@@ -42,7 +46,9 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
   onOpenExchangeSentiment,
   onOpenNews,
   onOpenTopMovers,
+  onOpenWhale,
   onOpenAuth,
+  onOpenTA,
   session,
   soundEnabled,
   onToggleSound,
@@ -56,7 +62,7 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
             <Compass className="w-4 h-4 text-amber-400 shrink-0" />
             <div className="flex items-center gap-2">
               <span className="font-mono font-bold text-xs tracking-wider text-slate-100 hidden sm:inline">
-                CONTRARIAN TERMINAL
+                GHALI TERMINAL
               </span>
               <span className="text-[10px] font-mono uppercase bg-[#1a2538] text-amber-300 px-1.5 py-0.2 rounded border border-[#2d3f5e]">
                 v4.8
@@ -153,6 +159,19 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
             <span className="hidden sm:inline">TOP MOVERS</span>
           </button>
 
+          {/* KOL & Whale Intelligence Desk Button */}
+          <button
+            onClick={() => {
+              sound.playClick();
+              onOpenWhale();
+            }}
+            className="flex items-center gap-1.5 bg-[#0d121c] hover:bg-[#151d2d] border border-[#232f48] hover:border-amber-400/50 text-slate-200 px-2.5 py-1.5 rounded text-xs font-mono font-medium transition-colors shadow-md cursor-pointer"
+            title="Tempat analisa para KOL & Smart Money Whales terhadap koin"
+          >
+            <Crown className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">KOL & WHALE</span>
+          </button>
+
           {/* Funding & Long/Short Button */}
           <button
             onClick={() => {
@@ -175,6 +194,18 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
           >
             <Radar className="w-3.5 h-3.5 text-cyan-400" />
             <span className="hidden lg:inline">RADAR</span>
+          </button>
+          {/* Technical Analysis Button */}
+          <button
+            onClick={() => {
+              sound.playClick();
+              onOpenTA();
+            }}
+            className="flex items-center gap-1.5 bg-[#0d121c] hover:bg-[#151d2d] border border-[#232f48] hover:border-amber-400/50 text-slate-200 px-2.5 py-1.5 rounded text-xs font-mono font-medium transition-colors shadow-md cursor-pointer"
+            title="Buka suite teknikal analisis (Fibonacci, EMA, StochRSI, Path, Trendline)"
+          >
+            <Sliders className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">TEKNIKAL</span>
           </button>
 
           {/* AI Inverter */}

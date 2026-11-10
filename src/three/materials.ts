@@ -173,7 +173,7 @@ export function createVernierDialTexture(accentHex: string): THREE.CanvasTexture
   ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
   ctx.font = 'bold 18px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('CONTRARIAN TERMINAL', cx, cy - 25);
+  ctx.fillText('GHALI TERMINAL', cx, cy - 25);
   ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
   ctx.font = '12px monospace';
   ctx.fillText('VERNIER SENTIMENT HORIZON • 0.001 RAD', cx, cy - 5);

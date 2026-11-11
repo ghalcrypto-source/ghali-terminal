@@ -201,9 +201,16 @@ export const NewsFeedModal: React.FC<NewsFeedModalProps> = ({
                 {/* Meta row: Source, Category, Time, and Sentiment */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#182338] text-blue-300 border border-[#263758]">
-                      {item.source}
-                    </span>
+                    <a
+                      href={item.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#182338] hover:bg-[#202f4b] text-amber-300 border border-[#263758] hover:border-amber-400 transition-colors"
+                      title="Buka sumber artikel asli"
+                    >
+                      <span>{item.source}</span>
+                      <ExternalLink className="w-3 h-3 text-amber-400" />
+                    </a>
                     <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[#141b2b] text-slate-400 border border-[#202c44]">
                       {item.category}
                     </span>
@@ -240,7 +247,9 @@ export const NewsFeedModal: React.FC<NewsFeedModalProps> = ({
 
                 {/* Title & Summary */}
                 <h3 className="font-mono text-sm font-bold text-slate-100 hover:text-amber-300 transition-colors leading-snug">
-                  {item.title}
+                  <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                    {item.title}
+                  </a>
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed font-sans">
                   {item.summary}

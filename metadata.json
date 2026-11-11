@@ -1,6 +1,6 @@
 {
-  "name": "Ghali Terminal",
-  "description": "Institutional-grade market inversion radar, crowded consensus scanner, and kinetic 3D sentiment monolith for high-conviction contrarian investors.",
+  "name": "Global Macro News Intelligence",
+  "description": "Real-time fundamental macro news intelligence terminal for crypto and forex traders powered by GDELT, RSS, Guardian, and Gemini AI analysis.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

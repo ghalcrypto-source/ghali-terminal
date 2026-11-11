@@ -1,4 +1,4 @@
-export type NewsSource = 'CoinDesk' | 'Cointelegraph' | 'Decrypt' | 'The Block' | 'Bloomberg Crypto' | 'Reuters';
+export type NewsSource = 'CoinDesk' | 'Cointelegraph' | 'Decrypt' | 'The Block' | 'Bloomberg Crypto' | 'Reuters' | string;
 
 export type NewsSentiment = 'BULLISH' | 'BEARISH' | 'CONTRARIAN ALERT' | 'NEUTRAL';
 
@@ -6,13 +6,14 @@ export interface CryptoNewsItem {
   id: string;
   title: string;
   summary: string;
-  source: NewsSource;
-  sourceUrl?: string;
+  source: string;
+  sourceUrl: string;
   category: 'MACRO' | 'BITCOIN' | 'ALTCOINS' | 'REGULATORY' | 'DEFI';
   timestamp: string;
   sentiment: NewsSentiment;
   crowdConsensus: string;
   contrarianAngle: string;
+  imageUrl?: string;
 }
 
 export interface MarketMover {

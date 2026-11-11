@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ChartLayout, ChartSlot, ExchangeId, CRYPTO_50_COINS } from '../types/crypto';
 import { TradingViewWidget } from './TradingViewWidget';
+import { CoinSearchInput } from './CoinSearchInput';
 import { sound } from '../audio/soundEngine';
 
 const TIMEFRAMES = [
@@ -155,7 +156,7 @@ export const MultiChartGrid: React.FC<MultiChartGridProps> = ({
         {/* Left: Info, 50-Coin status & Quick Presets */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 bg-[#121826] border border-[#232f48] px-2.5 py-1 rounded text-xs font-mono font-bold text-amber-400">
-            <span>MULTICHART // 50 KOIN</span>
+            <span>MULTICHART // 100+ TOKENS</span>
             <span className="text-[10px] text-slate-400 font-normal hidden sm:inline">BINANCE & BITGET</span>
           </div>
 
@@ -280,18 +281,11 @@ export const MultiChartGrid: React.FC<MultiChartGridProps> = ({
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-[10px] font-bold text-slate-500">#{index + 1}</span>
 
-                  {/* 50 COIN SELECTOR DROPDOWN */}
-                  <select
+                  {/* OPEN SEARCH & CUSTOM INPUT COIN SELECTOR */}
+                  <CoinSearchInput
                     value={slot.symbol}
-                    onChange={(e) => updateSlot(slot.id, { symbol: e.target.value })}
-                    className="bg-[#151c2d] text-slate-100 border border-[#23314d] rounded px-1.5 py-0.5 text-xs font-bold font-mono outline-none cursor-pointer hover:border-amber-400 max-w-[140px]"
-                  >
-                    {CRYPTO_50_COINS.map((c) => (
-                      <option key={c.pair} value={c.pair}>
-                        {c.symbol} [{c.category}]
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(newSym) => updateSlot(slot.id, { symbol: newSym })}
+                  />
 
                   {/* Exchange Toggle */}
                   <button

@@ -8,8 +8,6 @@ import { AINewsAnalysisDrawer } from './components/AINewsAnalysisDrawer';
 import { MacroImpactMatrix } from './components/MacroImpactMatrix';
 import { ApiKeysConfigModal } from './components/ApiKeysConfigModal';
 import { MultiApiTelemetryPanel } from './components/MultiApiTelemetryPanel';
-
-import { ThesisInverterModal } from './components/ThesisInverterModal';
 import { RadarModal } from './components/RadarModal';
 import { ExchangeContrarianPanel } from './components/ExchangeContrarianPanel';
 import { TopMoversModal } from './components/TopMoversModal';
@@ -66,7 +64,6 @@ export default function App() {
   });
 
   // Modals state
-  const [isInverterOpen, setIsInverterOpen] = useState(false);
   const [isRadarOpen, setIsRadarOpen] = useState(false);
   const [isExchangeSentimentOpen, setIsExchangeSentimentOpen] = useState(false);
   const [isTopMoversOpen, setIsTopMoversOpen] = useState(false);
@@ -74,7 +71,6 @@ export default function App() {
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isTAOpen, setIsTAOpen] = useState(false);
-  const [inverterAsset, setInverterAsset] = useState('Fed Rate & DXY Liquidity Policy');
   const [chartTargetSymbol, setChartTargetSymbol] = useState('BTCUSDT');
 
   // Fetch Macro News Wire
@@ -140,17 +136,6 @@ export default function App() {
     } catch (_) {}
   };
 
-  const handleOpenInverterWithAsset = (themeName: string) => {
-    setInverterAsset(themeName);
-    setIsRadarOpen(false);
-    setIsExchangeSentimentOpen(false);
-    setIsTopMoversOpen(false);
-    setIsWhaleOpen(false);
-    setIsAlertsOpen(false);
-    setIsTAOpen(false);
-    setIsInverterOpen(true);
-  };
-
   const handleLoadToChart = (symbol: string) => {
     sound.playSonarPing();
     const formatted = symbol.endsWith('USDT') ? symbol : `${symbol}USDT`;
@@ -180,10 +165,6 @@ export default function App() {
         viewMode={viewMode}
         onChangeViewMode={setViewMode}
         onOpenApiKeys={() => setIsApiKeysOpen(true)}
-        onOpenInverter={() => {
-          setInverterAsset('Fed Rate & DXY Liquidity Policy');
-          setIsInverterOpen(true);
-        }}
         onOpenRadar={() => setIsRadarOpen(true)}
         onOpenExchangeSentiment={() => setIsExchangeSentimentOpen(true)}
         onOpenTopMovers={() => setIsTopMoversOpen(true)}
@@ -283,12 +264,11 @@ export default function App() {
         )}
       </div>
 
-      {/* 3. AI News Analysis Drawer (Gemini Deep Analysis) */}
+      {/* 3. AI News Analysis Drawer (Institutional Macro Intelligence) */}
       <AINewsAnalysisDrawer
         isOpen={isAIDrawerOpen}
         onClose={() => setIsAIDrawerOpen(false)}
         item={selectedNewsForAI}
-        userGeminiKey={apiConfig.geminiKey}
       />
 
       {/* 4. API Keys Configuration Modal */}
@@ -299,36 +279,26 @@ export default function App() {
         onSave={handleSaveApiKeys}
       />
 
-      {/* 5. AI Contrarian Inverter Modal */}
-      <ThesisInverterModal
-        isOpen={isInverterOpen}
-        onClose={() => setIsInverterOpen(false)}
-        initialAsset={inverterAsset}
-      />
-
-      {/* 6. Macro Dislocation Radar Modal */}
+      {/* 5. Macro Dislocation Radar Modal */}
       <RadarModal
         isOpen={isRadarOpen}
         onClose={() => setIsRadarOpen(false)}
-        onSelectForInversion={handleOpenInverterWithAsset}
       />
 
-      {/* 7. Exchange Contrarian Panel */}
+      {/* 6. Exchange Contrarian Panel */}
       <ExchangeContrarianPanel
         isOpen={isExchangeSentimentOpen}
         onClose={() => setIsExchangeSentimentOpen(false)}
-        onSelectForInversion={handleOpenInverterWithAsset}
       />
 
-      {/* 8. Top Gainers & Top Losers Modal */}
+      {/* 7. Top Gainers & Top Losers Modal */}
       <TopMoversModal
         isOpen={isTopMoversOpen}
         onClose={() => setIsTopMoversOpen(false)}
         onLoadToChart={handleLoadToChart}
-        onSelectForInversion={handleOpenInverterWithAsset}
       />
 
-      {/* 9. Menu Auth (Masuk & Keluar) */}
+      {/* 8. Menu Auth (Masuk & Keluar) */}
       <AuthModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
@@ -337,7 +307,7 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      {/* 10. Technical Analysis Suite */}
+      {/* 9. Technical Analysis Suite */}
       <TechnicalAnalysisPanel
         isOpen={isTAOpen}
         onClose={() => setIsTAOpen(false)}
@@ -345,12 +315,11 @@ export default function App() {
         onApplyCoinToChart={handleLoadToChart}
       />
 
-      {/* 11. KOL & Smart Money Whale Intelligence Desk */}
+      {/* 10. KOL & Smart Money Whale Intelligence Desk */}
       <WhaleIntelligenceModal
         isOpen={isWhaleOpen}
         onClose={() => setIsWhaleOpen(false)}
         onLoadToChart={handleLoadToChart}
-        onSelectForInversion={handleOpenInverterWithAsset}
       />
 
       {/* 12. Price Alert Manager */}

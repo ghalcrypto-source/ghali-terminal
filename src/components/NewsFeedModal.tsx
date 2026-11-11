@@ -236,10 +236,10 @@ export const NewsFeedModal: React.FC<NewsFeedModalProps> = ({
                         onSelectForInversion(item.title);
                       }}
                       className="flex items-center gap-1 bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded text-[10px] font-mono cursor-pointer transition-colors"
-                      title="Deconstruct headline herd sentiment with Gemini AI"
+                      title="Analisis dekonstruksi sentimen berita"
                     >
                       <Sparkles className="w-3 h-3 text-amber-400" />
-                      <span>INVERT STORY</span>
+                      <span>BEDAH SENTIMEN</span>
                       <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>

@@ -23,14 +23,12 @@ interface AINewsAnalysisDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   item: MacroNewsItem | null;
-  userGeminiKey?: string;
 }
 
 export const AINewsAnalysisDrawer: React.FC<AINewsAnalysisDrawerProps> = ({
   isOpen,
   onClose,
   item,
-  userGeminiKey,
 }) => {
   const [analysis, setAnalysis] = useState<AINewsAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
@@ -59,7 +57,6 @@ export const AINewsAnalysisDrawer: React.FC<AINewsAnalysisDrawerProps> = ({
         summary: item.summary,
         source: item.source,
         category: item.category,
-        userGeminiKey,
       }),
     })
       .then((res) => res.json())
@@ -86,10 +83,10 @@ export const AINewsAnalysisDrawer: React.FC<AINewsAnalysisDrawerProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-mono font-bold tracking-wider text-white">
-                  AI MACRO FUNDAMENTAL AUDIT
+                  INSTITUTIONAL MACRO INTELLIGENCE
                 </h2>
                 <span className="text-[10px] font-mono uppercase bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/40 font-bold">
-                  GEMINI 3.8
+                  GHALI MACRO ENGINE
                 </span>
               </div>
               <p className="text-[11px] font-mono text-slate-400">
@@ -166,7 +163,7 @@ export const AINewsAnalysisDrawer: React.FC<AINewsAnalysisDrawerProps> = ({
           {loading ? (
             <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400 font-mono text-xs">
               <RefreshCw className="w-8 h-8 text-amber-400 animate-spin" />
-              <span className="tracking-wider">GEMINI AI SEDANG MEMBEDAH HAKIKAT & DAMPAK MAKRO...</span>
+              <span className="tracking-wider">SISTEM SEDANG MEMPROSES AUDIT FUNDAMENTAL MAKRO...</span>
             </div>
           ) : analysis ? (
             <div className="space-y-5">
@@ -320,7 +317,7 @@ export const AINewsAnalysisDrawer: React.FC<AINewsAnalysisDrawerProps> = ({
 
               {/* Timestamp Footer */}
               <div className="p-3 rounded-lg bg-[#070b13] border border-[#1a263d] text-center text-[11px] font-mono text-slate-500">
-                Analisis makro Gemini dieksekusi pada: <span className="text-slate-300 font-semibold">{analysis.analyzedAtWIB}</span>
+                Audit Makro Ghali Terminal dieksekusi pada: <span className="text-slate-300 font-semibold">{analysis.analyzedAtWIB}</span>
               </div>
             </div>
           ) : null}

@@ -37,7 +37,6 @@ interface HeaderTerminalProps {
   viewMode: TerminalViewMode;
   onChangeViewMode: (mode: TerminalViewMode) => void;
   onOpenApiKeys: () => void;
-  onOpenInverter: () => void;
   onOpenRadar: () => void;
   onOpenExchangeSentiment: () => void;
   onOpenTopMovers: () => void;
@@ -54,7 +53,6 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
   viewMode,
   onChangeViewMode,
   onOpenApiKeys,
-  onOpenInverter,
   onOpenRadar,
   onOpenExchangeSentiment,
   onOpenTopMovers,
@@ -204,7 +202,7 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
               onOpenApiKeys();
             }}
             className="flex items-center gap-1.5 bg-[#0c1220] hover:bg-[#162138] border border-[#233454] text-amber-300 hover:text-white px-2.5 py-1.5 rounded text-xs font-mono font-bold transition-colors shadow-md cursor-pointer"
-            title="Konfigurasi API Keys (NewsData, GNews, Guardian, Gemini)"
+            title="Konfigurasi API Keys Sumber Berita"
           >
             <Key className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">API KEYS</span>
@@ -234,18 +232,6 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
           >
             <Sliders className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden md:inline">TEKNIKAL</span>
-          </button>
-
-          {/* AI Inverter */}
-          <button
-            onClick={() => {
-              sound.playClick(1400);
-              onOpenInverter();
-            }}
-            className="flex items-center gap-1.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-mono font-bold px-3 py-1.5 rounded text-xs tracking-wider transition-all shadow-md cursor-pointer"
-          >
-            <Cpu className="w-3.5 h-3.5 text-black" />
-            <span className="hidden sm:inline">AI INVERTER</span>
           </button>
 
           {/* Audio toggle */}

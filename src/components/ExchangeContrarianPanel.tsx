@@ -16,7 +16,7 @@ import { sound } from '../audio/soundEngine';
 interface ExchangeContrarianPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectForInversion: (pair: string) => void;
+  onSelectForInversion?: (pair: string) => void;
 }
 
 export const ExchangeContrarianPanel: React.FC<ExchangeContrarianPanelProps> = ({
@@ -134,16 +134,18 @@ export const ExchangeContrarianPanel: React.FC<ExchangeContrarianPanelProps> = (
                         {item.contrarianSignal}
                       </span>
 
-                      <button
-                        onClick={() => {
-                          sound.playClick(1400);
-                          onSelectForInversion(item.symbol);
-                        }}
-                        className="flex items-center gap-1 bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded text-[11px] font-mono cursor-pointer transition-colors"
-                      >
-                        <span>INVERT</span>
-                        <ArrowRight className="w-3 h-3" />
-                      </button>
+                      {onSelectForInversion && (
+                        <button
+                          onClick={() => {
+                            sound.playClick(1400);
+                            onSelectForInversion(item.symbol);
+                          }}
+                          className="flex items-center gap-1 bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded text-[11px] font-mono cursor-pointer transition-colors"
+                        >
+                          <span>INVERT</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                   </div>
 

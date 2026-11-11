@@ -742,6 +742,116 @@ function classifyMacroNews(title: string, summary: string): {
   };
 }
 
+// Automated Institutional Macro Intelligence Generator
+function buildAutomatedMacroAnalysis(title: string, summary: string, meta: any, wibString: string) {
+  const cat = meta.category;
+  const sent = meta.sentiment;
+  const imp = meta.impactLevel;
+
+  let whyItMatters = '';
+  let usdDxyImpact = '';
+  let cryptoImpact = '';
+  let goldImpact = '';
+  let forexImpact = '';
+  let keyFacts: string[] = [];
+
+  if (cat === 'FED_FOMC' || cat === 'CPI_INFLATION') {
+    whyItMatters = 'Perkembangan data inflasi dan arah suku bunga acuan Fed merupakan jangkar utama likuiditas global yang menentukan cost of capital, arah imbal hasil US Treasury, serta selera risiko pasar finansial dunia.';
+    if (sent === 'BEARISH') {
+      usdDxyImpact = 'DXY Bullish / Menguat: Tekanan inflasi yang persisten atau retorika hawkish menunda pemangkasan suku bunga, mempertahankan imbal hasil US Treasury tinggi dan memperkuat daya tarik dolar.';
+      cryptoImpact = 'BTC & ETH Tertekan / Bearish: Suku bunga riil yang lebih tinggi meningkatkan biaya peluang (opportunity cost), memicu arus keluar likuiditas dari aset berisiko tinggi.';
+      goldImpact = 'Emas (XAUUSD) Tertekan: Kenaikan yield obligasi riil AS menekan harga emas non-yielding dalam jangka pendek.';
+      forexImpact = 'EUR/USD dan GBP/USD melemah terhadap USD karena selisih suku bunga (rate differential) yang melebar menguntungkan dolar.';
+    } else {
+      usdDxyImpact = 'DXY Melemah / Bearish: Sinyal pendinginan inflasi atau prospek pelonggaran moneter mempercepat repricing penurunan suku bunga, menekan indeks dolar.';
+      cryptoImpact = 'BTC & ETH Bullish / Reli: Pelonggaran kondisi finansial dan ekspansi likuiditas fiat menjadi katalis utama bagi reli akumulasi Bitcoin dan altcoin institusional.';
+      goldImpact = 'Emas (XAUUSD) Bullish: Penurunan imbal hasil riil Treasury dan pelemahan dolar AS secara historis memicu lonjakan harga emas.';
+      forexImpact = 'EUR/USD dan GBP/USD menguat terhadap USD seiring pelemahan dolar di pasar valuta asing global.';
+    }
+    keyFacts = [
+      `Data/Peristiwa: ${title.slice(0, 95)}`,
+      `Kategori Kebijakan: ${meta.categoryLabel} dengan estimasi dampak pasar ${imp}.`,
+      'Pergerakan imbal hasil obligasi US 10-Tahun menjadi variabel kunci transmisi kebijakan ke pasar valuta dan komoditas.',
+      'Pelaku pasar derivatif suku bunga (FedWatch) merevisi probabilitas penetapan suku bunga pertemuan FOMC mendatang.'
+    ];
+  } else if (cat === 'CENTRAL_BANKS') {
+    whyItMatters = 'Divergensi kebijakan antar bank sentral utama (Fed, ECB, BoJ, BoE, PBoC) menggerakkan selisih suku bunga global dan menentukan arah arus modal lintas batas (cross-border capital flows).';
+    usdDxyImpact = 'DXY merespons dinamika divergensi suku bunga antar negara; pergeseran nada bank sentral Eropa atau Jepang secara langsung mengubah bobot pembentuk DXY.';
+    cryptoImpact = 'Crypto sensitif terhadap agregat likuiditas bank sentral global (G5 M2); koordinasi pelonggaran moneter memicu dorongan tren naik aset digital.';
+    goldImpact = 'Emas didukung oleh diversifikasi cadangan devisa bank sentral global yang terus mengantisipasi volatilitas mata uang fiat.';
+    forexImpact = 'Volatilitas tinggi pada pasangan mata uang utama (EURUSD, USDJPY, GBPUSD) akibat repricing ekspektasi interest rate differential.';
+    keyFacts = [
+      `Katalis: ${title.slice(0, 95)}`,
+      'Sinyal Arah Moneter: Berita berpotensi mengubah proyeksi yield spread antar negara mitra dagang utama.',
+      'Pasar obligasi negara merespons dengan pergeseran kurva imbal hasil tenor pendek dan menengah.',
+      'Arus carry trade global berpotensi mengalami rebalancing menyesuaikan spread suku bunga terbaru.'
+    ];
+  } else if (cat === 'GEOPOLITICS_WAR' || cat === 'TRADE_WAR') {
+    whyItMatters = 'Eskalasi konflik geopolitik, perang dagang, dan sanksi ekonomi mengancam rantai pasok global, memicu lonjakan harga komoditas energi, dan mendorong aliran modal safe-haven.';
+    usdDxyImpact = 'DXY Menguat / Safe-Haven Bid: Dolar AS dicari sebagai aset likuid paling aman selama periode ketidakpastian geopolitik global.';
+    cryptoImpact = 'Volatilitas awal pada BTC & ETH; pasar sering mengalami aksi jual instan (de-risking), diikuti akumulasi sebagai instrumen lindung nilai non-negara (censorship-resistant asset).';
+    goldImpact = 'Emas (XAUUSD) Bullish Kuat: Safe haven pilihan utama para manajer investasi global saat risiko konflik militer atau sanksi ekonomi meningkat.';
+    forexImpact = 'Mata uang sensitif risiko (EUR, GBP, AUD) cenderung tertekan, sementara safe-haven FX (USD, CHF) mengalami apresiasi.';
+    keyFacts = [
+      `Peristiwa: ${title.slice(0, 95)}`,
+      'Premi risiko geopolitik langsung tercermin pada harga minyak mentah (Crude Oil) dan komoditas energi.',
+      'Sanksi perdagangan berpotensi memicu fragmentasi moneter dan mempercepat wacana diversifikasi de-dolarisasi.',
+      'Investor institusional meningkatkan alokasi kas dan instrumen lindung nilai risiko ekor (tail-risk hedge).'
+    ];
+  } else if (cat === 'BANKING_CRISIS' || cat === 'DEBT_YIELDS') {
+    whyItMatters = 'Kerapuhan sektor perbankan dan lonjakan beban utang pemerintah menguji stabilitas sistem finansial fiat serta memicu intervensi fasilitas likuiditas darurat dari otoritas moneter.';
+    usdDxyImpact = 'Volatilitas dua arah: Menguat di awal karena perebutan likuiditas kas, namun berisiko melemah jika bank sentral terpaksa mencetak likuiditas darurat.';
+    cryptoImpact = 'BTC Sangat Bullish Secara Asimetris: Narasi Bitcoin sebagai alternatif sistem perbankan terdesentralisasi menguat signifikan selama kepanikan likuiditas perbankan komersial.';
+    goldImpact = 'Emas (XAUUSD) Reli Kuat: Emas menjadi aset penyimpan nilai primer tanpa risiko pihak lawan (no counterparty risk).';
+    forexImpact = 'Tekanan likuiditas antarbank meningkatkan basis swap valuta asing dan volatilitas kurs antar negara.';
+    keyFacts = [
+      `Fokus Stabilitas: ${title.slice(0, 95)}`,
+      'Pengetatan standar kredit perbankan berisiko memperlambat aktivitas ekonomi riil secara tajam.',
+      'Imbal hasil obligasi negara mengalami pergerakan tajam merefleksikan premi risiko fiskal dan sovereign debt.',
+      'Kebutuhan refinancing utang dalam jumlah besar memberikan tekanan pada likuiditas pasar modal.'
+    ];
+  } else if (cat === 'CRYPTO_REGULATION') {
+    whyItMatters = 'Kepastian regulasi dan kebijakan pengawasan keuangan menjadi pintu gerbang adopsi modal institusional dan kejelasan operasional infrastruktur aset digital global.';
+    usdDxyImpact = 'Dampak netral hingga terbatas pada DXY; keterkaitan regulasi kripto lebih berfokus pada ekosistem stablecoin berdenominasi USD.';
+    cryptoImpact = sent === 'BULLISH'
+      ? 'BTC & ETH Bullish Kuat: Kejelasan hukum dan keterbukaan produk institusional membuka pintu aliran modal triliunan dolar dari dana pensiun dan manajer aset.'
+      : 'BTC & ETH Volatil / Defensif: Pengetatan aturan memicu kehati-hatian sementara sebelum konsolidasi jangka panjang.';
+    goldImpact = 'Emas cenderung netral; berfungsi sebagai aset pembanding digital gold bagi pelaku pasar makro institusional.';
+    forexImpact = 'Stabilitas nilai tukar mata uang fiat tetap terisolasi; fokus utama berada pada regulasi cadangan devisa pendukung stablecoin.';
+    keyFacts = [
+      `Regulasi: ${title.slice(0, 95)}`,
+      'Kerangka kepatuhan hukum menentukan kecepatan integrasi perbankan Wall Street dengan aset digital.',
+      'Arus dana ETF spot dan kepemilikan kustodian institusional menjadi barometer utama sentimen pasar.',
+      'Perkembangan regulasi stablecoin memperkuat utilitas dolar AS di ranah pembayaran digital global.'
+    ];
+  } else {
+    whyItMatters = 'Dinamika indikator makroekonomi ini memengaruhi proyeksi pertumbuhan ekonomi, penyesuaian portofolio hedge fund, dan arah arus likuiditas pasar modal.';
+    usdDxyImpact = sent === 'BULLISH' ? 'DXY cenderung stabil hingga menguat seiring prospek pertumbuhan ekonomi yang resilient.' : 'DXY mengalami tekanan moderat menyesuaikan revisi pertumbuhan.';
+    cryptoImpact = sent === 'BULLISH' ? 'Lingkungan risk-on mendorong apresiasi bertahap pada Bitcoin dan ekosistem aset digital.' : 'Aset kripto bergerak defensif menyusul kehati-hatian investor institusional.';
+    goldImpact = 'Emas mempertahankan nilai riilnya di tengah ekspektasi dinamika daya beli dan suku bunga riil.';
+    forexImpact = 'Pergerakan pasangan mata uang utama mencerminkan perbedaan fundamental pertumbuhan ekonomi antar kawasan.';
+    keyFacts = [
+      `Ringkasan: ${title.slice(0, 95)}`,
+      `Klasifikasi: Kategori ${meta.categoryLabel} dengan sentimen ${sent}.`,
+      'Data menjadi masukan kuantitatif bagi model analisis fundamental makro institusional.',
+      'Rebalancing portofolio lintas kelas aset terjadi secara bertahap merespons publikasi informasi.'
+    ];
+  }
+
+  return {
+    summary: summary || title,
+    keyFacts,
+    whyItMatters,
+    usdDxyImpact,
+    cryptoImpact,
+    goldImpact,
+    forexImpact,
+    marketSentiment: sent,
+    impactLevel: imp,
+    analyzedAtWIB: wibString,
+  };
+}
+
 // GLOBAL MACRO NEWS INTELLIGENCE Aggregator Endpoint
 app.get('/api/macro/news', async (req: Request, res: Response) => {
   const newsDataKey = (req.query.newsDataKey as string) || process.env.NEWSDATA_API_KEY || '';
@@ -761,6 +871,7 @@ app.get('/api/macro/news', async (req: Request, res: Response) => {
     const cleanSummary = (rawSummary || '').replace(/<[^>]*>/g, '').trim().slice(0, 320);
     const { wibString, timeAgo, iso } = formatWIBTime(rawDate);
     const meta = classifyMacroNews(cleanTitle, cleanSummary);
+    const automatedAnalysis = buildAutomatedMacroAnalysis(cleanTitle, cleanSummary, meta, wibString);
 
     itemsList.push({
       id: `macro-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
@@ -779,6 +890,7 @@ app.get('/api/macro/news', async (req: Request, res: Response) => {
       targetAssets: meta.targetAssets,
       assetImpacts: meta.assetImpacts,
       impactSummaryText: meta.impactSummaryText,
+      aiAnalysis: automatedAnalysis,
       isLiveApi: true,
     });
   };
@@ -949,85 +1061,24 @@ app.get('/api/macro/news', async (req: Request, res: Response) => {
   });
 });
 
-// AI NEWS ANALYSIS Endpoint (Deep Fundamental & Multi-Asset Market Impact Audit)
+// AUTOMATED INSTITUTIONAL MACRO INTELLIGENCE AUDIT Endpoint
 app.post('/api/macro/analyze', async (req: Request, res: Response) => {
   try {
-    const { title, summary, source, category, userGeminiKey } = req.body;
+    const { title, summary, category } = req.body;
     const itemTitle = title || 'Global Macro Dislocation Event';
     const itemSummary = summary || '';
-    const itemSource = source || 'Global News Wire';
+    const meta = classifyMacroNews(itemTitle, itemSummary);
+    if (category) meta.category = category;
 
-    // Use user-provided Gemini key if available, else server key
-    const activeAi = userGeminiKey ? new GoogleGenAI({ apiKey: userGeminiKey }) : ai;
-
-    const prompt = `Lakukan analisis fundamental macro komprehensif terhadap peristiwa berita finansial berikut:
-Judul Berita: "${itemTitle}"
-Ringkasan/Isi: "${itemSummary}"
-Sumber: "${itemSource}"
-Kategori Macro: "${category || 'GENERAL_MACRO'}"
-
-Tugas Anda adalah membedah dampak berita ini secara cermat untuk analis dan trader professional (Crypto, Forex, & Commodities).
-
-Berikan output JSON dengan format bahasa Indonesia yang lugas dan tepat sasaran dengan struktur berikut:
-1. "summary": Ringkasan berita dalam 2-3 kalimat eksekutif.
-2. "keyFacts": Array 3-4 poin fakta utama yang terkandung dalam berita.
-3. "whyItMatters": Mengapa berita ini sangat penting untuk kondisi makroekonomi global?
-4. "usdDxyImpact": Dampak spesifik terhadap US Dollar Index (DXY) dan mata uang USD (Bullish/Bearish/Neutral beserta alasannya).
-5. "cryptoImpact": Dampak spesifik terhadap pasar Kripto, khususnya Bitcoin (BTC) dan Ethereum (ETH).
-6. "goldImpact": Dampak spesifik terhadap Emas / XAUUSD (Hedge inflasi/Safe haven effect).
-7. "forexImpact": Dampak terhadap pasangan mata uang utama / Forex (EURUSD, USDJPY, GBPUSD).
-8. "marketSentiment": Salah satu dari: "BULLISH", "BEARISH", atau "NEUTRAL".
-9. "impactLevel": Salah satu dari: "HIGH", "MEDIUM", atau "LOW".`;
-
-    const response = await activeAi.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: {
-        systemInstruction:
-          'Anda adalah Kepala Macro Research & Global Forex Strategist di hedge fund institusional. Tugas Anda menganalisis peristiwa global secara objektif, mendalam, dan menghitung dampak langsungnya ke DXY, BTC/ETH, XAUUSD, dan FX pairs dalam Bahasa Indonesia.',
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            summary: { type: Type.STRING },
-            keyFacts: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-            },
-            whyItMatters: { type: Type.STRING },
-            usdDxyImpact: { type: Type.STRING },
-            cryptoImpact: { type: Type.STRING },
-            goldImpact: { type: Type.STRING },
-            forexImpact: { type: Type.STRING },
-            marketSentiment: { type: Type.STRING },
-            impactLevel: { type: Type.STRING },
-          },
-          required: [
-            'summary',
-            'keyFacts',
-            'whyItMatters',
-            'usdDxyImpact',
-            'cryptoImpact',
-            'goldImpact',
-            'forexImpact',
-            'marketSentiment',
-            'impactLevel',
-          ],
-        },
-      },
-    });
-
-    const parsed = JSON.parse(response.text || '{}');
     const wibNow = formatWIBTime().wibString;
+    const analysis = buildAutomatedMacroAnalysis(itemTitle, itemSummary, meta, wibNow);
+
     return res.json({
       success: true,
-      analysis: {
-        ...parsed,
-        analyzedAtWIB: wibNow,
-      },
+      analysis,
     });
   } catch (error: any) {
-    console.error('AI Macro Analysis error:', error);
+    console.error('Macro Analysis error:', error);
     const wibNow = formatWIBTime().wibString;
     return res.json({
       success: true,
@@ -1047,7 +1098,6 @@ Berikan output JSON dengan format bahasa Indonesia yang lugas dan tepat sasaran 
         impactLevel: 'MEDIUM',
         analyzedAtWIB: wibNow,
       },
-      fallback: true,
     });
   }
 });

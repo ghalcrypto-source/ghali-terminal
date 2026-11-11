@@ -21,7 +21,7 @@ interface WhaleIntelligenceModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoadToChart: (coinPair: string) => void;
-  onSelectForInversion: (topic: string) => void;
+  onSelectForInversion?: (topic: string) => void;
 }
 
 export const WhaleIntelligenceModal: React.FC<WhaleIntelligenceModalProps> = ({
@@ -345,19 +345,20 @@ export const WhaleIntelligenceModal: React.FC<WhaleIntelligenceModalProps> = ({
                       GRAFIK ${item.targetCoin}
                     </button>
 
-                    <button
-                      onClick={() => {
-                        sound.playClick(1400);
-                        onSelectForInversion(
-                          `${item.authorName} analysis on ${item.targetCoin}: ${item.title}`
-                        );
-                      }}
-                      className="flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded text-xs font-mono cursor-pointer transition-colors font-semibold"
-                      title="Uji apakah analisa KOL ini merupakan exit liquidity atau alpha murni"
-                    >
-                      <Sparkles className="w-3 h-3 text-amber-400" />
-                      <span>INVERT DENGAN AI</span>
-                    </button>
+                    {onSelectForInversion && (
+                      <button
+                        onClick={() => {
+                          sound.playClick(1400);
+                          onSelectForInversion(
+                            `${item.authorName} analysis on ${item.targetCoin}: ${item.title}`
+                          );
+                        }}
+                        className="flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded text-xs font-mono cursor-pointer transition-colors font-semibold"
+                      >
+                        <Sparkles className="w-3 h-3 text-amber-400" />
+                        <span>INVERT</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

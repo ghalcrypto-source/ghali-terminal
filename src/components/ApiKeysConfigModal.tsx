@@ -19,14 +19,12 @@ export const ApiKeysConfigModal: React.FC<ApiKeysConfigModalProps> = ({
   const [newsDataKey, setNewsDataKey] = useState(config.newsDataKey || '');
   const [gnewsKey, setGnewsKey] = useState(config.gnewsKey || '');
   const [guardianKey, setGuardianKey] = useState(config.guardianKey || '');
-  const [geminiKey, setGeminiKey] = useState(config.geminiKey || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
     setNewsDataKey(config.newsDataKey || '');
     setGnewsKey(config.gnewsKey || '');
     setGuardianKey(config.guardianKey || '');
-    setGeminiKey(config.geminiKey || '');
   }, [config, isOpen]);
 
   if (!isOpen) return null;
@@ -37,7 +35,6 @@ export const ApiKeysConfigModal: React.FC<ApiKeysConfigModalProps> = ({
       newsDataKey: newsDataKey.trim(),
       gnewsKey: gnewsKey.trim(),
       guardianKey: guardianKey.trim(),
-      geminiKey: geminiKey.trim(),
     };
     onSave(updated);
     setSavedSuccess(true);
@@ -58,10 +55,10 @@ export const ApiKeysConfigModal: React.FC<ApiKeysConfigModalProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-mono font-bold tracking-wider text-white">
-                KONFIGURASI API KEY BERITA & AI
+                KONFIGURASI API KEY SUMBER BERITA
               </h2>
               <p className="text-[11px] font-mono text-slate-400">
-                Gunakan API key pribadi Anda untuk kuota fetch berita & analisis Gemini AI tanpa batas
+                Gunakan API key pribadi Anda untuk kuota fetch berita global tanpa batas (Opsional)
               </p>
             </div>
           </div>
@@ -157,33 +154,6 @@ export const ApiKeysConfigModal: React.FC<ApiKeysConfigModalProps> = ({
               onChange={(e) => setGuardianKey(e.target.value)}
               className="w-full bg-[#070a12] border border-[#212d45] focus:border-emerald-400 rounded px-3 py-2 text-xs font-mono text-slate-200 outline-none"
             />
-          </div>
-
-          {/* Gemini API Key Override */}
-          <div className="space-y-1.5 pt-2 border-t border-[#1b273e]">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-mono font-bold text-purple-300">
-                Google Gemini API Key Override (Opsional)
-              </label>
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] font-mono text-purple-400 hover:underline inline-flex items-center gap-1"
-              >
-                Google AI Studio Key <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-            <input
-              type="password"
-              placeholder="AIzaSy..."
-              value={geminiKey}
-              onChange={(e) => setGeminiKey(e.target.value)}
-              className="w-full bg-[#070a12] border border-[#212d45] focus:border-purple-400 rounded px-3 py-2 text-xs font-mono text-slate-200 outline-none"
-            />
-            <p className="text-[10px] font-mono text-slate-500">
-              Kosongkan untuk menggunakan kunci Gemini server bawaan aplikasi.
-            </p>
           </div>
         </div>
 

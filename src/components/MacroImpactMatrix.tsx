@@ -201,7 +201,7 @@ export const MacroImpactMatrix: React.FC<MacroImpactMatrixProps> = ({ news, onSe
                     <div className="flex items-center justify-between pt-1.5 text-[10px] font-mono border-t border-[#16233a]">
                       <span className="text-slate-500">Sumber: {item.source}</span>
                       <span className="text-amber-400 font-bold flex items-center gap-1 group-hover:underline">
-                        <Sparkles className="w-3.5 h-3.5" /> Bedah AI Macro Analysis
+                        <Sparkles className="w-3.5 h-3.5" /> Analisis Fundamental Makro
                       </span>
                     </div>
                   </div>

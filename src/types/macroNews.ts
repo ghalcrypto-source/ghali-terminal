@@ -136,5 +136,4 @@ export interface ApiKeysConfig {
   newsDataKey?: string;
   gnewsKey?: string;
   guardianKey?: string;
-  geminiKey?: string;
 }

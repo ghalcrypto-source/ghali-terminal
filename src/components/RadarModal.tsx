@@ -6,7 +6,7 @@ import { sound } from '../audio/soundEngine';
 interface RadarModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectForInversion: (themeName: string) => void;
+  onSelectForInversion?: (themeName: string) => void;
 }
 
 export const RadarModal: React.FC<RadarModalProps> = ({
@@ -130,16 +130,18 @@ export const RadarModal: React.FC<RadarModalProps> = ({
                           <span className="text-emerald-400 font-bold">{item.asymmetryRatio}</span>
                         </div>
 
-                        <button
-                          onClick={() => {
-                            sound.playClick(1400);
-                            onSelectForInversion(item.title);
-                          }}
-                          className="flex items-center gap-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:border-amber-500/60 px-2.5 py-1 rounded text-[11px] font-mono cursor-pointer transition-colors"
-                        >
-                          <span>INVERT</span>
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                        </button>
+                        {onSelectForInversion && (
+                          <button
+                            onClick={() => {
+                              sound.playClick(1400);
+                              onSelectForInversion(item.title);
+                            }}
+                            className="flex items-center gap-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:border-amber-500/60 px-2.5 py-1 rounded text-[11px] font-mono cursor-pointer transition-colors"
+                          >
+                            <span>INVERT</span>
+                            <ArrowUpRight className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
 

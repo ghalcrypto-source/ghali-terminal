@@ -17,7 +17,7 @@ interface TopMoversModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoadToChart: (symbol: string) => void;
-  onSelectForInversion: (symbol: string) => void;
+  onSelectForInversion?: (symbol: string) => void;
 }
 
 export const TopMoversModal: React.FC<TopMoversModalProps> = ({
@@ -214,16 +214,17 @@ export const TopMoversModal: React.FC<TopMoversModalProps> = ({
                             >
                               CHART
                             </button>
-                            <button
-                              onClick={() => {
-                                sound.playClick(1400);
-                                onSelectForInversion(`${item.symbol} Crypto Mania`);
-                              }}
-                              className="px-2 py-1 rounded bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[10px] font-mono cursor-pointer"
-                              title="Invert with Gemini AI"
-                            >
-                              INVERT
-                            </button>
+                            {onSelectForInversion && (
+                              <button
+                                onClick={() => {
+                                  sound.playClick(1400);
+                                  onSelectForInversion(`${item.symbol} Crypto Mania`);
+                                }}
+                                className="px-2 py-1 rounded bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[10px] font-mono cursor-pointer"
+                              >
+                                INVERT
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -293,16 +294,17 @@ export const TopMoversModal: React.FC<TopMoversModalProps> = ({
                             >
                               CHART
                             </button>
-                            <button
-                              onClick={() => {
-                                sound.playClick(1400);
-                                onSelectForInversion(`${item.symbol} Capitulation Dip`);
-                              }}
-                              className="px-2 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 text-[10px] font-mono cursor-pointer"
-                              title="Invert with Gemini AI"
-                            >
-                              INVERT
-                            </button>
+                            {onSelectForInversion && (
+                              <button
+                                onClick={() => {
+                                  sound.playClick(1400);
+                                  onSelectForInversion(`${item.symbol} Capitulation Dip`);
+                                }}
+                                className="px-2 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 text-[10px] font-mono cursor-pointer"
+                              >
+                                INVERT
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>

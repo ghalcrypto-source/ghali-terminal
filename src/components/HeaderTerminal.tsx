@@ -21,7 +21,8 @@ export type TerminalViewMode =
   | 'multichart'
   | 'telemetry'
   | 'narratives'
-  | 'bitcoin_cycle';
+  | 'bitcoin_cycle'
+  | 'liquidity_movers';
 
 interface HeaderTerminalProps {
   viewMode: TerminalViewMode;

@@ -113,6 +113,64 @@ class SoundEngine {
       osc.stop(t + 0.095);
     } catch (_) {}
   }
+
+  /**
+   * Sound effect: "Cekring" (authentic cash register / coin clink + resonant bell chime)
+   * Plays on price movement ($1 ticks), target price hits, and manual test.
+   */
+  public playCekring() {
+    if (!this.enabled) return;
+    try {
+      this.initCtx();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+
+      // 1. Initial "Cek" / Mechanical Coin Strike (fast dual clink)
+      const strikeFrequencies = [2400, 3100];
+      strikeFrequencies.forEach((freq, idx) => {
+        if (!this.ctx) return;
+        const strikeOsc = this.ctx.createOscillator();
+        const strikeGain = this.ctx.createGain();
+        const strikeTime = t + idx * 0.032;
+
+        strikeOsc.type = 'triangle';
+        strikeOsc.frequency.setValueAtTime(freq, strikeTime);
+        strikeOsc.frequency.exponentialRampToValueAtTime(750, strikeTime + 0.04);
+
+        strikeGain.gain.setValueAtTime(0.18, strikeTime);
+        strikeGain.gain.exponentialRampToValueAtTime(0.001, strikeTime + 0.045);
+
+        strikeOsc.connect(strikeGain);
+        strikeGain.connect(this.ctx.destination);
+
+        strikeOsc.start(strikeTime);
+        strikeOsc.stop(strikeTime + 0.05);
+      });
+
+      // 2. Resonant "Kriiing" Metallic Bell Chime Chord (E6, G#6, B6, E7, B7)
+      const bellFreqs = [1318.5, 1661.2, 1975.5, 2637.0, 3951.0];
+      bellFreqs.forEach((freq, i) => {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const ringStart = t + 0.026;
+
+        osc.type = i % 2 === 0 ? 'sine' : 'triangle';
+        const detune = (i - 2) * 3.5;
+        osc.frequency.setValueAtTime(freq + detune, ringStart);
+
+        const initialVol = 0.14 / (1 + i * 0.28);
+        gain.gain.setValueAtTime(initialVol, ringStart);
+        gain.gain.exponentialRampToValueAtTime(0.0004, ringStart + 0.85);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(ringStart);
+        osc.stop(ringStart + 0.9);
+      });
+    } catch (_) {}
+  }
 }
 
 export const sound = new SoundEngine();

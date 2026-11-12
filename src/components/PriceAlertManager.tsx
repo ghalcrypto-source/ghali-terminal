@@ -43,7 +43,7 @@ export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
       {
         id: 'alert-1',
         symbol: 'BTCUSDT',
-        targetPrice: 95000,
+        targetPrice: 72000,
         direction: 'ABOVE',
         createdAt: Date.now() - 3600000,
       },
@@ -62,7 +62,7 @@ export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
   >([]);
 
   const [selectedCoin, setSelectedCoin] = useState('BTCUSDT');
-  const [targetPriceInput, setTargetPriceInput] = useState('95000');
+  const [targetPriceInput, setTargetPriceInput] = useState('72500');
   const [direction, setDirection] = useState<'ABOVE' | 'BELOW'>('ABOVE');
 
   // Save alerts to localStorage
@@ -72,7 +72,7 @@ export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
     } catch (_) {}
   }, [alerts]);
 
-  // Simulate real-time price fluctuation and $1 movement detector
+  // Simulate real-time price fluctuation and $1 movement detector with authentic "Cekring" sound
   useEffect(() => {
     const timer = setInterval(() => {
       // Pick a random coin from 50 coins to simulate a $1+ price tick
@@ -82,7 +82,8 @@ export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
         const isUp = delta > 0;
         const msg = `${randomCoin.symbol} bergerak ${isUp ? 'NAIK' : 'TURUN'} sebesar $${Math.abs(delta).toFixed(2)} (Harga terkini: $${(randomCoin.basePriceUSD + delta).toLocaleString()})`;
         
-        sound.playDialTick();
+        // Mainkan nada cekring (cash register / coin bell chime) saat notifikasi aktif
+        sound.playCekring();
 
         setNotifications((prev) => [
           {
@@ -106,7 +107,7 @@ export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
     const price = parseFloat(targetPriceInput);
     if (isNaN(price) || price <= 0) return;
 
-    sound.playClick(1400);
+    sound.playCekring();
     const newAlert: PriceAlert = {
       id: Math.random().toString(36).substring(2, 9),
       symbol: selectedCoin,
@@ -130,27 +131,43 @@ export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1c273e] bg-[#0e1422]">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded bg-red-500/10 border border-red-500/30">
-              <BellRing className="w-4 h-4 text-red-400" />
+            <div className="p-1.5 rounded bg-amber-500/10 border border-amber-500/30">
+              <BellRing className="w-4 h-4 text-amber-400 animate-pulse" />
             </div>
             <div>
-              <h2 className="text-sm font-mono font-bold tracking-wider text-slate-100">
-                PUSAT ALERT & NOTIFIKASI PERGERAKAN $1
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-mono font-bold tracking-wider text-slate-100">
+                  PUSAT ALERT & NOTIFIKASI PERGERAKAN $1
+                </h2>
+                <span className="text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full flex items-center gap-1 font-bold">
+                  🔔 NADA CEKRING AKTIF
+                </span>
+              </div>
               <p className="text-[11px] font-mono text-slate-400">
-                Notifikasi instan setiap koin naik atau turun $1 • Target Harga Kustom • Log Real-Time
+                Notifikasi instan setiap koin naik atau turun $1 dengan efek suara cekring • Target Harga Kustom
               </p>
             </div>
           </div>
-          <button
-            onClick={() => {
-              sound.playClick();
-              onClose();
-            }}
-            className="p-1 text-slate-400 hover:text-white rounded border border-[#25324e] hover:bg-[#1a2336] cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => sound.playCekring()}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 rounded transition-colors cursor-pointer"
+              title="Klik untuk mendengarkan nada notifikasi cekring"
+            >
+              <Volume2 className="w-3.5 h-3.5 text-amber-400" />
+              <span>Tes Nada Cekring 🔔</span>
+            </button>
+            <button
+              onClick={() => {
+                sound.playClick();
+                onClose();
+              }}
+              className="p-1 text-slate-400 hover:text-white rounded border border-[#25324e] hover:bg-[#1a2336] cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Content Layout */}

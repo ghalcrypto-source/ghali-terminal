@@ -61,7 +61,7 @@ export interface ExchangeSentiment {
 // COMPREHENSIVE COMPILATION OF ALL MAJOR LISTED COINS & TOKENS ON BINANCE & BITGET (100+ COINS)
 export const CRYPTO_50_COINS: CoinInfo[] = [
   // Majors & Layer 1
-  { symbol: 'BTC', pair: 'BTCUSDT', name: 'Bitcoin', category: 'L1', basePriceUSD: 94820 },
+  { symbol: 'BTC', pair: 'BTCUSDT', name: 'Bitcoin', category: 'L1', basePriceUSD: 71315 },
   { symbol: 'ETH', pair: 'ETHUSDT', name: 'Ethereum', category: 'L1', basePriceUSD: 3410 },
   { symbol: 'SOL', pair: 'SOLUSDT', name: 'Solana', category: 'L1', basePriceUSD: 218.4 },
   { symbol: 'BNB', pair: 'BNBUSDT', name: 'BNB', category: 'L1', basePriceUSD: 662.5 },

@@ -18,6 +18,7 @@ import { LoginGate } from './components/LoginGate';
 import { TechnicalAnalysisPanel } from './components/TechnicalAnalysisPanel';
 import { WhaleIntelligenceModal } from './components/WhaleIntelligenceModal';
 import { PriceAlertManager } from './components/PriceAlertManager';
+import { CryptoLiquidityMoversPanel } from './components/CryptoLiquidityMoversPanel';
 
 import { FinishId, CameraPreset } from './types/contrarian';
 import { UserSession } from './types/news';
@@ -35,6 +36,7 @@ import {
   ChevronRight,
   Radio,
   TrendingUp,
+  Compass,
 } from 'lucide-react';
 
 export default function App() {
@@ -49,6 +51,7 @@ export default function App() {
       if (v === 'telemetry' || path.includes('telemetry')) return 'telemetry';
       if (v === 'narratives' || v === 'chatter' || path.includes('narratives') || path.includes('chatter')) return 'narratives';
       if (v === 'bitcoin_cycle' || v === 'cycle' || path.includes('cycle') || path.includes('bitcoin')) return 'bitcoin_cycle';
+      if (v === 'liquidity_movers' || v === 'liquidity' || v === 'movers' || path.includes('liquidity')) return 'liquidity_movers';
       if (v === 'multichart' || path.includes('multichart')) return 'multichart';
       if (v === 'monolith' || path.includes('monolith')) return 'monolith';
     } catch (_) {}
@@ -383,7 +386,28 @@ export default function App() {
                   <span>Bitcoin Cycle & Analysis</span>
                 </div>
                 <span className="px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 text-[10px] font-bold border border-amber-800">
-                  NEW
+                  2026
+                </span>
+              </button>
+
+              {/* Arus Likuiditas & Movers (Placed directly below Bitcoin Cycle) */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setViewMode('liquidity_movers');
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  viewMode === 'liquidity_movers'
+                    ? 'bg-gradient-to-r from-cyan-500 to-cyan-400 text-black shadow-lg shadow-cyan-500/20'
+                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Compass className="w-4 h-4 text-cyan-400" />
+                  <span>Arus Likuiditas & Movers</span>
+                </div>
+                <span className="px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 text-[10px] font-bold border border-cyan-800">
+                  TOP 5 L/S
                 </span>
               </button>
             </div>
@@ -437,7 +461,20 @@ export default function App() {
           {/* VIEW C: BITCOIN CYCLE & EXPERT ANALYSIS */}
           {viewMode === 'bitcoin_cycle' && (
             <div className="w-full h-full relative flex overflow-hidden">
-              <BitcoinCyclePanel />
+              <BitcoinCyclePanel
+                onLoadToChart={handleLoadToChart}
+                onOpenAlerts={() => setIsAlertsOpen(true)}
+              />
+            </div>
+          )}
+
+          {/* VIEW: CRYPTO LIQUIDITY FLOW, MOVERS & TOP 5 ALTCOINS LONG/SHORT */}
+          {viewMode === 'liquidity_movers' && (
+            <div className="w-full h-full relative flex flex-col overflow-y-auto p-4 sm:p-6 bg-[#060911]">
+              <CryptoLiquidityMoversPanel
+                onLoadToChart={handleLoadToChart}
+                onOpenAlerts={() => setIsAlertsOpen(true)}
+              />
             </div>
           )}
 

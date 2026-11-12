@@ -24,7 +24,28 @@ import { PartInfo } from './three/MonolithScene';
 import { sound } from './audio/soundEngine';
 
 export default function App() {
-  const [viewMode, setViewMode] = useState<TerminalViewMode>('macro_terminal');
+  const [viewMode, setViewMode] = useState<TerminalViewMode>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get('view');
+      const path = window.location.pathname.toLowerCase();
+      if (v === 'impact_matrix' || v === 'matrix' || path.includes('matrix')) return 'impact_matrix';
+      if (v === 'high_impact' || v === 'priority' || path.includes('high_impact') || path.includes('priority')) return 'high_impact';
+      if (v === 'macro_terminal' || v === 'macro' || v === 'macroview' || path.includes('macroview') || path.includes('macro')) return 'macro_terminal';
+      if (v === 'telemetry' || path.includes('telemetry')) return 'telemetry';
+      if (v === 'multichart' || path.includes('multichart')) return 'multichart';
+      if (v === 'monolith' || path.includes('monolith')) return 'monolith';
+    } catch (_) {}
+    return 'macro_terminal';
+  });
+
+  useEffect(() => {
+    try {
+      const newUrl = `${window.location.pathname}?view=${viewMode}`;
+      window.history.replaceState({}, '', newUrl);
+    } catch (_) {}
+  }, [viewMode]);
+
   const [finish, setFinish] = useState<FinishId>('obsidian-gold');
   const [exploded, setExploded] = useState(0);
   const [cameraPreset, setCameraPreset] = useState<CameraPreset>('macro');

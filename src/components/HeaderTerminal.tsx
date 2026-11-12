@@ -2,24 +2,12 @@ import React from 'react';
 import {
   Volume2,
   VolumeX,
-  Compass,
-  Radar,
-  Cpu,
-  LayoutGrid,
-  Percent,
-  Box,
-  Newspaper,
-  TrendingUp,
   User,
   LogOut,
   Sliders,
-  Crown,
   BellRing,
   Globe,
-  Activity,
-  AlertTriangle,
   Key,
-  Flame,
 } from 'lucide-react';
 import { sound } from '../audio/soundEngine';
 import { UserSession } from '../types/news';
@@ -31,7 +19,9 @@ export type TerminalViewMode =
   | 'high_impact'
   | 'monolith'
   | 'multichart'
-  | 'telemetry';
+  | 'telemetry'
+  | 'narratives'
+  | 'bitcoin_cycle';
 
 interface HeaderTerminalProps {
   viewMode: TerminalViewMode;
@@ -67,9 +57,8 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
   return (
     <header className="absolute top-0 left-0 right-0 z-20 pointer-events-none p-2 sm:p-2.5 bg-gradient-to-b from-[#06080d]/95 via-[#06080d]/85 to-transparent">
       <div className="max-w-[1780px] mx-auto flex items-center justify-between gap-2">
-        {/* Left: Branding & View Switcher */}
-        <div className="flex items-center gap-2 pointer-events-auto flex-wrap">
-          {/* Main Title Badge */}
+        {/* Left: Branding Logo Badge (View switchers are now on the left sidebar) */}
+        <div className="flex items-center gap-2 pointer-events-auto">
           <div className="flex items-center gap-2.5 bg-[#0c1220]/90 backdrop-blur-md border border-[#21304d] px-3 py-1.5 rounded shadow-lg group relative overflow-hidden">
             <div className="relative w-5 h-5 flex items-center justify-center shrink-0">
               <span className="absolute inset-0 rounded-full border border-amber-400/40 animate-spin-slow" />
@@ -86,105 +75,6 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
                 v5.0 WIB
               </span>
             </div>
-          </div>
-
-          {/* Primary Navigation View Modes */}
-          <div className="flex items-center bg-[#0c1220] border border-[#21304d] p-0.5 rounded shadow-md flex-wrap">
-            <button
-              onClick={() => {
-                sound.playClick();
-                onChangeViewMode('macro_terminal');
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-bold transition-colors cursor-pointer ${
-                viewMode === 'macro_terminal'
-                  ? 'bg-amber-500 text-black shadow'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="Pusat Monitoring Berita Global (Bloomberg Table & Grid)"
-            >
-              <Newspaper className="w-3.5 h-3.5" />
-              <span>MACRO WIRE</span>
-            </button>
-
-            <button
-              onClick={() => {
-                sound.playClick();
-                onChangeViewMode('impact_matrix');
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-bold transition-colors cursor-pointer ${
-                viewMode === 'impact_matrix'
-                  ? 'bg-amber-500 text-black shadow'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="Matrix Impact USD/DXY, BTC, XAUUSD & Forex"
-            >
-              <Activity className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">IMPACT MATRIX</span>
-              <span className="md:hidden">MATRIX</span>
-            </button>
-
-            <button
-              onClick={() => {
-                sound.playClick();
-                onChangeViewMode('high_impact');
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-bold transition-colors cursor-pointer ${
-                viewMode === 'high_impact'
-                  ? 'bg-red-500 text-white shadow'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="Priority View Berita Berdampak Tinggi Terhadap Pasar"
-            >
-              <Flame className="w-3.5 h-3.5 text-red-400" />
-              <span className="hidden lg:inline">HIGH IMPACT</span>
-            </button>
-
-            <button
-              onClick={() => {
-                sound.playClick();
-                onChangeViewMode('telemetry');
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-bold transition-colors cursor-pointer ${
-                viewMode === 'telemetry'
-                  ? 'bg-amber-500 text-black shadow'
-                  : 'text-[#38bdf8] hover:text-cyan-200'
-              }`}
-              title="Real-time Telemetry dari 8 Public API (Binance, Kraken, Coinbase, DEX Screener, DeFiLlama, mempool.space, Fear & Greed, GDELT)"
-            >
-              <Radar className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="hidden sm:inline">8-API TELEMETRY</span>
-              <span className="sm:hidden">TELEMETRY</span>
-            </button>
-
-            <button
-              onClick={() => {
-                sound.playClick();
-                onChangeViewMode('multichart');
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-bold transition-colors cursor-pointer ${
-                viewMode === 'multichart'
-                  ? 'bg-amber-500 text-black shadow'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">MULTICHART</span>
-            </button>
-
-            <button
-              onClick={() => {
-                sound.playClick();
-                onChangeViewMode('monolith');
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-bold transition-colors cursor-pointer ${
-                viewMode === 'monolith'
-                  ? 'bg-amber-500 text-black shadow'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Box className="w-3.5 h-3.5" />
-              <span className="hidden xl:inline">3D MONOLITH</span>
-            </button>
           </div>
         </div>
 

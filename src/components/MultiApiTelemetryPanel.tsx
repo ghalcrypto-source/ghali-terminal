@@ -3,22 +3,14 @@ import {
   Activity,
   RefreshCw,
   Gauge,
-  Flame,
-  Globe,
-  Database,
   Layers,
   Cpu,
-  ArrowUpRight,
-  ArrowDownRight,
   ExternalLink,
-  ShieldCheck,
-  TrendingUp,
-  Zap,
-  Compass,
   Radar,
-  Radio,
+  Zap,
 } from 'lucide-react';
 import { sound } from '../audio/soundEngine';
+import { TradingViewMiniChart, TradingViewTechnicalGauge } from './TradingViewWidgets';
 
 export const MultiApiTelemetryPanel: React.FC = () => {
   const [telemetry, setTelemetry] = useState<any>(null);
@@ -55,6 +47,15 @@ export const MultiApiTelemetryPanel: React.FC = () => {
   const dexs = telemetry?.dexScreener?.topPairs || [];
   const wibTime = telemetry?.wibTimestamp || '';
 
+  // Extract precise live prices from Binance spot array
+  const btcSpot = binance.find((b: any) => b.symbol === 'BTCUSDT');
+  const ethSpot = binance.find((b: any) => b.symbol === 'ETHUSDT');
+  const solSpot = binance.find((b: any) => b.symbol === 'SOLUSDT');
+
+  const btcPrice = btcSpot ? parseFloat(btcSpot.lastPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '95,420.00';
+  const ethPrice = ethSpot ? parseFloat(ethSpot.lastPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '3,410.50';
+  const solPrice = solSpot ? parseFloat(solSpot.lastPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '218.40';
+
   return (
     <div className="w-full h-full bg-[#06080d] p-4 sm:p-6 overflow-y-auto space-y-6 font-sans text-slate-100">
       {/* Dynamic Background Ambient Motion Rays */}
@@ -70,26 +71,23 @@ export const MultiApiTelemetryPanel: React.FC = () => {
           <div className="flex items-center gap-4">
             {/* Dual Counter-Rotating Orbital Telemetry Compass */}
             <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
-              {/* Outer clockwise ring */}
               <svg className="absolute inset-0 w-full h-full animate-spin-slow text-amber-500/40" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="6 8" />
               </svg>
-              {/* Inner counter-clockwise ring */}
               <svg className="absolute inset-1 w-10 h-10 animate-spin-reverse text-cyan-400/50" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="12 6" />
               </svg>
-              {/* Center Radar Icon */}
               <Radar className="w-5 h-5 text-amber-400 relative z-10 animate-pulse" />
             </div>
 
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
                 <h1 className="text-base sm:text-lg font-mono font-extrabold tracking-wider text-white flex items-center gap-2">
-                  <span>ON-CHAIN & MULTI-EXCHANGE API TELEMETRY</span>
+                  <span>8-API TELEMETRY & TRADINGVIEW INTEGRATION</span>
                 </h1>
                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 uppercase font-bold tracking-wide flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  8 LIVE PUBLIC APIs CONNECTED
+                  LIVE TRADINGVIEW & 8 PUBLIC APIs
                 </span>
               </div>
               <p className="text-xs font-mono text-slate-400 mt-0.5">
@@ -112,15 +110,15 @@ export const MultiApiTelemetryPanel: React.FC = () => {
               className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black border border-amber-400/50 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold transition-all transform hover:scale-105 shadow-lg shadow-amber-500/10 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-black ${loading ? 'animate-spin' : ''}`} />
-              <span>SYNC 8 APIs</span>
+              <span>SYNC LIVE DATA</span>
             </button>
           </div>
         </div>
 
-        {/* Top 3 High Priority Telemetry Cards with Rotational Dial Graphics */}
+        {/* Top 3 High Priority Telemetry Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Card 1: Fear & Greed Index with Rotating Circular Radial Dial */}
-          <div className="bg-[#080c15] border border-[#1d2b45] hover:border-amber-500/50 rounded-xl p-5 space-y-4 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(245,158,11,0.12)] relative overflow-hidden group">
+          {/* Card 1: Fear & Greed Index */}
+          <div className="bg-[#080c15] border border-[#1d2b45] hover:border-amber-500/50 rounded-xl p-5 space-y-4 shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono font-bold text-amber-300 flex items-center gap-2">
                 <Gauge className="w-4 h-4 text-amber-400" />
@@ -142,14 +140,10 @@ export const MultiApiTelemetryPanel: React.FC = () => {
                 </p>
               </div>
 
-              {/* Rotating Radial Gauge Circle SVG */}
               <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
-                {/* Rotating Outer Gauge Dash Circle */}
                 <svg className="absolute inset-0 w-full h-full animate-spin-slow text-amber-500/30" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 6" />
                 </svg>
-
-                {/* Gauge Progress Bar Circle */}
                 <svg className="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="38" fill="none" stroke="#121b2d" strokeWidth="8" />
                   <circle
@@ -162,7 +156,6 @@ export const MultiApiTelemetryPanel: React.FC = () => {
                     strokeDasharray="238.7"
                     strokeDashoffset={238.7 - (238.7 * fngVal) / 100}
                     strokeLinecap="round"
-                    className="transition-all duration-1000 ease-out"
                   />
                 </svg>
                 <div className="absolute font-mono font-bold text-xs text-white">
@@ -172,13 +165,13 @@ export const MultiApiTelemetryPanel: React.FC = () => {
             </div>
 
             <div className="pt-3 border-t border-[#17233a] text-[10px] font-mono text-slate-400 flex items-center justify-between">
-              <span>Status Psikologi Tradings:</span>
+              <span>Status Psikologi:</span>
               <span className="text-emerald-400 font-bold">STABLE FEED</span>
             </div>
           </div>
 
-          {/* Card 2: mempool.space Bitcoin Network Fees with Rotating Gear Node */}
-          <div className="bg-[#080c15] border border-[#1d2b45] hover:border-orange-500/50 rounded-xl p-5 space-y-4 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(249,115,22,0.12)] relative overflow-hidden group">
+          {/* Card 2: mempool.space */}
+          <div className="bg-[#080c15] border border-[#1d2b45] hover:border-orange-500/50 rounded-xl p-5 space-y-4 shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono font-bold text-orange-400 flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-orange-400" />
@@ -188,22 +181,22 @@ export const MultiApiTelemetryPanel: React.FC = () => {
                 href="https://mempool.space"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[10px] font-mono text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1 bg-[#0d1627] px-2 py-0.5 rounded border border-[#1e2d4a]"
+                className="text-[10px] font-mono text-blue-400 hover:underline inline-flex items-center gap-1 bg-[#0d1627] px-2 py-0.5 rounded border border-[#1e2d4a]"
               >
                 mempool.space <ExternalLink className="w-3 h-3" />
               </a>
             </div>
 
             <div className="grid grid-cols-3 gap-2 text-center font-mono">
-              <div className="p-2.5 bg-[#0d1424] rounded-lg border border-[#1c2a44] transition-all hover:border-orange-500/40">
+              <div className="p-2.5 bg-[#0d1424] rounded-lg border border-[#1c2a44]">
                 <span className="text-[9px] text-slate-500 uppercase block font-semibold">Fastest Fee</span>
                 <span className="text-base font-extrabold text-orange-400">{mempool?.fees?.fastestFee || 12} <span className="text-[10px] font-normal text-slate-400">sat/vB</span></span>
               </div>
-              <div className="p-2.5 bg-[#0d1424] rounded-lg border border-[#1c2a44] transition-all hover:border-amber-500/40">
+              <div className="p-2.5 bg-[#0d1424] rounded-lg border border-[#1c2a44]">
                 <span className="text-[9px] text-slate-500 uppercase block font-semibold">Half Hour</span>
                 <span className="text-base font-extrabold text-amber-300">{mempool?.fees?.halfHourFee || 10} <span className="text-[10px] font-normal text-slate-400">sat/vB</span></span>
               </div>
-              <div className="p-2.5 bg-[#0d1424] rounded-lg border border-[#1c2a44] transition-all hover:border-slate-500/40">
+              <div className="p-2.5 bg-[#0d1424] rounded-lg border border-[#1c2a44]">
                 <span className="text-[9px] text-slate-500 uppercase block font-semibold">Minimum</span>
                 <span className="text-base font-extrabold text-slate-300">{mempool?.fees?.minimumFee || 5} <span className="text-[10px] font-normal text-slate-400">sat/vB</span></span>
               </div>
@@ -218,8 +211,8 @@ export const MultiApiTelemetryPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 3: DeFiLlama TVL with Rotating Orbital Atom */}
-          <div className="bg-[#080c15] border border-[#1d2b45] hover:border-cyan-500/50 rounded-xl p-5 space-y-4 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(6,182,212,0.12)] relative overflow-hidden group">
+          {/* Card 3: DeFiLlama TVL */}
+          <div className="bg-[#080c15] border border-[#1d2b45] hover:border-cyan-500/50 rounded-xl p-5 space-y-4 shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono font-bold text-cyan-300 flex items-center gap-2">
                 <Layers className="w-4 h-4 text-cyan-400" />
@@ -229,7 +222,7 @@ export const MultiApiTelemetryPanel: React.FC = () => {
                 href="https://defillama.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[10px] font-mono text-cyan-400 hover:text-cyan-300 hover:underline inline-flex items-center gap-1 bg-[#0d1627] px-2 py-0.5 rounded border border-[#1e2d4a]"
+                className="text-[10px] font-mono text-cyan-400 hover:underline inline-flex items-center gap-1 bg-[#0d1627] px-2 py-0.5 rounded border border-[#1e2d4a]"
               >
                 defillama.com <ExternalLink className="w-3 h-3" />
               </a>
@@ -240,12 +233,11 @@ export const MultiApiTelemetryPanel: React.FC = () => {
                 <span className="text-3xl sm:text-4xl font-mono font-black text-white tracking-tight">
                   {llama?.totalTvl ? `$${(llama.totalTvl / 1e9).toFixed(2)}B` : '$77.65B'}
                 </span>
-                <p className="text-[11px] font-mono text-slate-400 max-w-xs">
-                  Total Value Locked across Ethereum, Solana, Arbitrum, BSC & Tron.
+                <p className="text-[11px] font-mono text-slate-400">
+                  Total Value Locked across all major networks.
                 </p>
               </div>
 
-              {/* Rotating Cyan Atom Sphere Visual */}
               <div className="relative w-16 h-16 shrink-0 flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full border border-cyan-400/40 animate-spin-slow" />
                 <div className="absolute inset-2 rounded-full border border-cyan-300/30 animate-spin-reverse" />
@@ -260,7 +252,43 @@ export const MultiApiTelemetryPanel: React.FC = () => {
           </div>
         </div>
 
-        {/* Grid 2: Cross-Exchange Arbitrage & Prices (Binance, Kraken, Coinbase) */}
+        {/* INTEGRATED TRADINGVIEW MINI CHARTS & TECHNICAL GAUGES SECTION */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="bg-[#080c14] border border-[#1d2b45] rounded-xl p-4 space-y-3 shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#18243b] pb-2 font-mono text-xs">
+              <span className="font-bold text-amber-300 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                TradingView Live Chart: BTC/USDT
+              </span>
+              <span className="text-emerald-400 font-extrabold">${btcPrice}</span>
+            </div>
+            <TradingViewMiniChart symbol="BINANCE:BTCUSDT" height={240} />
+          </div>
+
+          <div className="bg-[#080c14] border border-[#1d2b45] rounded-xl p-4 space-y-3 shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#18243b] pb-2 font-mono text-xs">
+              <span className="font-bold text-purple-300 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-purple-400" />
+                TradingView Live Chart: ETH/USDT
+              </span>
+              <span className="text-emerald-400 font-extrabold">${ethPrice}</span>
+            </div>
+            <TradingViewMiniChart symbol="BINANCE:ETHUSDT" height={240} />
+          </div>
+
+          <div className="bg-[#080c14] border border-[#1d2b45] rounded-xl p-4 space-y-3 shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#18243b] pb-2 font-mono text-xs">
+              <span className="font-bold text-cyan-300 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                TradingView Technical Gauge: BTC
+              </span>
+              <span className="text-amber-400 font-bold">1H / 4H</span>
+            </div>
+            <TradingViewTechnicalGauge symbol="BINANCE:BTCUSDT" />
+          </div>
+        </div>
+
+        {/* Cross-Exchange Spot Price Arbitrage Table (Binance vs Kraken vs Coinbase) */}
         <div className="bg-[#080c14] border border-[#1d2b45] rounded-xl p-5 space-y-4 shadow-xl">
           <div className="flex items-center justify-between border-b border-[#18243b] pb-3">
             <div className="flex items-center gap-2.5">
@@ -270,7 +298,7 @@ export const MultiApiTelemetryPanel: React.FC = () => {
                 CROSS-EXCHANGE SPOT PRICE ARBITRAGE (BINANCE vs KRAKEN vs COINBASE)
               </h2>
             </div>
-            <span className="text-xs font-mono text-slate-400 hidden sm:inline">Live Ticker Comparison</span>
+            <span className="text-xs font-mono text-slate-400 hidden sm:inline">Live TradingView & Exchange Ticker Feed</span>
           </div>
 
           <div className="overflow-x-auto">
@@ -293,13 +321,13 @@ export const MultiApiTelemetryPanel: React.FC = () => {
                     BTC / USD(T)
                   </td>
                   <td className="py-3.5 px-4 font-extrabold text-white">
-                    ${binance.find((b: any) => b.symbol === 'BTCUSDT')?.lastPrice ? parseFloat(binance.find((b: any) => b.symbol === 'BTCUSDT').lastPrice).toLocaleString() : '95,420'}
+                    ${btcPrice}
                   </td>
                   <td className="py-3.5 px-4 text-slate-200">
-                    ${kraken?.btc?.price ? kraken.btc.price.toLocaleString() : '95,418'}
+                    ${kraken?.btc?.price ? kraken.btc.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : btcPrice}
                   </td>
                   <td className="py-3.5 px-4 text-slate-200">
-                    ${coinbase?.btc ? parseFloat(coinbase.btc).toLocaleString() : '95,422'}
+                    ${coinbase?.btc ? parseFloat(coinbase.btc).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : btcPrice}
                   </td>
                   <td className="py-3.5 px-4 text-emerald-400 font-bold">
                     $4.00 (0.004% Spread)
@@ -316,13 +344,13 @@ export const MultiApiTelemetryPanel: React.FC = () => {
                     ETH / USD(T)
                   </td>
                   <td className="py-3.5 px-4 font-extrabold text-white">
-                    ${binance.find((b: any) => b.symbol === 'ETHUSDT')?.lastPrice ? parseFloat(binance.find((b: any) => b.symbol === 'ETHUSDT').lastPrice).toLocaleString() : '3,410'}
+                    ${ethPrice}
                   </td>
                   <td className="py-3.5 px-4 text-slate-200">
-                    ${kraken?.eth?.price ? kraken.eth.price.toLocaleString() : '3,409'}
+                    ${kraken?.eth?.price ? kraken.eth.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ethPrice}
                   </td>
                   <td className="py-3.5 px-4 text-slate-200">
-                    ${coinbase?.eth ? parseFloat(coinbase.eth).toLocaleString() : '3,411'}
+                    ${coinbase?.eth ? parseFloat(coinbase.eth).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ethPrice}
                   </td>
                   <td className="py-3.5 px-4 text-emerald-400 font-bold">
                     $2.00 (0.05% Spread)
@@ -339,13 +367,13 @@ export const MultiApiTelemetryPanel: React.FC = () => {
                     SOL / USD(T)
                   </td>
                   <td className="py-3.5 px-4 font-extrabold text-white">
-                    ${binance.find((b: any) => b.symbol === 'SOLUSDT')?.lastPrice ? parseFloat(binance.find((b: any) => b.symbol === 'SOLUSDT').lastPrice).toLocaleString() : '218.40'}
+                    ${solPrice}
                   </td>
                   <td className="py-3.5 px-4 text-slate-200">
-                    ${kraken?.sol?.price ? kraken.sol.price.toLocaleString() : '218.35'}
+                    ${kraken?.sol?.price ? kraken.sol.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : solPrice}
                   </td>
                   <td className="py-3.5 px-4 text-slate-200">
-                    ${coinbase?.sol ? parseFloat(coinbase.sol).toLocaleString() : '218.45'}
+                    ${coinbase?.sol ? parseFloat(coinbase.sol).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : solPrice}
                   </td>
                   <td className="py-3.5 px-4 text-emerald-400 font-bold">
                     $0.10 (0.04% Spread)
@@ -361,7 +389,6 @@ export const MultiApiTelemetryPanel: React.FC = () => {
 
         {/* Grid 3: DEX Screener Trending Pairs & DeFiLlama Chain TVLs */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left 7 Cols: DEX Screener Pools */}
           <div className="lg:col-span-7 bg-[#080c14] border border-[#1d2b45] rounded-xl p-5 space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-[#18243b] pb-3">
               <span className="text-xs font-mono font-bold text-amber-300 flex items-center gap-2">
@@ -372,7 +399,7 @@ export const MultiApiTelemetryPanel: React.FC = () => {
                 href="https://dexscreener.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[10px] font-mono text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1 bg-[#0d1627] px-2 py-0.5 rounded border border-[#1e2d4a]"
+                className="text-[10px] font-mono text-blue-400 hover:underline inline-flex items-center gap-1 bg-[#0d1627] px-2 py-0.5 rounded border border-[#1e2d4a]"
               >
                 dexscreener.com <ExternalLink className="w-3 h-3" />
               </a>
@@ -409,7 +436,6 @@ export const MultiApiTelemetryPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Right 5 Cols: DeFiLlama Chain TVL Ranking */}
           <div className="lg:col-span-5 bg-[#080c14] border border-[#1d2b45] rounded-xl p-5 space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-[#18243b] pb-3">
               <span className="text-xs font-mono font-bold text-cyan-300 flex items-center gap-2">
@@ -445,4 +471,3 @@ export const MultiApiTelemetryPanel: React.FC = () => {
     </div>
   );
 };
-

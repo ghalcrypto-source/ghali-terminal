@@ -8,6 +8,8 @@ import { AINewsAnalysisDrawer } from './components/AINewsAnalysisDrawer';
 import { MacroImpactMatrix } from './components/MacroImpactMatrix';
 import { ApiKeysConfigModal } from './components/ApiKeysConfigModal';
 import { MultiApiTelemetryPanel } from './components/MultiApiTelemetryPanel';
+import { CryptoNarrativeStream } from './components/CryptoNarrativeStream';
+import { BitcoinCyclePanel } from './components/BitcoinCyclePanel';
 import { RadarModal } from './components/RadarModal';
 import { ExchangeContrarianPanel } from './components/ExchangeContrarianPanel';
 import { TopMoversModal } from './components/TopMoversModal';
@@ -22,6 +24,18 @@ import { UserSession } from './types/news';
 import { MacroNewsItem, ApiKeysConfig } from './types/macroNews';
 import { PartInfo } from './three/MonolithScene';
 import { sound } from './audio/soundEngine';
+import {
+  Newspaper,
+  Activity,
+  Flame,
+  Radar,
+  LayoutGrid,
+  Box,
+  Crown,
+  ChevronRight,
+  Radio,
+  TrendingUp,
+} from 'lucide-react';
 
 export default function App() {
   const [viewMode, setViewMode] = useState<TerminalViewMode>(() => {
@@ -33,6 +47,8 @@ export default function App() {
       if (v === 'high_impact' || v === 'priority' || path.includes('high_impact') || path.includes('priority')) return 'high_impact';
       if (v === 'macro_terminal' || v === 'macro' || v === 'macroview' || path.includes('macroview') || path.includes('macro')) return 'macro_terminal';
       if (v === 'telemetry' || path.includes('telemetry')) return 'telemetry';
+      if (v === 'narratives' || v === 'chatter' || path.includes('narratives') || path.includes('chatter')) return 'narratives';
+      if (v === 'bitcoin_cycle' || v === 'cycle' || path.includes('cycle') || path.includes('bitcoin')) return 'bitcoin_cycle';
       if (v === 'multichart' || path.includes('multichart')) return 'multichart';
       if (v === 'monolith' || path.includes('monolith')) return 'monolith';
     } catch (_) {}
@@ -72,7 +88,7 @@ export default function App() {
     }
   });
 
-  // User authentication session state - defaults to requiring Google login on entry
+  // User authentication session state
   const [session, setSession] = useState<UserSession>(() => {
     return {
       isLoggedIn: false, // Mandatory login gate
@@ -181,7 +197,7 @@ export default function App() {
 
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-[#06080d] font-sans flex flex-col">
-      {/* 1. Header Bar with View Switchers & Ticker */}
+      {/* 1. Header Bar with Ticker & Top Controls */}
       <HeaderTerminal
         viewMode={viewMode}
         onChangeViewMode={setViewMode}
@@ -198,94 +214,307 @@ export default function App() {
         onToggleSound={toggleSound}
       />
 
-      {/* 2. Main Viewport Area */}
-      <div className="flex-1 w-full h-full pt-14 relative overflow-hidden">
-        {/* VIEW A: GLOBAL MACRO NEWS WIRE TERMINAL */}
-        {viewMode === 'macro_terminal' && (
-          <div className="w-full h-full relative flex overflow-hidden">
-            <MacroNewsTable
-              news={macroNews}
-              loading={newsLoading}
-              onRefresh={fetchMacroNews}
-              onSelectForAI={handleSelectNewsForAI}
-              wibNow={wibNow}
-            />
-          </div>
-        )}
+      {/* 2. Main Workspace Layout with Left Sidebar Menu */}
+      <div className="flex-1 w-full h-full pt-14 relative flex overflow-hidden">
+        {/* ============================================================ */}
+        {/* LEFT SIDEBAR NAVIGATION MENU                                 */}
+        {/* ============================================================ */}
+        <aside className="w-64 shrink-0 bg-[#080b12] border-r border-[#1a253a] flex flex-col justify-between p-3.5 overflow-y-auto hidden lg:flex text-xs font-mono z-10">
+          <div className="space-y-6">
+            <div className="px-2 pt-1 pb-2 border-b border-[#18243b]">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-extrabold block">
+                NAVIGASI UTAMA
+              </span>
+              <span className="text-xs font-bold text-amber-300">MODUL INTELLIGENCE</span>
+            </div>
 
-        {/* VIEW B: GLOBAL MACRO IMPACT MATRIX */}
-        {viewMode === 'impact_matrix' && (
-          <div className="w-full h-full relative flex overflow-hidden">
-            <MacroImpactMatrix
-              news={macroNews}
-              onSelectNews={handleSelectNewsForAI}
-            />
-          </div>
-        )}
+            <div className="space-y-1.5">
+              {/* Macro Wire / MacroView */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setViewMode('macro_terminal');
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  viewMode === 'macro_terminal'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
+                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Newspaper className="w-4 h-4" />
+                  <span>Macro Wire (MacroView)</span>
+                </div>
+                <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'macro_terminal' ? 'text-black' : 'text-slate-500'}`} />
+              </button>
 
-        {/* VIEW C: HIGH IMPACT PRIORITY VIEW */}
-        {viewMode === 'high_impact' && (
-          <div className="w-full h-full relative flex overflow-hidden">
-            <MacroNewsTable
-              news={macroNews.filter((n) => n.impactLevel === 'HIGH')}
-              loading={newsLoading}
-              onRefresh={fetchMacroNews}
-              onSelectForAI={handleSelectNewsForAI}
-              wibNow={wibNow}
-            />
-          </div>
-        )}
+              {/* 24/7 Crypto Narratives */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setViewMode('narratives');
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  viewMode === 'narratives'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
+                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Radio className="w-4 h-4 text-amber-400 animate-pulse" />
+                  <span>24/7 Crypto Narratives</span>
+                </div>
+                <span className="px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 text-[10px] font-bold border border-amber-800">
+                  LIVE
+                </span>
+              </button>
 
-        {/* VIEW D: MULTICHART GRID */}
-        {viewMode === 'multichart' && (
-          <div className="w-full h-full relative flex">
-            <MultiChartGrid
-              externalSymbol={chartTargetSymbol}
-              onOpenTA={(sym) => {
-                setChartTargetSymbol(sym);
-                setIsTAOpen(true);
+              {/* Impact Matrix */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setViewMode('impact_matrix');
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  viewMode === 'impact_matrix'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
+                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Activity className="w-4 h-4" />
+                  <span>Impact Matrix</span>
+                </div>
+                <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'impact_matrix' ? 'text-black' : 'text-slate-500'}`} />
+              </button>
+
+              {/* High Impact */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setViewMode('high_impact');
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  viewMode === 'high_impact'
+                    ? 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg shadow-red-500/20'
+                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Flame className="w-4 h-4 text-amber-300" />
+                  <span>High Impact Priority</span>
+                </div>
+                <span className="px-1.5 py-0.2 rounded bg-red-950 text-red-300 text-[10px] font-bold border border-red-800">
+                  HOT
+                </span>
+              </button>
+
+              {/* 8-API Telemetry */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setViewMode('telemetry');
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  viewMode === 'telemetry'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
+                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Radar className="w-4 h-4 text-cyan-400" />
+                  <span>8-API Telemetry</span>
+                </div>
+                <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'telemetry' ? 'text-black' : 'text-slate-500'}`} />
+              </button>
+
+              {/* Multichart */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setViewMode('multichart');
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  viewMode === 'multichart'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
+                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <LayoutGrid className="w-4 h-4 text-blue-400" />
+                  <span>Multichart Grid</span>
+                </div>
+                <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'multichart' ? 'text-black' : 'text-slate-500'}`} />
+              </button>
+
+              {/* 3D Monolith */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setViewMode('monolith');
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  viewMode === 'monolith'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
+                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Box className="w-4 h-4 text-emerald-400" />
+                  <span>3D Monolith Sentiment</span>
+                </div>
+                <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'monolith' ? 'text-black' : 'text-slate-500'}`} />
+              </button>
+
+              {/* Bitcoin Cycle & Expert Analysis (Placed directly below 3D Monolith) */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setViewMode('bitcoin_cycle');
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  viewMode === 'bitcoin_cycle'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
+                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <TrendingUp className="w-4 h-4 text-amber-400" />
+                  <span>Bitcoin Cycle & Analysis</span>
+                </div>
+                <span className="px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 text-[10px] font-bold border border-amber-800">
+                  NEW
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Pro Access Badge Card */}
+          <div className="p-3.5 bg-gradient-to-b from-[#0f1728] to-[#0a0f1b] border border-amber-500/30 rounded-xl space-y-2 mt-4 shadow-lg">
+            <div className="flex items-center gap-2 text-amber-300 font-bold text-xs">
+              <Crown className="w-4 h-4 text-amber-400 fill-amber-400/20" />
+              <span>Pro Access Desk</span>
+            </div>
+            <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
+              Institutional real-time liquidity feeds & AI contrarian alpha.
+            </p>
+            <button
+              onClick={() => {
+                sound.playClick(1400);
+                setIsApiKeysOpen(true);
               }}
-            />
+              className="w-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black font-extrabold text-xs py-1.5 rounded-lg transition-all shadow-md cursor-pointer"
+            >
+              Configure API Keys →
+            </button>
           </div>
-        )}
+        </aside>
 
-        {/* VIEW E: ON-CHAIN & MULTI-EXCHANGE 8-API TELEMETRY PANEL */}
-        {viewMode === 'telemetry' && (
-          <div className="w-full h-full relative flex overflow-hidden">
-            <MultiApiTelemetryPanel />
-          </div>
-        )}
+        {/* ============================================================ */}
+        {/* RIGHT CONTENT AREA                                           */}
+        {/* ============================================================ */}
+        <div className="flex-1 w-full h-full relative overflow-hidden flex">
+          {/* VIEW A: GLOBAL MACRO NEWS WIRE TERMINAL */}
+          {viewMode === 'macro_terminal' && (
+            <div className="w-full h-full relative flex overflow-hidden">
+              <MacroNewsTable
+                news={macroNews}
+                loading={newsLoading}
+                onRefresh={fetchMacroNews}
+                onSelectForAI={handleSelectNewsForAI}
+                wibNow={wibNow}
+              />
+            </div>
+          )}
 
-        {/* VIEW F: 3D SENTIMENT MONOLITH */}
-        {viewMode === 'monolith' && (
-          <div className="w-full h-full relative">
-            <ThreeCanvas
-              finish={finish}
-              exploded={exploded}
-              cameraPreset={cameraPreset}
-              autoRotate={autoRotate}
-              rotationSpeed={rotationSpeed}
-              onPartHover={setHoveredPart}
-              onPartSelect={handlePartSelect}
-            />
-            <BottomControlDock
-              finish={finish}
-              onSelectFinish={setFinish}
-              exploded={exploded}
-              onChangeExploded={setExploded}
-              cameraPreset={cameraPreset}
-              onSelectCamera={setCameraPreset}
-              autoRotate={autoRotate}
-              onToggleRotate={() => setAutoRotate((prev) => !prev)}
-              rotationSpeed={rotationSpeed}
-              onChangeSpeed={setRotationSpeed}
-              hoveredPart={hoveredPart}
-            />
-          </div>
-        )}
+          {/* VIEW B: 24/7 CRYPTO NARRATIVES STREAM */}
+          {viewMode === 'narratives' && (
+            <div className="w-full h-full relative flex overflow-hidden">
+              <CryptoNarrativeStream />
+            </div>
+          )}
+
+          {/* VIEW C: BITCOIN CYCLE & EXPERT ANALYSIS */}
+          {viewMode === 'bitcoin_cycle' && (
+            <div className="w-full h-full relative flex overflow-hidden">
+              <BitcoinCyclePanel />
+            </div>
+          )}
+
+          {/* VIEW D: GLOBAL MACRO IMPACT MATRIX */}
+          {viewMode === 'impact_matrix' && (
+            <div className="w-full h-full relative flex overflow-hidden">
+              <MacroImpactMatrix
+                news={macroNews}
+                onSelectNews={handleSelectNewsForAI}
+              />
+            </div>
+          )}
+
+          {/* VIEW E: HIGH IMPACT PRIORITY VIEW */}
+          {viewMode === 'high_impact' && (
+            <div className="w-full h-full relative flex overflow-hidden">
+              <MacroNewsTable
+                news={macroNews.filter((n) => n.impactLevel === 'HIGH')}
+                loading={newsLoading}
+                onRefresh={fetchMacroNews}
+                onSelectForAI={handleSelectNewsForAI}
+                wibNow={wibNow}
+              />
+            </div>
+          )}
+
+          {/* VIEW F: MULTICHART GRID */}
+          {viewMode === 'multichart' && (
+            <div className="w-full h-full relative flex">
+              <MultiChartGrid
+                externalSymbol={chartTargetSymbol}
+                onOpenTA={(sym) => {
+                  setChartTargetSymbol(sym);
+                  setIsTAOpen(true);
+                }}
+              />
+            </div>
+          )}
+
+          {/* VIEW G: ON-CHAIN & MULTI-EXCHANGE 8-API TELEMETRY PANEL */}
+          {viewMode === 'telemetry' && (
+            <div className="w-full h-full relative flex overflow-hidden">
+              <MultiApiTelemetryPanel />
+            </div>
+          )}
+
+          {/* VIEW H: 3D SENTIMENT MONOLITH */}
+          {viewMode === 'monolith' && (
+            <div className="w-full h-full relative w-full h-full">
+              <ThreeCanvas
+                finish={finish}
+                exploded={exploded}
+                cameraPreset={cameraPreset}
+                autoRotate={autoRotate}
+                rotationSpeed={rotationSpeed}
+                onPartHover={setHoveredPart}
+                onPartSelect={handlePartSelect}
+              />
+              <BottomControlDock
+                finish={finish}
+                onSelectFinish={setFinish}
+                exploded={exploded}
+                onChangeExploded={setExploded}
+                cameraPreset={cameraPreset}
+                onSelectCamera={setCameraPreset}
+                autoRotate={autoRotate}
+                onToggleRotate={() => setAutoRotate((prev) => !prev)}
+                rotationSpeed={rotationSpeed}
+                onChangeSpeed={setRotationSpeed}
+                hoveredPart={hoveredPart}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* 3. AI News Analysis Drawer (Institutional Macro Intelligence) */}
+      {/* 3. AI News Analysis Drawer */}
       <AINewsAnalysisDrawer
         isOpen={isAIDrawerOpen}
         onClose={() => setIsAIDrawerOpen(false)}
@@ -343,7 +572,7 @@ export default function App() {
         onLoadToChart={handleLoadToChart}
       />
 
-      {/* 12. Price Alert Manager */}
+      {/* 11. Price Alert Manager */}
       <PriceAlertManager
         isOpen={isAlertsOpen}
         onClose={() => setIsAlertsOpen(false)}

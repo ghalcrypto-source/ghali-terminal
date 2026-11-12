@@ -23,7 +23,7 @@ import { CryptoLiquidityMoversPanel } from './components/CryptoLiquidityMoversPa
 import { FinishId, CameraPreset } from './types/contrarian';
 import { UserSession } from './types/news';
 import { MacroNewsItem, ApiKeysConfig } from './types/macroNews';
-import { PartInfo } from './three/MonolithScene';
+import { PartInfo, Altcoin5mMetric } from './three/MonolithScene';
 import { sound } from './audio/soundEngine';
 import {
   Newspaper,
@@ -54,7 +54,7 @@ export default function App() {
       if (v === 'multichart' || path.includes('multichart')) return 'multichart';
       if (v === 'monolith' || path.includes('monolith')) return 'monolith';
     } catch (_) {}
-    return 'macro_terminal';
+    return 'monolith';
   });
 
   useEffect(() => {
@@ -140,6 +140,32 @@ export default function App() {
     }
   }, [session.isLoggedIn, apiConfig]);
 
+  // Live 5-Minute (+/-) telemetry for Bitcoin Core & 10 Orbiting Altcoins
+  const [altcoin5mMetrics, setAltcoin5mMetrics] = useState<Record<string, Altcoin5mMetric>>({});
+
+  useEffect(() => {
+    if (!session.isLoggedIn) return;
+    let active = true;
+
+    const fetchAltcoins5m = async () => {
+      try {
+        const res = await fetch('/api/crypto/altcoins-5m');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (active && data?.success && data?.metrics) {
+          setAltcoin5mMetrics(data.metrics);
+        }
+      } catch (_) {}
+    };
+
+    fetchAltcoins5m();
+    const timer = setInterval(fetchAltcoins5m, 15000); // 15s live 5M refresh
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [session.isLoggedIn]);
+
   const toggleSound = () => {
     const next = !soundEnabled;
     setSoundEnabled(next);
@@ -217,7 +243,37 @@ export default function App() {
       />
 
       {/* 2. Main Workspace Layout with Left Sidebar Menu */}
-      <div className="flex-1 w-full h-full pt-14 relative flex overflow-hidden">
+      <div className="flex-1 min-h-0 w-full relative flex flex-col lg:flex-row overflow-hidden">
+        {/* Mobile Top Quick Navigation Bar (< lg) */}
+        <div className="lg:hidden w-full bg-[#080b12] border-b border-[#1a253a] px-3 py-2 flex items-center gap-1.5 overflow-x-auto shrink-0 text-[11px] font-mono z-10">
+          {[
+            { id: 'monolith' as TerminalViewMode, label: '3D Monolith BTC' },
+            { id: 'bitcoin_cycle' as TerminalViewMode, label: 'Bitcoin Cycle' },
+            { id: 'liquidity_movers' as TerminalViewMode, label: 'Arus Likuiditas' },
+            { id: 'macro_terminal' as TerminalViewMode, label: 'Macro Wire' },
+            { id: 'narratives' as TerminalViewMode, label: 'Narratives' },
+            { id: 'impact_matrix' as TerminalViewMode, label: 'Impact Matrix' },
+            { id: 'high_impact' as TerminalViewMode, label: 'High Impact' },
+            { id: 'telemetry' as TerminalViewMode, label: '8-API' },
+            { id: 'multichart' as TerminalViewMode, label: 'Multichart' },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => {
+                sound.playClick();
+                setViewMode(item.id);
+              }}
+              className={`px-2.5 py-1 rounded-lg font-bold whitespace-nowrap cursor-pointer transition-colors ${
+                viewMode === item.id
+                  ? 'bg-amber-500 text-black'
+                  : 'bg-[#101726] text-slate-300 border border-[#1d2a42]'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
         {/* ============================================================ */}
         {/* LEFT SIDEBAR NAVIGATION MENU                                 */}
         {/* ============================================================ */}
@@ -225,18 +281,87 @@ export default function App() {
           <div className="space-y-6">
             <div className="px-2 pt-1 pb-2.5 border-b border-[#18243b] flex items-center justify-between">
               <div>
-                <span className="text-xs font-black tracking-wider text-amber-300 font-mono block">
+                <span className="text-xs font-bold tracking-[0.2em] bg-gradient-to-r from-amber-100 via-amber-300 to-amber-100 bg-clip-text text-transparent font-display block">
                   GHALI TERMINAL
                 </span>
                 <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
                   Macro & Crypto Desk
                 </span>
               </div>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="System Live" />
+              <span className="w-2 h-2 rounded-full bg-emerald-400" title="System Live" />
             </div>
 
             <div className="space-y-1.5">
-              {/* Macro Wire / MacroView */}
+              {/* 1. 3D Monolith Sentiment (PALING ATAS) */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setViewMode('monolith');
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  viewMode === 'monolith'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
+                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Box className={`w-4 h-4 ${viewMode === 'monolith' ? 'text-black' : 'text-emerald-400'}`} />
+                  <span>3D Monolith Sentiment</span>
+                </div>
+                <span
+                  className={`px-1.5 py-0.2 rounded text-[10px] font-bold border ${
+                    viewMode === 'monolith'
+                      ? 'bg-black/20 text-black border-black/30'
+                      : 'bg-emerald-950 text-emerald-300 border-emerald-800'
+                  }`}
+                >
+                  3D BTC
+                </span>
+              </button>
+
+              {/* 2. Bitcoin Cycle & Expert Analysis (Directly below 3D Monolith) */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setViewMode('bitcoin_cycle');
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  viewMode === 'bitcoin_cycle'
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
+                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <TrendingUp className={`w-4 h-4 ${viewMode === 'bitcoin_cycle' ? 'text-black' : 'text-amber-400'}`} />
+                  <span>Bitcoin Cycle & Analysis</span>
+                </div>
+                <span className="px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 text-[10px] font-bold border border-amber-800">
+                  2026
+                </span>
+              </button>
+
+              {/* 3. Arus Likuiditas & Movers (Directly below Bitcoin Cycle) */}
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setViewMode('liquidity_movers');
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  viewMode === 'liquidity_movers'
+                    ? 'bg-gradient-to-r from-cyan-500 to-cyan-400 text-black shadow-lg shadow-cyan-500/20'
+                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Compass className={`w-4 h-4 ${viewMode === 'liquidity_movers' ? 'text-black' : 'text-cyan-400'}`} />
+                  <span>Arus Likuiditas & Movers</span>
+                </div>
+                <span className="px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 text-[10px] font-bold border border-cyan-800">
+                  TOP 5 L/S
+                </span>
+              </button>
+
+              {/* 4. Macro Wire / MacroView */}
               <button
                 onClick={() => {
                   sound.playClick();
@@ -255,7 +380,7 @@ export default function App() {
                 <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'macro_terminal' ? 'text-black' : 'text-slate-500'}`} />
               </button>
 
-              {/* 24/7 Crypto Narratives */}
+              {/* 5. 24/7 Crypto Narratives */}
               <button
                 onClick={() => {
                   sound.playClick();
@@ -268,7 +393,7 @@ export default function App() {
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Radio className="w-4 h-4 text-amber-400 animate-pulse" />
+                  <Radio className="w-4 h-4 text-amber-400" />
                   <span>24/7 Crypto Narratives</span>
                 </div>
                 <span className="px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 text-[10px] font-bold border border-amber-800">
@@ -276,7 +401,7 @@ export default function App() {
                 </span>
               </button>
 
-              {/* Impact Matrix */}
+              {/* 6. Impact Matrix */}
               <button
                 onClick={() => {
                   sound.playClick();
@@ -295,7 +420,7 @@ export default function App() {
                 <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'impact_matrix' ? 'text-black' : 'text-slate-500'}`} />
               </button>
 
-              {/* High Impact */}
+              {/* 7. High Impact */}
               <button
                 onClick={() => {
                   sound.playClick();
@@ -316,7 +441,7 @@ export default function App() {
                 </span>
               </button>
 
-              {/* 8-API Telemetry */}
+              {/* 8. 8-API Telemetry */}
               <button
                 onClick={() => {
                   sound.playClick();
@@ -335,7 +460,7 @@ export default function App() {
                 <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'telemetry' ? 'text-black' : 'text-slate-500'}`} />
               </button>
 
-              {/* Multichart */}
+              {/* 9. Multichart */}
               <button
                 onClick={() => {
                   sound.playClick();
@@ -352,67 +477,6 @@ export default function App() {
                   <span>Multichart Grid</span>
                 </div>
                 <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'multichart' ? 'text-black' : 'text-slate-500'}`} />
-              </button>
-
-              {/* 3D Monolith */}
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setViewMode('monolith');
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
-                  viewMode === 'monolith'
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Box className="w-4 h-4 text-emerald-400" />
-                  <span>3D Monolith Sentiment</span>
-                </div>
-                <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'monolith' ? 'text-black' : 'text-slate-500'}`} />
-              </button>
-
-              {/* Bitcoin Cycle & Expert Analysis (Placed directly below 3D Monolith) */}
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setViewMode('bitcoin_cycle');
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
-                  viewMode === 'bitcoin_cycle'
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <TrendingUp className="w-4 h-4 text-amber-400" />
-                  <span>Bitcoin Cycle & Analysis</span>
-                </div>
-                <span className="px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 text-[10px] font-bold border border-amber-800">
-                  2026
-                </span>
-              </button>
-
-              {/* Arus Likuiditas & Movers (Placed directly below Bitcoin Cycle) */}
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setViewMode('liquidity_movers');
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
-                  viewMode === 'liquidity_movers'
-                    ? 'bg-gradient-to-r from-cyan-500 to-cyan-400 text-black shadow-lg shadow-cyan-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Compass className="w-4 h-4 text-cyan-400" />
-                  <span>Arus Likuiditas & Movers</span>
-                </div>
-                <span className="px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 text-[10px] font-bold border border-cyan-800">
-                  TOP 5 L/S
-                </span>
               </button>
             </div>
           </div>
@@ -505,18 +569,56 @@ export default function App() {
             </div>
           )}
 
-          {/* VIEW H: 3D SENTIMENT MONOLITH */}
+          {/* VIEW H: 3D BITCOIN & ORBITING ALTCOINS MONOLITH */}
           {viewMode === 'monolith' && (
-            <div className="w-full h-full relative w-full h-full">
+            <div className="w-full h-full relative">
               <ThreeCanvas
                 finish={finish}
                 exploded={exploded}
                 cameraPreset={cameraPreset}
                 autoRotate={autoRotate}
                 rotationSpeed={rotationSpeed}
+                altcoin5m={altcoin5mMetrics}
                 onPartHover={setHoveredPart}
                 onPartSelect={handlePartSelect}
               />
+              {/* Elegant Top-Center Crest & Spec Badge (Positioned cleanly below header & TradingView) */}
+              <div className="absolute top-6 sm:top-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none flex flex-col items-center gap-1 w-full max-w-xl px-4">
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center gap-2.5">
+                    <span className="h-[1px] w-6 sm:w-10 bg-gradient-to-r from-transparent to-amber-400/75" />
+                    <span className="text-amber-400/85 text-[8px]">◆</span>
+                    <h1 className="font-display text-xs sm:text-sm font-bold tracking-[0.26em] bg-gradient-to-r from-amber-100 via-amber-300 to-amber-100 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(245,158,11,0.25)] whitespace-nowrap">
+                      GHALI TERMINAL
+                    </h1>
+                    <span className="text-amber-400/85 text-[8px]">◆</span>
+                    <span className="h-[1px] w-6 sm:w-10 bg-gradient-to-l from-transparent to-amber-400/75" />
+                  </div>
+                  <span className="text-[8px] sm:text-[9px] font-mono tracking-[0.22em] text-amber-200/60 uppercase">
+                    Sovereign Bitcoin & Altcoin Orbital Architecture
+                  </span>
+                </div>
+
+                <div className="hidden sm:flex items-center gap-2 bg-[#0b0f19]/95 border border-amber-500/25 px-3 py-0.5 rounded text-[10px] font-mono text-slate-300 shadow-lg">
+                  <span className="text-amber-300 font-bold">₿ BITCOIN CORE CENTER</span>
+                  <span className="text-slate-600">•</span>
+                  <span className="text-cyan-300 font-semibold">10 ALTCOINS ORBITING</span>
+                  <span className="text-slate-600">•</span>
+                  {(() => {
+                    const orbitKeys = ['ETH', 'SOL', 'BNB', 'XRP', 'DOGE', 'SUI', 'ADA', 'AVAX', 'LINK', 'TAO'];
+                    const plusCount = orbitKeys.filter((k) => (altcoin5mMetrics[k]?.change5m ?? 0) > 0).length;
+                    const minusCount = orbitKeys.filter((k) => (altcoin5mMetrics[k]?.change5m ?? 0) < 0).length;
+                    return (
+                      <span className="font-bold">
+                        <span className="text-emerald-400">▲ {plusCount} PLUS</span>
+                        <span className="text-slate-500 mx-1">/</span>
+                        <span className="text-rose-400">▼ {minusCount} MINUS</span>
+                        <span className="text-slate-400 ml-1">(5M LIVE)</span>
+                      </span>
+                    );
+                  })()}
+                </div>
+              </div>
               <BottomControlDock
                 finish={finish}
                 onSelectFinish={setFinish}

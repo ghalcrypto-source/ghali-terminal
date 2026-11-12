@@ -56,20 +56,20 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
   onToggleSound,
 }) => {
   return (
-    <header className="absolute top-0 left-0 right-0 z-20 pointer-events-none p-2 sm:p-2.5 bg-gradient-to-b from-[#06080d]/95 via-[#06080d]/85 to-transparent">
+    <header className="relative shrink-0 z-20 pointer-events-none p-2 sm:p-2.5 bg-[#06080d] border-b border-[#141d30]">
       <div className="max-w-[1780px] mx-auto flex items-center justify-between gap-2">
         {/* Left: Branding Logo Badge (GHALI TERMINAL) */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="flex items-center gap-2.5 bg-[#0c1220]/90 backdrop-blur-md border border-amber-500/30 px-3 py-1.5 rounded-lg shadow-lg group relative overflow-hidden">
-            <div className="relative w-5 h-5 flex items-center justify-center shrink-0">
-              <span className="absolute inset-0 rounded-full border border-amber-400/40 animate-spin-slow" />
-              <Globe className="w-4 h-4 text-amber-400 shrink-0 animate-pulse relative z-10" />
+          <div className="flex items-center gap-2 bg-[#0c1220]/95 border border-amber-500/35 px-2.5 py-1 rounded-lg shadow-lg group relative overflow-hidden">
+            <div className="relative w-4 h-4 flex items-center justify-center shrink-0">
+              <span className="absolute inset-0 rounded-full border border-amber-400/45 animate-spin-slow" />
+              <Globe className="w-3.5 h-3.5 text-amber-300 shrink-0 relative z-10" />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono font-black text-xs sm:text-sm tracking-wider text-amber-300">
+            <div className="flex items-center gap-1.5">
+              <span className="font-display font-bold text-[11px] sm:text-xs tracking-[0.16em] bg-gradient-to-r from-amber-100 via-amber-300 to-amber-100 bg-clip-text text-transparent">
                 GHALI TERMINAL
               </span>
-              <span className="text-[10px] font-mono uppercase bg-[#18263e] text-slate-300 px-1.5 py-0.2 rounded border border-[#2b3f66] font-bold">
+              <span className="text-[8px] font-mono uppercase bg-[#18263e] text-amber-200/90 px-1.5 py-0.5 rounded border border-amber-500/30 font-semibold tracking-wider">
                 PRO INTEL
               </span>
             </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { MonolithScene, PartInfo } from '../three/MonolithScene';
+import { MonolithScene, PartInfo, Altcoin5mMetric } from '../three/MonolithScene';
 import { FinishId, CameraPreset } from '../types/contrarian';
 
 interface ThreeCanvasProps {
@@ -8,6 +8,7 @@ interface ThreeCanvasProps {
   cameraPreset: CameraPreset;
   autoRotate: boolean;
   rotationSpeed: number;
+  altcoin5m?: Record<string, Altcoin5mMetric>;
   onPartHover?: (part: PartInfo | null) => void;
   onPartSelect?: (part: PartInfo) => void;
 }
@@ -18,11 +19,14 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   cameraPreset,
   autoRotate,
   rotationSpeed,
+  altcoin5m,
   onPartHover,
   onPartSelect,
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<MonolithScene | null>(null);
+  const latestAltcoin5mRef = useRef(altcoin5m);
+  latestAltcoin5mRef.current = altcoin5m;
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -32,6 +36,10 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
     scene.onPartHover = onPartHover;
     scene.onPartSelect = onPartSelect;
+
+    if (latestAltcoin5mRef.current) {
+      scene.updateAltcoins5m(latestAltcoin5mRef.current);
+    }
 
     return () => {
       scene.dispose();
@@ -76,6 +84,13 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     }
   }, [autoRotate, rotationSpeed]);
 
+  // Update live 5-minute +/- signs on orbiting altcoins
+  useEffect(() => {
+    if (sceneRef.current && altcoin5m) {
+      sceneRef.current.updateAltcoins5m(altcoin5m);
+    }
+  }, [altcoin5m]);
+
   return (
     <div
       ref={mountRef}
@@ -84,3 +99,4 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     />
   );
 };
+

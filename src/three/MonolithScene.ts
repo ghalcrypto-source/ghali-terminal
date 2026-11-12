@@ -7,6 +7,9 @@ import {
   createVernierDialTexture,
   createContactShadowTexture,
   createBrushedMetalRoughnessTexture,
+  createBitcoinCoreTexture,
+  createAltcoinFaceTexture,
+  createAltcoinBadgeSpriteTexture,
 } from './materials';
 
 export interface PartInfo {
@@ -15,6 +18,46 @@ export interface PartInfo {
   description: string;
   metric: string;
 }
+
+export interface Altcoin5mMetric {
+  change5m: number;
+  price?: number;
+}
+
+interface AltcoinOrbiter {
+  group: THREE.Group;
+  symbol: string;
+  name: string;
+  color: string;
+  radius: number;
+  baseAngle: number;
+  speed: number;
+  yOffset: number;
+  tiltX: number;
+  tiltZ: number;
+  change5m: number;
+  price: number;
+  faceMat: THREE.MeshStandardMaterial;
+  faceTex: THREE.CanvasTexture;
+  rimMat: THREE.MeshStandardMaterial;
+  badgeSprite: THREE.Sprite;
+  badgeMat: THREE.SpriteMaterial;
+  badgeTex: THREE.CanvasTexture;
+  partInfo: PartInfo;
+}
+
+const ORBITING_ALTCOINS = [
+  { symbol: 'ETH', name: 'Ethereum', color: '#627eea', radius: 2.35, speed: 0.42, yOffset: 0.12, tiltX: 0.14, tiltZ: 0.08, default5m: 0.42 },
+  { symbol: 'SOL', name: 'Solana', color: '#14f195', radius: 2.48, speed: 0.52, yOffset: -0.18, tiltX: -0.12, tiltZ: 0.15, default5m: 0.85 },
+  { symbol: 'BNB', name: 'BNB Chain', color: '#f3ba2f', radius: 2.62, speed: 0.36, yOffset: 0.24, tiltX: 0.18, tiltZ: -0.1, default5m: -0.24 },
+  { symbol: 'XRP', name: 'Ripple', color: '#38bdf8', radius: 2.38, speed: 0.46, yOffset: -0.05, tiltX: -0.08, tiltZ: -0.14, default5m: -0.51 },
+  { symbol: 'DOGE', name: 'Dogecoin', color: '#fbbf24', radius: 2.75, speed: 0.38, yOffset: 0.08, tiltX: 0.1, tiltZ: 0.12, default5m: 0.67 },
+  { symbol: 'SUI', name: 'Sui', color: '#22d3ee', radius: 2.55, speed: 0.56, yOffset: -0.22, tiltX: -0.16, tiltZ: 0.06, default5m: 1.14 },
+  { symbol: 'ADA', name: 'Cardano', color: '#3b82f6', radius: 2.86, speed: 0.32, yOffset: 0.18, tiltX: 0.12, tiltZ: -0.16, default5m: -0.38 },
+  { symbol: 'AVAX', name: 'Avalanche', color: '#ef4444', radius: 2.42, speed: 0.48, yOffset: 0.30, tiltX: -0.14, tiltZ: 0.1, default5m: -0.62 },
+  { symbol: 'LINK', name: 'Chainlink', color: '#60a5fa', radius: 2.70, speed: 0.40, yOffset: -0.26, tiltX: 0.09, tiltZ: 0.14, default5m: 0.31 },
+  { symbol: 'TAO', name: 'Bittensor', color: '#a855f7', radius: 2.92, speed: 0.34, yOffset: 0.02, tiltX: -0.1, tiltZ: -0.12, default5m: 0.94 },
+];
 
 export class MonolithScene {
   private container: HTMLElement;
@@ -31,8 +74,9 @@ export class MonolithScene {
   private keyLight!: THREE.DirectionalLight;
   private hemiLight!: THREE.HemisphereLight;
   private rimLight!: THREE.DirectionalLight;
+  private btcCoreLight!: THREE.PointLight;
 
-  // Procedural 8-Part Model Group & Components
+  // Procedural Multi-Part Model Group & Components
   private rootGroup!: THREE.Group;
   private basePedestal!: THREE.Group;
   private dialDiscMesh!: THREE.Mesh;
@@ -43,12 +87,16 @@ export class MonolithScene {
   private laserNeedleGroup!: THREE.Group;
   private contactShadowMesh!: THREE.Mesh;
   private satellitesMesh!: THREE.InstancedMesh;
-  private satelliteCount = 20;
+  private satelliteCount = 24;
+  private altcoinOrbiters: AltcoinOrbiter[] = [];
+  private orbitTracksGroup!: THREE.Group;
 
   // Materials References for theme switching
   private primaryMetalMaterial!: THREE.MeshStandardMaterial;
   private secondaryMetalMaterial!: THREE.MeshStandardMaterial;
   private coreCrystalMaterial!: THREE.MeshPhysicalMaterial;
+  private btcGoldMaterial!: THREE.MeshStandardMaterial;
+  private btcFaceMaterial!: THREE.MeshStandardMaterial;
   private dialMaterial!: THREE.MeshStandardMaterial;
   private glowMaterial!: THREE.MeshBasicMaterial;
   private gearMaterial!: THREE.MeshStandardMaterial;
@@ -57,6 +105,8 @@ export class MonolithScene {
   private dialTexture!: THREE.CanvasTexture;
   private contactTexture!: THREE.CanvasTexture;
   private roughnessTexture!: THREE.CanvasTexture;
+  private btcFaceTexture!: THREE.CanvasTexture;
+  private altcoinTextures: THREE.CanvasTexture[] = [];
 
   // Animation & Kinematics State
   public explodedValue = 0; // 0.0 to 1.0
@@ -82,6 +132,7 @@ export class MonolithScene {
   public onPartSelect?: (part: PartInfo) => void;
 
   private interactiveMeshes: { mesh: THREE.Object3D; info: PartInfo }[] = [];
+  private btcPartInfo!: PartInfo;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -204,6 +255,8 @@ export class MonolithScene {
 
     this.contactTexture = createContactShadowTexture();
     this.roughnessTexture = createBrushedMetalRoughnessTexture();
+    this.btcFaceTexture = createBitcoinCoreTexture(accentHex);
+    this.btcFaceTexture.anisotropy = maxAnisotropy;
 
     // Setup materials
     this.primaryMetalMaterial = new THREE.MeshStandardMaterial({
@@ -242,6 +295,28 @@ export class MonolithScene {
       envMapIntensity: 2.0,
     });
 
+    this.btcGoldMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf59e0b,
+      metalness: 0.96,
+      roughness: 0.16,
+      emissive: 0x78350f,
+      emissiveIntensity: 0.25,
+      envMapIntensity: 1.7,
+    });
+
+    this.btcFaceMaterial = new THREE.MeshStandardMaterial({
+      map: this.btcFaceTexture,
+      metalness: 0.72,
+      roughness: 0.22,
+      emissive: 0xf59e0b,
+      emissiveMap: this.btcFaceTexture,
+      emissiveIntensity: 0.35,
+      envMapIntensity: 1.4,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
+    });
+
     this.dialMaterial = new THREE.MeshStandardMaterial({
       map: this.dialTexture,
       roughness: 0.25,
@@ -254,6 +329,8 @@ export class MonolithScene {
     this.glowMaterial = new THREE.MeshBasicMaterial({
       color: theme.accentGlowColor,
       wireframe: true,
+      transparent: true,
+      opacity: 0.45,
     });
   }
 
@@ -402,34 +479,76 @@ export class MonolithScene {
     });
 
     // ==========================================
-    // PART 6: Central Levitating Monolith Core (Crystal)
+    // PART 6: Central Bitcoin Sovereign Core (Inside Gimbal Rings)
     // ==========================================
     this.monolithCoreGroup = new THREE.Group();
     this.monolithCoreGroup.position.y = 1.9;
 
-    // Octahedral crystalline prism
-    const crystalGeo = new THREE.OctahedronGeometry(0.68, 0);
-    const crystalMesh = new THREE.Mesh(crystalGeo, this.coreCrystalMaterial);
-    crystalMesh.castShadow = !this.isSoftwareGl;
-    this.monolithCoreGroup.add(crystalMesh);
+    // 6.1 Primary 24k Gold Coin Body (upright facing Z axis)
+    const btcDiscGeo = new THREE.CylinderGeometry(0.62, 0.62, 0.12, 64);
+    const btcDiscMesh = new THREE.Mesh(btcDiscGeo, this.btcGoldMaterial);
+    btcDiscMesh.rotation.x = Math.PI / 2;
+    btcDiscMesh.castShadow = !this.isSoftwareGl;
+    this.monolithCoreGroup.add(btcDiscMesh);
 
-    // Glowing internal wireframe armature
-    const wireGeo = new THREE.OctahedronGeometry(0.7, 0);
+    // 6.2 Front & Back Engraved Bitcoin ₿ Medallion Faceplates
+    const btcFaceGeo = new THREE.CircleGeometry(0.58, 64);
+    const btcFrontFace = new THREE.Mesh(btcFaceGeo, this.btcFaceMaterial);
+    btcFrontFace.position.z = 0.062;
+    const btcBackFace = new THREE.Mesh(btcFaceGeo, this.btcFaceMaterial);
+    btcBackFace.rotation.y = Math.PI;
+    btcBackFace.position.z = -0.062;
+    this.monolithCoreGroup.add(btcFrontFace, btcBackFace);
+
+    // 6.3 Milled Outer Coin Bezel & Front/Back Inner Rim Torus
+    const btcOuterRimGeo = new THREE.TorusGeometry(0.62, 0.042, 20, 64);
+    const btcOuterRim = new THREE.Mesh(btcOuterRimGeo, this.btcGoldMaterial);
+    this.monolithCoreGroup.add(btcOuterRim);
+
+    const btcInnerRimGeo = new THREE.TorusGeometry(0.51, 0.016, 12, 48);
+    const btcInnerRimFront = new THREE.Mesh(btcInnerRimGeo, this.primaryMetalMaterial);
+    btcInnerRimFront.position.z = 0.056;
+    const btcInnerRimBack = new THREE.Mesh(btcInnerRimGeo, this.primaryMetalMaterial);
+    btcInnerRimBack.position.z = -0.056;
+    this.monolithCoreGroup.add(btcInnerRimFront, btcInnerRimBack);
+
+    // 6.4 24 Knurled Perimeter Coin Teeth
+    const btcToothGeo = new THREE.BoxGeometry(0.032, 0.075, 0.13);
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * Math.PI * 2;
+      const tooth = new THREE.Mesh(btcToothGeo, this.btcGoldMaterial);
+      tooth.position.set(Math.cos(a) * 0.63, Math.sin(a) * 0.63, 0);
+      tooth.rotation.z = a + Math.PI / 2;
+      this.monolithCoreGroup.add(tooth);
+    }
+
+    // 6.5 Golden Sovereignty Halo Ring + Subtle Wireframe Energy Cage
+    const btcHaloGeo = new THREE.TorusGeometry(0.79, 0.014, 12, 64);
+    const btcHaloMat = new THREE.MeshBasicMaterial({
+      color: 0xfbbf24,
+      transparent: true,
+      opacity: 0.72,
+    });
+    const btcHaloMesh = new THREE.Mesh(btcHaloGeo, btcHaloMat);
+    this.monolithCoreGroup.add(btcHaloMesh);
+
+    const wireGeo = new THREE.OctahedronGeometry(0.88, 0);
     const wireMesh = new THREE.Mesh(wireGeo, this.glowMaterial);
     this.monolithCoreGroup.add(wireMesh);
 
-    // Sub-core levitating micro-cube
-    const microGeo = new THREE.BoxGeometry(0.24, 0.24, 0.24);
-    const microMesh = new THREE.Mesh(microGeo, this.primaryMetalMaterial);
-    this.monolithCoreGroup.add(microMesh);
+    // Warm Golden PointLight illuminating surrounding gimbal rings
+    this.btcCoreLight = new THREE.PointLight(0xf59e0b, 2.2, 5.5);
+    this.btcCoreLight.position.set(0, 0, 0.4);
+    this.monolithCoreGroup.add(this.btcCoreLight);
 
     this.rootGroup.add(this.monolithCoreGroup);
-    this.registerInteractive(crystalMesh, {
-      name: 'Contrarian Monolith Core',
-      category: 'Central Asymmetry Resonator',
-      description: 'Pulsates with unpriced tail risk. Shifts hue as consensus crowds into terminal complacency.',
-      metric: 'Crowd Dislocation Index: 88.4 / 100',
-    });
+    this.btcPartInfo = {
+      name: 'Bitcoin (BTC) Sovereign Core',
+      category: 'Pusat Gravitasi Likuiditas Kripto',
+      description: 'Aset induk di tengah lingkaran gimbal; seluruh rotasi modal Altcoin bergerak mengorbit dominansi Bitcoin.',
+      metric: 'BTC Dominance Anchor • Supply Cap 21M',
+    };
+    this.registerInteractive(this.monolithCoreGroup, this.btcPartInfo);
 
     // ==========================================
     // PART 7: Precision Caliper Vernier Needle & Laser
@@ -471,13 +590,143 @@ export class MonolithScene {
     });
 
     // ==========================================
-    // PART 8: Instanced Orbital Consensus Satellites
+    // PART 8: Orbiting 3D Altcoins + Circular Orbital Tracks
     // ==========================================
-    const satelliteGeo = new THREE.SphereGeometry(0.045, 12, 12);
+    this.orbitTracksGroup = new THREE.Group();
+    this.orbitTracksGroup.position.y = 1.9;
+
+    const trackRadii = [2.38, 2.65, 2.90];
+    trackRadii.forEach((r, idx) => {
+      const trackGeo = new THREE.TorusGeometry(r, 0.008, 10, 96);
+      const trackMat = new THREE.MeshBasicMaterial({
+        color: FINISH_THEMES[this.currentTheme].accentGlowColor,
+        transparent: true,
+        opacity: idx === 0 ? 0.42 : 0.25,
+      });
+      const trackMesh = new THREE.Mesh(trackGeo, trackMat);
+      trackMesh.rotation.x = Math.PI / 2 + (idx - 1) * 0.11;
+      trackMesh.rotation.y = (idx - 1) * 0.08;
+      this.orbitTracksGroup.add(trackMesh);
+    });
+    this.rootGroup.add(this.orbitTracksGroup);
+
+    // Build 10 Distinct 3D Altcoin Medallions orbiting the circle around Bitcoin
+    const maxAnisotropy = this.renderer.capabilities.getMaxAnisotropy();
+    const altBodyGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.06, 32);
+    const altRimGeo = new THREE.TorusGeometry(0.255, 0.022, 12, 32);
+    const altFaceGeo = new THREE.CircleGeometry(0.235, 32);
+
+    this.altcoinOrbiters = ORBITING_ALTCOINS.map((cfg, i) => {
+      const group = new THREE.Group();
+      const baseAngle = (i / ORBITING_ALTCOINS.length) * Math.PI * 2;
+      const initial5m = cfg.default5m;
+      const statusHex = initial5m > 0 ? 0x10b981 : initial5m < 0 ? 0xef4444 : new THREE.Color(cfg.color).getHex();
+
+      const altTex = createAltcoinFaceTexture(cfg.symbol, cfg.name, cfg.color, initial5m);
+      altTex.anisotropy = maxAnisotropy;
+      this.altcoinTextures.push(altTex);
+
+      const coinBodyMat = new THREE.MeshStandardMaterial({
+        color: 0x1e293b,
+        metalness: 0.9,
+        roughness: 0.22,
+        envMapIntensity: 1.5,
+      });
+
+      const coinRimMat = new THREE.MeshStandardMaterial({
+        color: statusHex,
+        metalness: 0.85,
+        roughness: 0.18,
+        emissive: statusHex,
+        emissiveIntensity: 0.65,
+        envMapIntensity: 1.6,
+      });
+
+      const coinFaceMat = new THREE.MeshStandardMaterial({
+        map: altTex,
+        metalness: 0.35,
+        roughness: 0.28,
+        emissive: 0xffffff,
+        emissiveMap: altTex,
+        emissiveIntensity: 0.42,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
+      });
+
+      const bodyMesh = new THREE.Mesh(altBodyGeo, coinBodyMat);
+      bodyMesh.rotation.x = Math.PI / 2;
+      bodyMesh.castShadow = !this.isSoftwareGl;
+
+      const rimMesh = new THREE.Mesh(altRimGeo, coinRimMat);
+
+      const frontFace = new THREE.Mesh(altFaceGeo, coinFaceMat);
+      frontFace.position.z = 0.03;
+
+      const backFace = new THREE.Mesh(altFaceGeo, coinFaceMat);
+      backFace.rotation.y = Math.PI;
+      backFace.position.z = -0.03;
+
+      // Floating camera-facing 5-minute +/- badge sprite directly above coin
+      const badgeTex = createAltcoinBadgeSpriteTexture(cfg.symbol, initial5m, cfg.color);
+      badgeTex.anisotropy = maxAnisotropy;
+      const badgeMat = new THREE.SpriteMaterial({
+        map: badgeTex,
+        transparent: true,
+        depthWrite: false,
+      });
+      const badgeSprite = new THREE.Sprite(badgeMat);
+      badgeSprite.position.set(0, 0.42, 0);
+      badgeSprite.scale.set(1.04, 0.29, 1);
+
+      group.add(bodyMesh, rimMesh, frontFace, backFace, badgeSprite);
+      group.position.set(
+        Math.cos(baseAngle) * cfg.radius,
+        1.9 + cfg.yOffset,
+        Math.sin(baseAngle) * cfg.radius
+      );
+
+      this.rootGroup.add(group);
+      const signStr = initial5m > 0 ? `+${initial5m.toFixed(2)}%` : `${initial5m.toFixed(2)}%`;
+      const partInfo: PartInfo = {
+        name: `${cfg.symbol} (${cfg.name})`,
+        category: 'Orbiting Altcoin • 5M Momentum',
+        description: `Mengorbit pusat Bitcoin pada radius ${cfg.radius.toFixed(2)} AU; indikator 5 menit terakhir ${initial5m >= 0 ? 'PLUS (Bullish)' : 'MINUS (Bearish)'}.`,
+        metric: `5M: ${signStr} • Orbit Speed ${(cfg.speed * 100).toFixed(0)}`,
+      };
+      this.registerInteractive(group, partInfo);
+
+      return {
+        group,
+        symbol: cfg.symbol,
+        name: cfg.name,
+        color: cfg.color,
+        radius: cfg.radius,
+        baseAngle,
+        speed: cfg.speed,
+        yOffset: cfg.yOffset,
+        tiltX: cfg.tiltX,
+        tiltZ: cfg.tiltZ,
+        change5m: initial5m,
+        price: 0,
+        faceMat: coinFaceMat,
+        faceTex: altTex,
+        rimMat: coinRimMat,
+        badgeSprite,
+        badgeMat,
+        badgeTex,
+        partInfo,
+      };
+    });
+
+    // Subtle micro-liquidity stardust orbiting the perimeter
+    const satelliteGeo = new THREE.SphereGeometry(0.032, 10, 10);
     const satelliteMat = new THREE.MeshStandardMaterial({
-      color: FINISH_THEMES[this.currentTheme].primaryMetalColor,
+      color: FINISH_THEMES[this.currentTheme].accentGlowColor,
       metalness: 0.9,
       roughness: 0.15,
+      emissive: FINISH_THEMES[this.currentTheme].accentGlowColor,
+      emissiveIntensity: 0.4,
       envMapIntensity: 1.5,
     });
     this.satellitesMesh = new THREE.InstancedMesh(satelliteGeo, satelliteMat, this.satelliteCount);
@@ -485,8 +734,8 @@ export class MonolithScene {
 
     for (let i = 0; i < this.satelliteCount; i++) {
       const angle = (i / this.satelliteCount) * Math.PI * 2;
-      const radius = 2.15 + (i % 3) * 0.25;
-      const y = 1.6 + ((i % 5) - 2) * 0.18;
+      const radius = 2.2 + (i % 3) * 0.35;
+      const y = 1.9 + ((i % 5) - 2) * 0.14;
       this._mat4A.makeTranslation(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
       this.satellitesMesh.setMatrixAt(i, this._mat4A);
     }
@@ -528,13 +777,76 @@ export class MonolithScene {
     this.hemiLight.groundColor.setHex(theme.ambientLightColor);
     this.rimLight.color.setHex(theme.accentGlowColor);
 
-    // Update dial canvas
+    // Update dial & Bitcoin core accent canvas
     const accentHex = '#' + theme.accentGlowColor.toString(16).padStart(6, '0');
     this.dialTexture.dispose();
     this.dialTexture = createVernierDialTexture(accentHex);
     this.dialTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
     this.dialMaterial.map = this.dialTexture;
     this.dialMaterial.needsUpdate = true;
+
+    this.btcFaceTexture.dispose();
+    this.btcFaceTexture = createBitcoinCoreTexture(accentHex);
+    this.btcFaceTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+    this.btcFaceMaterial.map = this.btcFaceTexture;
+    this.btcFaceMaterial.emissiveMap = this.btcFaceTexture;
+    this.btcFaceMaterial.needsUpdate = true;
+  }
+
+  /**
+   * Updates real-time 5-minute +/- indicators on each orbiting Altcoin & central Bitcoin
+   */
+  public updateAltcoins5m(metrics: Record<string, Altcoin5mMetric>) {
+    if (this.isDisposed || !metrics) return;
+    const maxAnisotropy = this.renderer.capabilities.getMaxAnisotropy();
+
+    if (metrics.BTC && this.btcPartInfo) {
+      const btc5m = metrics.BTC.change5m;
+      const btcSign = btc5m > 0 ? `+${btc5m.toFixed(2)}%` : `${btc5m.toFixed(2)}%`;
+      const btcPriceStr = metrics.BTC.price ? `$${metrics.BTC.price.toLocaleString()} • ` : '';
+      this.btcPartInfo.metric = `${btcPriceStr}5M: ${btcSign} • Supply Cap 21M`;
+    }
+
+    for (const orb of this.altcoinOrbiters) {
+      const incoming = metrics[orb.symbol];
+      if (!incoming) continue;
+
+      const nextVal = parseFloat(incoming.change5m.toFixed(2));
+      const nextPrice = incoming.price || orb.price;
+      const valChanged = Math.abs(nextVal - orb.change5m) >= 0.005;
+
+      orb.price = nextPrice;
+
+      if (valChanged) {
+        orb.change5m = nextVal;
+
+        // 1. Update coin face texture
+        const nextFaceTex = createAltcoinFaceTexture(orb.symbol, orb.name, orb.color, nextVal);
+        nextFaceTex.anisotropy = maxAnisotropy;
+        orb.faceTex.dispose();
+        orb.faceTex = nextFaceTex;
+        orb.faceMat.map = nextFaceTex;
+        orb.faceMat.emissiveMap = nextFaceTex;
+        orb.faceMat.needsUpdate = true;
+
+        // 2. Update floating sprite badge texture
+        const nextBadgeTex = createAltcoinBadgeSpriteTexture(orb.symbol, nextVal, orb.color);
+        nextBadgeTex.anisotropy = maxAnisotropy;
+        orb.badgeTex.dispose();
+        orb.badgeTex = nextBadgeTex;
+        orb.badgeMat.map = nextBadgeTex;
+        orb.badgeMat.needsUpdate = true;
+
+        // 3. Update coin metallic rim hue (emerald for +, crimson for -, brand for 0)
+        const rimHex = nextVal > 0 ? 0x10b981 : nextVal < 0 ? 0xef4444 : new THREE.Color(orb.color).getHex();
+        orb.rimMat.color.setHex(rimHex);
+        orb.rimMat.emissive.setHex(rimHex);
+      }
+
+      const signStr = nextVal > 0 ? `+${nextVal.toFixed(2)}%` : `${nextVal.toFixed(2)}%`;
+      const priceLabel = nextPrice > 0 ? `$${nextPrice < 1 ? nextPrice.toFixed(4) : nextPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })} • ` : '';
+      orb.partInfo.metric = `${priceLabel}5M: ${signStr}`;
+    }
   }
 
   /**
@@ -577,7 +889,9 @@ export class MonolithScene {
 
     if (intersects.length > 0) {
       const hit = intersects[0].object;
-      const found = this.interactiveMeshes.find((item) => item.mesh === hit || item.mesh.children.includes(hit));
+      const found = this.interactiveMeshes.find(
+        (item) => item.mesh === hit || Boolean(item.mesh.getObjectById(hit.id))
+      );
       if (found && this.onPartHover) {
         this.onPartHover(found.info);
         document.body.style.cursor = 'pointer';
@@ -598,7 +912,9 @@ export class MonolithScene {
 
     if (intersects.length > 0) {
       const hit = intersects[0].object;
-      const found = this.interactiveMeshes.find((item) => item.mesh === hit || item.mesh.children.includes(hit));
+      const found = this.interactiveMeshes.find(
+        (item) => item.mesh === hit || Boolean(item.mesh.getObjectById(hit.id))
+      );
       if (found && this.onPartSelect) {
         this.onPartSelect(found.info);
       }
@@ -635,8 +951,8 @@ export class MonolithScene {
       this.controls.update();
 
       // 3. Procedural Mechanical Rotations
+      const speed = this.autoRotate ? this.rotationSpeed : 0.15;
       if (this.autoRotate) {
-        const speed = this.rotationSpeed;
         // Outer Gimbal rotates steadily
         this.outerGimbalGroup.rotation.y += 0.35 * speed * dt;
         // Escapement Gear counter-rotates with rhythmic micro-stepping
@@ -644,9 +960,9 @@ export class MonolithScene {
         // Inner Gimbal wobbles on X and tilts
         this.innerGimbalGroup.rotation.x = Math.sin(elapsed * 0.8 * speed) * 0.45;
         this.innerGimbalGroup.rotation.z += 0.5 * speed * dt;
-        // Monolith Core levitates and rotates on dual axes
-        this.monolithCoreGroup.rotation.y += 0.8 * speed * dt;
-        this.monolithCoreGroup.rotation.x = Math.cos(elapsed * 1.2 * speed) * 0.15;
+        // Central Bitcoin Sovereign Core levitates & spins gently
+        this.monolithCoreGroup.rotation.y += 0.65 * speed * dt;
+        this.monolithCoreGroup.rotation.x = Math.cos(elapsed * 1.1 * speed) * 0.12;
         // Laser needle sweeps around dial face
         this.laserNeedleGroup.rotation.y = Math.sin(elapsed * 0.5 * speed) * 1.2;
       }
@@ -666,19 +982,41 @@ export class MonolithScene {
       // Inner Gimbal elevates
       this.innerGimbalGroup.position.y = 1.9 + 2.5 * ex;
 
-      // Monolith Core elevates to apex
+      // Bitcoin Core elevates to apex
       this.monolithCoreGroup.position.y = 1.9 + 3.4 * ex;
+
+      // Orbit tracks scale cleanly with explosion
+      this.orbitTracksGroup.position.y = 1.9 + 0.8 * ex;
+      const trackScale = 1.0 + 0.35 * ex;
+      this.orbitTracksGroup.scale.set(trackScale, trackScale, trackScale);
 
       // Laser needle separates
       this.laserNeedleGroup.position.y = 0.35 + 0.3 * ex;
 
-      // Instanced satellites expand orbital radius
-      const baseRadiusMul = 1.0 + 0.7 * ex;
+      // 4.1 Orbiting 3D Altcoins circling around the rings & central Bitcoin
+      const baseRadiusMul = 1.0 + 0.45 * ex;
+      const orbitTime = elapsed * (this.autoRotate ? this.rotationSpeed : 0.2);
+      for (let i = 0; i < this.altcoinOrbiters.length; i++) {
+        const orb = this.altcoinOrbiters[i];
+        const angle = orb.baseAngle + orbitTime * orb.speed;
+        const r = orb.radius * baseRadiusMul;
+        const x = Math.cos(angle) * r;
+        const z = Math.sin(angle) * r;
+        const orbitalInclinationY = Math.sin(angle) * (orb.tiltX * r) + Math.cos(angle) * (orb.tiltZ * r);
+        const y = 1.9 + 0.8 * ex + orb.yOffset + orbitalInclinationY + Math.sin(elapsed * 1.8 + i) * 0.06;
+
+        orb.group.position.set(x, y, z);
+        // Keep altcoins spinning gracefully so front & back logos are always readable
+        orb.group.rotation.y = -angle + Math.PI / 2 + elapsed * 0.4;
+        orb.group.rotation.x = Math.sin(elapsed * 1.4 + i) * 0.08;
+      }
+
+      // Instanced micro-liquidity stardust orbiting perimeter
       for (let i = 0; i < this.satelliteCount; i++) {
         const baseAngle = (i / this.satelliteCount) * Math.PI * 2;
-        const currentAngle = baseAngle + elapsed * (0.3 + (i % 3) * 0.1);
-        const radius = (2.15 + (i % 3) * 0.25) * baseRadiusMul;
-        const y = (1.6 + ((i % 5) - 2) * 0.18) * (1 + 0.5 * ex) + Math.sin(elapsed * 2 + i) * 0.08;
+        const currentAngle = baseAngle + orbitTime * (0.3 + (i % 3) * 0.1);
+        const radius = (2.2 + (i % 3) * 0.35) * baseRadiusMul;
+        const y = (1.9 + ((i % 5) - 2) * 0.14) + 0.8 * ex + Math.sin(elapsed * 2 + i) * 0.08;
         this._mat4A.makeTranslation(Math.cos(currentAngle) * radius, y, Math.sin(currentAngle) * radius);
         this.satellitesMesh.setMatrixAt(i, this._mat4A);
       }
@@ -726,6 +1064,17 @@ export class MonolithScene {
     window.removeEventListener('resize', this.onResize);
     this.container.removeEventListener('pointermove', this.onPointerMove);
     this.container.removeEventListener('click', this.onClick);
+
+    this.dialTexture?.dispose();
+    this.contactTexture?.dispose();
+    this.roughnessTexture?.dispose();
+    this.btcFaceTexture?.dispose();
+    this.altcoinOrbiters.forEach((orb) => {
+      orb.faceTex?.dispose();
+      orb.badgeTex?.dispose();
+      orb.badgeMat?.dispose();
+    });
+    this.altcoinTextures = [];
 
     this.controls.dispose();
     this.renderer.dispose();

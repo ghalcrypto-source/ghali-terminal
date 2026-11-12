@@ -58,22 +58,19 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
   return (
     <header className="absolute top-0 left-0 right-0 z-20 pointer-events-none p-2 sm:p-2.5 bg-gradient-to-b from-[#06080d]/95 via-[#06080d]/85 to-transparent">
       <div className="max-w-[1780px] mx-auto flex items-center justify-between gap-2">
-        {/* Left: Branding Logo Badge (View switchers are now on the left sidebar) */}
+        {/* Left: Branding Logo Badge (GHALI TERMINAL) */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="flex items-center gap-2.5 bg-[#0c1220]/90 backdrop-blur-md border border-[#21304d] px-3 py-1.5 rounded shadow-lg group relative overflow-hidden">
+          <div className="flex items-center gap-2.5 bg-[#0c1220]/90 backdrop-blur-md border border-amber-500/30 px-3 py-1.5 rounded-lg shadow-lg group relative overflow-hidden">
             <div className="relative w-5 h-5 flex items-center justify-center shrink-0">
               <span className="absolute inset-0 rounded-full border border-amber-400/40 animate-spin-slow" />
               <Globe className="w-4 h-4 text-amber-400 shrink-0 animate-pulse relative z-10" />
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-mono font-bold text-xs tracking-wider text-white hidden sm:inline">
-                GLOBAL MACRO NEWS INTELLIGENCE
+              <span className="font-mono font-black text-xs sm:text-sm tracking-wider text-amber-300">
+                GHALI TERMINAL
               </span>
-              <span className="font-mono font-bold text-xs tracking-wider text-white sm:hidden">
-                MACRO WIRE
-              </span>
-              <span className="text-[10px] font-mono uppercase bg-[#18263e] text-amber-300 px-1.5 py-0.2 rounded border border-[#2b3f66] font-bold">
-                v5.0 WIB
+              <span className="text-[10px] font-mono uppercase bg-[#18263e] text-slate-300 px-1.5 py-0.2 rounded border border-[#2b3f66] font-bold">
+                PRO INTEL
               </span>
             </div>
           </div>

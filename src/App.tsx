@@ -32,7 +32,6 @@ import {
   Radar,
   LayoutGrid,
   Box,
-  Crown,
   ChevronRight,
   Radio,
   TrendingUp,
@@ -224,11 +223,16 @@ export default function App() {
         {/* ============================================================ */}
         <aside className="w-64 shrink-0 bg-[#080b12] border-r border-[#1a253a] flex flex-col justify-between p-3.5 overflow-y-auto hidden lg:flex text-xs font-mono z-10">
           <div className="space-y-6">
-            <div className="px-2 pt-1 pb-2 border-b border-[#18243b]">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-extrabold block">
-                NAVIGASI UTAMA
-              </span>
-              <span className="text-xs font-bold text-amber-300">MODUL INTELLIGENCE</span>
+            <div className="px-2 pt-1 pb-2.5 border-b border-[#18243b] flex items-center justify-between">
+              <div>
+                <span className="text-xs font-black tracking-wider text-amber-300 font-mono block">
+                  GHALI TERMINAL
+                </span>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+                  Macro & Crypto Desk
+                </span>
+              </div>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="System Live" />
             </div>
 
             <div className="space-y-1.5">
@@ -411,26 +415,6 @@ export default function App() {
                 </span>
               </button>
             </div>
-          </div>
-
-          {/* Pro Access Badge Card */}
-          <div className="p-3.5 bg-gradient-to-b from-[#0f1728] to-[#0a0f1b] border border-amber-500/30 rounded-xl space-y-2 mt-4 shadow-lg">
-            <div className="flex items-center gap-2 text-amber-300 font-bold text-xs">
-              <Crown className="w-4 h-4 text-amber-400 fill-amber-400/20" />
-              <span>Pro Access Desk</span>
-            </div>
-            <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
-              Institutional real-time liquidity feeds & AI contrarian alpha.
-            </p>
-            <button
-              onClick={() => {
-                sound.playClick(1400);
-                setIsApiKeysOpen(true);
-              }}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black font-extrabold text-xs py-1.5 rounded-lg transition-all shadow-md cursor-pointer"
-            >
-              Configure API Keys →
-            </button>
           </div>
         </aside>
 

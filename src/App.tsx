@@ -14,7 +14,7 @@ import { RadarModal } from './components/RadarModal';
 import { ExchangeContrarianPanel } from './components/ExchangeContrarianPanel';
 import { TopMoversModal } from './components/TopMoversModal';
 import { AuthModal } from './components/AuthModal';
-import { LoginGate } from './components/LoginGate';
+import { LoginGate, OWNER_TOKEN_STORAGE_KEY } from './components/LoginGate';
 import { TechnicalAnalysisPanel } from './components/TechnicalAnalysisPanel';
 import { WhaleIntelligenceModal } from './components/WhaleIntelligenceModal';
 import { PriceAlertManager } from './components/PriceAlertManager';
@@ -25,6 +25,8 @@ import { UserSession } from './types/news';
 import { MacroNewsItem, ApiKeysConfig } from './types/macroNews';
 import { PartInfo, Altcoin5mMetric } from './three/MonolithScene';
 import { sound } from './audio/soundEngine';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth, signOutGoogle, syncGoogleUserProfile } from './firebase';
 import {
   Newspaper,
   Activity,
@@ -70,7 +72,7 @@ export default function App() {
   const [autoRotate, setAutoRotate] = useState(true);
   const [rotationSpeed, setRotationSpeed] = useState(1.0);
   const [hoveredPart, setHoveredPart] = useState<PartInfo | null>(null);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true); // Controls Alert "Cekring" sound (UI clicks remain muted)
 
   // Global Macro News State
   const [macroNews, setMacroNews] = useState<MacroNewsItem[]>([]);
@@ -90,17 +92,104 @@ export default function App() {
     }
   });
 
-  // User authentication session state
-  const [session, setSession] = useState<UserSession>(() => {
-    return {
-      isLoggedIn: false, // Mandatory login gate
-      traderName: '',
-      role: 'Head of Global Macro Strategy',
-      avatarSeed: 'gate',
-      connectedExchanges: ['BINANCE', 'BITGET'],
-      riskPreference: 'CONVEX ASYMMETRIC',
+  // Mandatory Firebase Google Auth session state
+  const [authReady, setAuthReady] = useState(false);
+  const [session, setSession] = useState<UserSession>(() => ({
+    isLoggedIn: false,
+    traderName: '',
+    role: 'Verified Google Strategist',
+    avatarSeed: 'gate',
+    connectedExchanges: ['BINANCE', 'BITGET'],
+    riskPreference: 'CONVEX ASYMMETRIC',
+  }));
+
+  useEffect(() => {
+    let cancelled = false;
+    let firebaseResolved = false;
+    let ownerCheckResolved = false;
+    let hasFirebaseUser = false;
+
+    const finalizeReady = () => {
+      if (!cancelled && firebaseResolved && ownerCheckResolved) {
+        setAuthReady(true);
+      }
     };
-  });
+
+    const verifyStoredOwnerToken = async () => {
+      try {
+        const token = localStorage.getItem(OWNER_TOKEN_STORAGE_KEY);
+        if (!token) return;
+        const res = await fetch('/api/auth/owner-session', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          localStorage.removeItem(OWNER_TOKEN_STORAGE_KEY);
+          return;
+        }
+        const data = await res.json();
+        if (!cancelled && data?.authenticated && data?.user && !hasFirebaseUser) {
+          setSession({
+            isLoggedIn: true,
+            uid: data.user.uid,
+            email: data.user.email || '',
+            photoURL: '',
+            traderName: data.user.traderName || 'GHALI',
+            role: data.user.role || 'Terminal Owner',
+            avatarSeed: data.user.uid,
+            connectedExchanges: ['BINANCE', 'BITGET'],
+            riskPreference: 'CONVEX ASYMMETRIC',
+          });
+        }
+      } catch (_) {
+      } finally {
+        ownerCheckResolved = true;
+        finalizeReady();
+      }
+    };
+
+    verifyStoredOwnerToken();
+
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      firebaseResolved = true;
+      if (firebaseUser && firebaseUser.email) {
+        hasFirebaseUser = true;
+        setSession({
+          isLoggedIn: true,
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          photoURL: firebaseUser.photoURL || '',
+          traderName: firebaseUser.displayName || firebaseUser.email.split('@')[0] || 'Google User',
+          role: 'Verified Google Strategist',
+          avatarSeed: firebaseUser.uid,
+          connectedExchanges: ['BINANCE', 'BITGET'],
+          riskPreference: 'CONVEX ASYMMETRIC',
+        });
+        syncGoogleUserProfile(firebaseUser).catch((err) =>
+          console.error('Google profile sync warning:', err)
+        );
+      } else {
+        hasFirebaseUser = false;
+        setSession((prev) =>
+          prev.uid === 'owner-120403'
+            ? prev
+            : {
+                isLoggedIn: false,
+                traderName: '',
+                role: 'Observer',
+                avatarSeed: 'guest',
+                connectedExchanges: [],
+                riskPreference: 'CONVEX ASYMMETRIC',
+              }
+        );
+      }
+      finalizeReady();
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
 
   // Modals state
   const [isRadarOpen, setIsRadarOpen] = useState(false);
@@ -169,7 +258,7 @@ export default function App() {
   const toggleSound = () => {
     const next = !soundEnabled;
     setSoundEnabled(next);
-    sound.enabled = next;
+    sound.setAlertEnabled(next);
   };
 
   const handleSaveApiKeys = (newConfig: ApiKeysConfig) => {
@@ -181,24 +270,25 @@ export default function App() {
 
   const handleLogin = (newSession: UserSession) => {
     setSession(newSession);
-    try {
-      localStorage.setItem('contrarian_session', JSON.stringify(newSession));
-    } catch (_) {}
   };
 
-  const handleLogout = () => {
-    const loggedOut: UserSession = {
+  const handleLogout = async () => {
+    try {
+      localStorage.removeItem(OWNER_TOKEN_STORAGE_KEY);
+    } catch (_) {}
+    try {
+      await signOutGoogle();
+    } catch (err) {
+      console.error('Google signOut error:', err);
+    }
+    setSession({
       isLoggedIn: false,
       traderName: '',
       role: 'Observer',
       avatarSeed: 'guest',
       connectedExchanges: [],
       riskPreference: 'CONVEX ASYMMETRIC',
-    };
-    setSession(loggedOut);
-    try {
-      localStorage.removeItem('contrarian_session');
-    } catch (_) {}
+    });
   };
 
   const handleLoadToChart = (symbol: string) => {
@@ -218,8 +308,17 @@ export default function App() {
     setIsAIDrawerOpen(true);
   };
 
-  // If user is not logged in, render mandatory Login Gate
-  if (!session.isLoggedIn) {
+  if (!authReady) {
+    return (
+      <div className="w-screen h-screen bg-[#04060a] flex flex-col items-center justify-center gap-3 font-mono text-xs text-amber-300">
+        <div className="w-8 h-8 rounded-full border-2 border-amber-400/30 border-t-amber-400 animate-spin" />
+        <span className="tracking-widest uppercase">Memverifikasi Sesi Server Google...</span>
+      </div>
+    );
+  }
+
+  // If user is not authenticated with Google, render mandatory Google Auth Gate
+  if (!session.isLoggedIn || !session.uid) {
     return <LoginGate onLoginSuccess={handleLogin} />;
   }
 
@@ -700,6 +799,8 @@ export default function App() {
         isOpen={isAlertsOpen}
         onClose={() => setIsAlertsOpen(false)}
         onSelectCoinToChart={handleLoadToChart}
+        alertSoundEnabled={soundEnabled}
+        onToggleAlertSound={toggleSound}
       />
     </main>
   );

@@ -1,0 +1,97 @@
+{
+  "entities": {
+    "UserPrivateProfile": {
+      "title": "UserPrivateProfile",
+      "description": "Authenticated Google user profile linked to GHALI TERMINAL.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the authenticated Google user."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 254,
+          "description": "Verified Google account email address."
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Google account display name."
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "Google account profile picture URL."
+        },
+        "role": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Terminal strategy role."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when user first linked Google account."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of latest Google sign-in."
+        }
+      },
+      "required": ["uid", "email", "displayName", "role", "createdAt", "updatedAt"]
+    },
+    "PriceAlertRecord": {
+      "title": "PriceAlertRecord",
+      "description": "Custom crypto price alert owned by an authenticated Google user.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "symbol": {
+          "type": "string",
+          "maxLength": 24,
+          "pattern": "^[A-Z0-9]+$",
+          "description": "Trading pair symbol (e.g. BTCUSDT)."
+        },
+        "targetPrice": {
+          "type": "number",
+          "description": "Target USD trigger price."
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["ABOVE", "BELOW"],
+          "description": "Alert trigger direction."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        }
+      },
+      "required": ["ownerId", "symbol", "targetPrice", "direction", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/private/profile": {
+      "schema": {
+        "$ref": "#/entities/UserPrivateProfile"
+      },
+      "description": "Isolated PII profile for authenticated Google user."
+    },
+    "/users/{userId}/alerts/{alertId}": {
+      "schema": {
+        "$ref": "#/entities/PriceAlertRecord"
+      },
+      "description": "Custom price alerts belonging to authenticated user."
+    }
+  }
+}

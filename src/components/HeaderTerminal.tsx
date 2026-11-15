@@ -122,13 +122,10 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
             <span className="hidden md:inline">TEKNIKAL</span>
           </button>
 
-          {/* Audio toggle */}
+          {/* Alert Audio toggle */}
           <button
-            onClick={() => {
-              sound.playClick();
-              onToggleSound();
-            }}
-            title={soundEnabled ? 'Mute Audio' : 'Enable Audio'}
+            onClick={onToggleSound}
+            title={soundEnabled ? 'Matikan Suara Alert Cekring' : 'Aktifkan Suara Alert Cekring'}
             className="flex items-center bg-[#0c1220] hover:bg-[#162138] border border-[#233454] text-slate-300 hover:text-white p-1.5 rounded text-xs font-mono transition-colors shadow-md cursor-pointer"
           >
             {soundEnabled ? (
@@ -138,33 +135,37 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
             )}
           </button>
 
-          {/* User Account */}
+          {/* Authenticated Google User Account */}
           {session.isLoggedIn ? (
             <button
-              onClick={() => {
-                sound.playClick();
-                onOpenAuth();
-              }}
+              onClick={onOpenAuth}
+              title={session.email || session.traderName}
               className="flex items-center gap-1.5 bg-[#141d2e] hover:bg-[#1c2940] border border-[#2a3c5e] text-slate-200 px-2.5 py-1 rounded text-xs font-mono transition-colors shadow-md cursor-pointer"
             >
-              <div className="w-4 h-4 rounded-full bg-amber-500 text-black font-bold flex items-center justify-center text-[10px]">
-                {session.traderName.slice(0, 1)}
-              </div>
-              <span className="font-semibold text-amber-300 truncate max-w-[80px] sm:max-w-[120px]">
+              {session.photoURL ? (
+                <img
+                  src={session.photoURL}
+                  alt={session.traderName}
+                  referrerPolicy="no-referrer"
+                  className="w-4 h-4 rounded-full object-cover border border-amber-400/60"
+                />
+              ) : (
+                <div className="w-4 h-4 rounded-full bg-amber-500 text-black font-bold flex items-center justify-center text-[10px]">
+                  {session.traderName.slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <span className="font-semibold text-amber-300 truncate max-w-[80px] sm:max-w-[130px]">
                 {session.traderName}
               </span>
               <LogOut className="w-3 h-3 text-slate-400 ml-1" />
             </button>
           ) : (
             <button
-              onClick={() => {
-                sound.playClick();
-                onOpenAuth();
-              }}
+              onClick={onOpenAuth}
               className="flex items-center gap-1.5 bg-[#172236] hover:bg-[#20304c] border border-amber-500/40 text-amber-300 hover:text-white px-2.5 py-1.5 rounded text-xs font-mono font-bold transition-colors shadow-md cursor-pointer"
             >
               <User className="w-3.5 h-3.5 text-amber-400" />
-              <span>MASUK</span>
+              <span>MASUK GOOGLE</span>
             </button>
           )}
         </div>

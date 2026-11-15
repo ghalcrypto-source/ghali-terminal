@@ -27,12 +27,16 @@ interface PriceAlertManagerProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectCoinToChart: (symbol: string) => void;
+  alertSoundEnabled?: boolean;
+  onToggleAlertSound?: () => void;
 }
 
 export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
   isOpen,
   onClose,
   onSelectCoinToChart,
+  alertSoundEnabled = true,
+  onToggleAlertSound,
 }) => {
   const [alerts, setAlerts] = useState<PriceAlert[]>(() => {
     try {
@@ -60,6 +64,7 @@ export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
   const [notifications, setNotifications] = useState<
     { id: string; message: string; time: string; type: 'up' | 'down' }[]
   >([]);
+  const [autoTickChime, setAutoTickChime] = useState(false);
 
   const [selectedCoin, setSelectedCoin] = useState('BTCUSDT');
   const [targetPriceInput, setTargetPriceInput] = useState('72500');
@@ -72,18 +77,18 @@ export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
     } catch (_) {}
   }, [alerts]);
 
-  // Simulate real-time price fluctuation and $1 movement detector with authentic "Cekring" sound
+  // Simulate real-time price fluctuation log; only play Cekring chime when autoTickChime & alertSoundEnabled are ON
   useEffect(() => {
     const timer = setInterval(() => {
-      // Pick a random coin from 50 coins to simulate a $1+ price tick
       const randomCoin = CRYPTO_50_COINS[Math.floor(Math.random() * CRYPTO_50_COINS.length)];
-      const delta = (Math.random() * 4 - 1.95); // e.g. -1.95 to +2.05 ($1+ movement)
+      const delta = (Math.random() * 4 - 1.95);
       if (Math.abs(delta) >= 1.0) {
         const isUp = delta > 0;
         const msg = `${randomCoin.symbol} bergerak ${isUp ? 'NAIK' : 'TURUN'} sebesar $${Math.abs(delta).toFixed(2)} (Harga terkini: $${(randomCoin.basePriceUSD + delta).toLocaleString()})`;
-        
-        // Mainkan nada cekring (cash register / coin bell chime) saat notifikasi aktif
-        sound.playCekring();
+
+        if (autoTickChime && alertSoundEnabled) {
+          sound.playCekring();
+        }
 
         setNotifications((prev) => [
           {
@@ -92,13 +97,13 @@ export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
             time: new Date().toLocaleTimeString(),
             type: isUp ? 'up' : 'down',
           },
-          ...prev.slice(0, 15), // keep last 15
+          ...prev.slice(0, 15),
         ]);
       }
-    }, 5000); // every 5 seconds check $1 tick
+    }, 5000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [autoTickChime, alertSoundEnabled]);
 
   if (!isOpen) return null;
 
@@ -107,7 +112,9 @@ export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
     const price = parseFloat(targetPriceInput);
     if (isNaN(price) || price <= 0) return;
 
-    sound.playCekring();
+    if (alertSoundEnabled) {
+      sound.playCekring();
+    }
     const newAlert: PriceAlert = {
       id: Math.random().toString(36).substring(2, 9),
       symbol: selectedCoin,
@@ -121,7 +128,6 @@ export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
   };
 
   const handleDeleteAlert = (id: string) => {
-    sound.playClick();
     setAlerts((prev) => prev.filter((a) => a.id !== id));
   };
 
@@ -129,29 +135,49 @@ export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-none">
       <div className="bg-[#0b0f18] border border-[#23314d] rounded-xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden text-slate-100">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1c273e] bg-[#0e1422]">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 border-b border-[#1c273e] bg-[#0e1422]">
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded bg-amber-500/10 border border-amber-500/30">
-              <BellRing className="w-4 h-4 text-amber-400 animate-pulse" />
+              <BellRing className="w-4 h-4 text-amber-400" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-sm font-mono font-bold tracking-wider text-slate-100">
                   PUSAT ALERT & NOTIFIKASI PERGERAKAN $1
                 </h2>
-                <span className="text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full flex items-center gap-1 font-bold">
-                  🔔 NADA CEKRING AKTIF
+                <span
+                  className={`text-[10px] font-mono px-2 py-0.5 rounded-full border flex items-center gap-1 font-bold ${
+                    alertSoundEnabled
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                      : 'bg-slate-800/70 text-slate-400 border-slate-700'
+                  }`}
+                >
+                  {alertSoundEnabled ? '🔔 SUARA ALERT CEKRING: AKTIF' : '🔇 SUARA ALERT: MATI'}
                 </span>
               </div>
               <p className="text-[11px] font-mono text-slate-400">
-                Notifikasi instan setiap koin naik atau turun $1 dengan efek suara cekring • Target Harga Kustom
+                Nada cekring berbunyi saat alert aktif / dites • Mode senyap klik UI aktif
               </p>
             </div>
           </div>
-          
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {onToggleAlertSound && (
+              <button
+                onClick={onToggleAlertSound}
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-bold rounded border transition-colors cursor-pointer ${
+                  alertSoundEnabled
+                    ? 'bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border-emerald-600/50'
+                    : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border-slate-700'
+                }`}
+                title="Nyalakan / Matikan Suara Alert Cekring"
+              >
+                <Volume2 className="w-3.5 h-3.5" />
+                <span>{alertSoundEnabled ? 'Suara Alert: ON' : 'Suara Alert: OFF'}</span>
+              </button>
+            )}
             <button
-              onClick={() => sound.playCekring()}
+              onClick={() => sound.playCekring(true)}
               className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 rounded transition-colors cursor-pointer"
               title="Klik untuk mendengarkan nada notifikasi cekring"
             >
@@ -159,10 +185,18 @@ export const PriceAlertManager: React.FC<PriceAlertManagerProps> = ({
               <span>Tes Nada Cekring 🔔</span>
             </button>
             <button
-              onClick={() => {
-                sound.playClick();
-                onClose();
-              }}
+              onClick={() => setAutoTickChime((prev) => !prev)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-bold rounded border transition-colors cursor-pointer ${
+                autoTickChime
+                  ? 'bg-cyan-950/60 text-cyan-300 border-cyan-600/50'
+                  : 'bg-[#121929] text-slate-400 border-[#25324e] hover:text-slate-200'
+              }`}
+              title="Aktifkan bunyi cekring otomatis setiap log pergerakan $1"
+            >
+              <span>{autoTickChime ? 'Auto $1 Chime: ON' : 'Auto $1 Chime: OFF'}</span>
+            </button>
+            <button
+              onClick={onClose}
               className="p-1 text-slate-400 hover:text-white rounded border border-[#25324e] hover:bg-[#1a2336] cursor-pointer"
             >
               <X className="w-4 h-4" />

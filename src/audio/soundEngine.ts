@@ -1,6 +1,21 @@
 class SoundEngine {
   private ctx: AudioContext | null = null;
-  public enabled: boolean = true;
+  public enabled: boolean = false; // UI clicks/ticks/pings silent by default
+  public alertEnabled: boolean = true; // Dedicated alert "cekring" sound active
+
+  public setEnabled(next: boolean) {
+    this.enabled = next;
+    if (!next && !this.alertEnabled && this.ctx && this.ctx.state === 'running') {
+      this.ctx.suspend().catch(() => {});
+    }
+  }
+
+  public setAlertEnabled(next: boolean) {
+    this.alertEnabled = next;
+    if (!next && !this.enabled && this.ctx && this.ctx.state === 'running') {
+      this.ctx.suspend().catch(() => {});
+    }
+  }
 
   private initCtx() {
     if (!this.ctx && typeof window !== 'undefined') {
@@ -116,10 +131,10 @@ class SoundEngine {
 
   /**
    * Sound effect: "Cekring" (authentic cash register / coin clink + resonant bell chime)
-   * Plays on price movement ($1 ticks), target price hits, and manual test.
+   * Plays on price alerts, target price hits, and manual test when alertEnabled is true.
    */
-  public playCekring() {
-    if (!this.enabled) return;
+  public playCekring(force = false) {
+    if (!this.alertEnabled && !force) return;
     try {
       this.initCtx();
       if (!this.ctx) return;

@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
@@ -1123,9 +1124,26 @@ function formatWIBTime(dateInput?: string | Date | number): { wibString: string;
   }
 }
 
-// Helper for 10 mandatory category classification & metadata extraction with explicit asset impact mapping
-function classifyMacroNews(title: string, summary: string): {
-  category: 'FED_FOMC' | 'CPI_INFLATION' | 'CENTRAL_BANKS' | 'GDP_JOBS' | 'LIQUIDITY' | 'GEOPOLITICS_WAR' | 'TRADE_WAR' | 'BANKING_CRISIS' | 'DEBT_YIELDS' | 'CRYPTO_REGULATION';
+// Helper for category classification & metadata extraction with explicit Crypto 24H + Macro asset impact mapping
+function classifyMacroNews(
+  title: string,
+  summary: string,
+  domainHint?: 'CRYPTO' | 'MACRO'
+): {
+  newsDomain: 'CRYPTO' | 'MACRO';
+  category:
+    | 'CRYPTO_MARKET'
+    | 'DEFI_ONCHAIN'
+    | 'CRYPTO_REGULATION'
+    | 'FED_FOMC'
+    | 'CPI_INFLATION'
+    | 'CENTRAL_BANKS'
+    | 'GDP_JOBS'
+    | 'LIQUIDITY'
+    | 'GEOPOLITICS_WAR'
+    | 'TRADE_WAR'
+    | 'BANKING_CRISIS'
+    | 'DEBT_YIELDS';
   categoryLabel: string;
   country: 'US' | 'EU' | 'UK' | 'CN' | 'JP' | 'ME' | 'GLOBAL';
   impactLevel: 'HIGH' | 'MEDIUM' | 'LOW';
@@ -1136,10 +1154,56 @@ function classifyMacroNews(title: string, summary: string): {
 } {
   const text = `${title} ${summary}`.toLowerCase();
 
-  let category: any = 'FED_FOMC';
-  let categoryLabel = 'Fed & FOMC';
+  const hasCryptoSignal =
+    domainHint === 'CRYPTO' ||
+    /\b(bitcoin|btc|ethereum|eth|solana|sol|xrp|ripple|doge|dogecoin|sui|cardano|ada|avax|chainlink|altcoin|crypto|cryptocurrency|blockchain|web3|defi|stablecoin|usdt|usdc|tether|binance|coinbase|kraken|okx|bybit|dex|uniswap|lido|aave|airdrop|memecoin|nft|satoshi|halving|spot etf|bitcoin etf|ethereum etf|on-chain|whale)\b/.test(
+      text
+    );
 
-  if (text.includes('cpi') || text.includes('pce') || text.includes('inflation') || text.includes('nfp') || text.includes('payroll') || text.includes('ppi') || text.includes('wage')) {
+  let category: any = hasCryptoSignal ? 'CRYPTO_MARKET' : 'FED_FOMC';
+  let categoryLabel = hasCryptoSignal ? 'Crypto 24H (BTC & Alts)' : 'Fed & FOMC';
+
+  if (
+    hasCryptoSignal &&
+    (text.includes('sec') ||
+      text.includes('cftc') ||
+      text.includes('regulation') ||
+      text.includes('regulatory') ||
+      text.includes('etf') ||
+      text.includes('lawsuit') ||
+      text.includes('bill') ||
+      text.includes('treasury reserve') ||
+      text.includes('mica'))
+  ) {
+    category = 'CRYPTO_REGULATION';
+    categoryLabel = 'Crypto Regulation & ETF';
+  } else if (
+    hasCryptoSignal &&
+    (text.includes('defi') ||
+      text.includes('on-chain') ||
+      text.includes('layer-2') ||
+      text.includes('layer 2') ||
+      text.includes('rollup') ||
+      text.includes('dex') ||
+      text.includes('lending') ||
+      text.includes('staking') ||
+      text.includes('tvl') ||
+      text.includes('bridge') ||
+      text.includes('exploit') ||
+      text.includes('hack') ||
+      text.includes('phishing') ||
+      text.includes('wallet') ||
+      text.includes('stablecoin') ||
+      text.includes('usdt') ||
+      text.includes('usdc') ||
+      text.includes('whale'))
+  ) {
+    category = 'DEFI_ONCHAIN';
+    categoryLabel = 'DeFi, Layer-2 & On-Chain';
+  } else if (hasCryptoSignal) {
+    category = 'CRYPTO_MARKET';
+    categoryLabel = 'Crypto 24H (BTC & Alts)';
+  } else if (text.includes('cpi') || text.includes('pce') || text.includes('inflation') || text.includes('nfp') || text.includes('payroll') || text.includes('ppi') || text.includes('wage')) {
     category = 'CPI_INFLATION';
     categoryLabel = 'CPI, PCE & NFP';
   } else if (text.includes('ecb') || text.includes('boj') || text.includes('boe') || text.includes('pboc') || text.includes('central bank') || text.includes('interest rate') || text.includes('rate hike') || text.includes('rate cut')) {
@@ -1163,13 +1227,18 @@ function classifyMacroNews(title: string, summary: string): {
   } else if (text.includes('treasury yield') || text.includes('bond yield') || text.includes('10-year') || text.includes('sovereign debt') || text.includes('deficit') || text.includes('yield curve')) {
     category = 'DEBT_YIELDS';
     categoryLabel = 'Govt Debt & Bond Yields';
-  } else if (text.includes('sec') || text.includes('cftc') || text.includes('crypto') || text.includes('bitcoin') || text.includes('ethereum') || text.includes('etf') || text.includes('stablecoin') || text.includes('binance') || text.includes('coinbase') || text.includes('regulatory')) {
-    category = 'CRYPTO_REGULATION';
-    categoryLabel = 'Crypto Regulation & Adoption';
   } else if (text.includes('fed') || text.includes('powell') || text.includes('fomc') || text.includes('federal reserve')) {
     category = 'FED_FOMC';
     categoryLabel = 'Fed & FOMC';
   }
+
+  const newsDomain: 'CRYPTO' | 'MACRO' =
+    hasCryptoSignal ||
+    category === 'CRYPTO_MARKET' ||
+    category === 'DEFI_ONCHAIN' ||
+    category === 'CRYPTO_REGULATION'
+      ? 'CRYPTO'
+      : 'MACRO';
 
   let country: 'US' | 'EU' | 'UK' | 'CN' | 'JP' | 'ME' | 'GLOBAL' = 'GLOBAL';
   if (text.includes('fed') || text.includes('us ') || text.includes('united states') || text.includes('powell') || text.includes('treasury') || text.includes('wall street') || text.includes('sec')) {
@@ -1192,6 +1261,12 @@ function classifyMacroNews(title: string, summary: string): {
     text.includes('emergency') ||
     text.includes('soars') ||
     text.includes('plunges') ||
+    text.includes('crashes') ||
+    text.includes('lowest') ||
+    text.includes('all-time high') ||
+    text.includes('ath') ||
+    text.includes('hack') ||
+    text.includes('exploit') ||
     text.includes('rate decision') ||
     text.includes('fomc') ||
     text.includes('cpi') ||
@@ -1201,7 +1276,9 @@ function classifyMacroNews(title: string, summary: string): {
     text.includes('collapse') ||
     text.includes('crisis') ||
     text.includes('surge') ||
-    text.includes('tariff')
+    text.includes('tariff') ||
+    text.includes('liquidation') ||
+    text.includes('etf')
   ) {
     impactLevel = 'HIGH';
   } else if (text.includes('opinion') || text.includes('editorial') || text.includes('blog')) {
@@ -1209,9 +1286,41 @@ function classifyMacroNews(title: string, summary: string): {
   }
 
   let sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
-  if (text.includes('surge') || text.includes('rally') || text.includes('pause') || text.includes('cut') || text.includes('inflow') || text.includes('record high') || text.includes('easing') || text.includes('growth')) {
+  if (
+    text.includes('surge') ||
+    text.includes('rally') ||
+    text.includes('soar') ||
+    text.includes('pause') ||
+    text.includes('cut') ||
+    text.includes('inflow') ||
+    text.includes('record high') ||
+    text.includes('easing') ||
+    text.includes('growth') ||
+    text.includes('approve') ||
+    text.includes('adopt') ||
+    text.includes('bullish') ||
+    text.includes('rebound')
+  ) {
     sentiment = 'BULLISH';
-  } else if (text.includes('plunge') || text.includes('drop') || text.includes('hike') || text.includes('collapse') || text.includes('crisis') || text.includes('war') || text.includes('sanction') || text.includes('spike')) {
+  } else if (
+    text.includes('plunge') ||
+    text.includes('crash') ||
+    text.includes('lowest') ||
+    text.includes('drop') ||
+    text.includes('slump') ||
+    text.includes('sell-off') ||
+    text.includes('outflow') ||
+    text.includes('hack') ||
+    text.includes('phishing') ||
+    text.includes('theft') ||
+    text.includes('loses') ||
+    text.includes('hike') ||
+    text.includes('collapse') ||
+    text.includes('crisis') ||
+    text.includes('war') ||
+    text.includes('sanction') ||
+    text.includes('bearish')
+  ) {
     sentiment = 'BEARISH';
   }
 
@@ -1220,7 +1329,53 @@ function classifyMacroNews(title: string, summary: string): {
   let assetImpacts: Array<{ asset: string; assetLabel: string; direction: 'BULLISH' | 'BEARISH' | 'NEUTRAL'; effectText: string }> = [];
   let impactSummaryText = '';
 
-  if (category === 'FED_FOMC' || category === 'CPI_INFLATION') {
+  if (category === 'CRYPTO_MARKET' || category === 'DEFI_ONCHAIN') {
+    const detectedCoins: string[] = [];
+    if (text.includes('bitcoin') || text.includes('btc')) detectedCoins.push('BTC');
+    if (text.includes('ethereum') || text.includes('eth')) detectedCoins.push('ETH');
+    if (text.includes('solana') || text.includes('sol')) detectedCoins.push('SOL');
+    if (text.includes('xrp') || text.includes('ripple')) detectedCoins.push('XRP');
+    if (text.includes('bnb') || text.includes('binance')) detectedCoins.push('BNB');
+    if (text.includes('doge')) detectedCoins.push('DOGE');
+    if (text.includes('sui')) detectedCoins.push('SUI');
+    if (text.includes('ada') || text.includes('cardano')) detectedCoins.push('ADA');
+    if (text.includes('avax')) detectedCoins.push('AVAX');
+    if (text.includes('link') || text.includes('chainlink')) detectedCoins.push('LINK');
+
+    targetAssets = detectedCoins.length > 0 ? detectedCoins.slice(0, 3) : ['BTC', 'ETH', 'SOL'];
+    const leadCoin = targetAssets[0] || 'BTC';
+
+    assetImpacts = [
+      {
+        asset: leadCoin,
+        assetLabel: leadCoin,
+        direction: sentiment,
+        effectText:
+          sentiment === 'BULLISH'
+            ? `${leadCoin} Menguat (Katalis Sentimen Positif 24H)`
+            : sentiment === 'BEARISH'
+            ? `${leadCoin} Tertekan (Risiko Aksi Jual / Volatilitas 24H)`
+            : `Rotasi Likuiditas 24H pada ${leadCoin} & Altcoins`,
+      },
+      {
+        asset: leadCoin === 'BTC' ? 'ETH' : 'BTC',
+        assetLabel: leadCoin === 'BTC' ? 'Ethereum' : 'Bitcoin',
+        direction: sentiment,
+        effectText:
+          sentiment === 'BULLISH'
+            ? 'Sentimen Risk-On Mengalir ke Kapitalisasi Besar'
+            : sentiment === 'BEARISH'
+            ? 'Kewaspadaan Likuiditas Lintas Pasar Kripto'
+            : 'Konsolidasi Beta & Dominasi BTC',
+      },
+    ];
+    impactSummaryText =
+      sentiment === 'BULLISH'
+        ? `Dampak Crypto 24H: ${targetAssets.join(', ')} Menguat ⬆️ (Katalis Positif Pasar)`
+        : sentiment === 'BEARISH'
+        ? `Dampak Crypto 24H: ${targetAssets.join(', ')} Tertekan ⬇️ (Risiko Volatilitas / Likuidasi)`
+        : `Dampak Crypto 24H: Rebalancing & Rotasi Modal pada ${targetAssets.join(', ')} ⚡`;
+  } else if (category === 'FED_FOMC' || category === 'CPI_INFLATION') {
     targetAssets = ['DXY', 'BTC', 'XAUUSD'];
     const isHawkish = sentiment === 'BEARISH' || text.includes('hike') || text.includes('high') || text.includes('spike');
     assetImpacts = [
@@ -1273,7 +1428,7 @@ function classifyMacroNews(title: string, summary: string): {
       { asset: 'DXY', assetLabel: 'US Dollar', direction: 'BULLISH', effectText: 'DXY Menguat (Dollar Haven Bid)' },
       { asset: 'BTC', assetLabel: 'Bitcoin', direction: 'NEUTRAL', effectText: 'Volatilitas Awal Menyusul Rebalancing' },
     ];
-    impactSummaryText = 'Dampak: Emas (XAUUSD) & Dollar Haven Melonjak 🚀 (Sentimen Safe-Haven Primar)';
+    impactSummaryText = 'Dampak: Emas (XAUUSD) & Dollar Haven Melonjak 🚀 (Sentimen Safe-Haven Primer)';
   } else if (category === 'CRYPTO_REGULATION') {
     targetAssets = ['BTC', 'ETH', 'SOL'];
     const isPos = sentiment === 'BULLISH' || text.includes('etf') || text.includes('approve') || text.includes('reserve');
@@ -1318,6 +1473,7 @@ function classifyMacroNews(title: string, summary: string): {
   }
 
   return {
+    newsDomain,
     category,
     categoryLabel,
     country,
@@ -1342,7 +1498,28 @@ function buildAutomatedMacroAnalysis(title: string, summary: string, meta: any, 
   let forexImpact = '';
   let keyFacts: string[] = [];
 
-  if (cat === 'FED_FOMC' || cat === 'CPI_INFLATION') {
+  if (cat === 'CRYPTO_MARKET' || cat === 'DEFI_ONCHAIN') {
+    whyItMatters =
+      cat === 'DEFI_ONCHAIN'
+        ? 'Dinamika on-chain, arus likuiditas stablecoin, keamanan protokol DeFi, serta pergerakan dompet whale merupakan indikator awal pergeseran modal 24 jam di pasar kripto sebelum tercermin di harga spot.'
+        : 'Pasar kripto bergerak 24/7 tanpa jeda bursa; katalis berita 24 jam terakhir langsung memicu penyesuaian leverage derivatif (funding rate & open interest) serta arus masuk modal BTC dan altcoin.';
+    usdDxyImpact =
+      'Dampak tidak langsung terhadap DXY: aliran modal risk-on di kripto sering beriringan dengan pelemahan permintaan kas dolar jangka pendek.';
+    cryptoImpact =
+      sent === 'BULLISH'
+        ? `Positif untuk ${meta.targetAssets.join(', ')}: Momentum berita mendukung akumulasi spot, peningkatan open interest sehat, dan rotasi ke altcoin berbeta tinggi.`
+        : sent === 'BEARISH'
+        ? `Tekanan Jual Jangka Pendek pada ${meta.targetAssets.join(', ')}: Waspadai sweep likuiditas long, pelebaran spread bursa, dan rotasi defensif ke stablecoin (USDT/USDC).`
+        : `Konsolidasi & Rotasi Sektor pada ${meta.targetAssets.join(', ')}: Pasar menimbang katalis berita terhadap level likuiditas orderbook 24 jam.`;
+    goldImpact = 'Emas (XAUUSD) cenderung stabil; modal spekulatif lebih aktif berotasi di aset digital 24 jam.';
+    forexImpact = 'Korelasi valuta asing relatif minim kecuali dipicu guncangan likuiditas dolar atau arus stablecoin lintas negara.';
+    keyFacts = [
+      `Katalis Crypto 24H: ${title.slice(0, 95)}`,
+      `Aset Fokus: ${meta.targetAssets.join(', ')} (${meta.categoryLabel}).`,
+      `Estimasi Dampak Pasar: ${imp} dengan sentimen awal ${sent}.`,
+      'Pantau perubahan volume spot, funding rate futures, dan arus keluar/masuk bursa dalam 1-4 jam ke depan.',
+    ];
+  } else if (cat === 'FED_FOMC' || cat === 'CPI_INFLATION') {
     whyItMatters = 'Perkembangan data inflasi dan arah suku bunga acuan Fed merupakan jangkar utama likuiditas global yang menentukan cost of capital, arah imbal hasil US Treasury, serta selera risiko pasar finansial dunia.';
     if (sent === 'BEARISH') {
       usdDxyImpact = 'DXY Bullish / Menguat: Tekanan inflasi yang persisten atau retorika hawkish menunda pemangkasan suku bunga, mempertahankan imbal hasil US Treasury tinggi dan memperkuat daya tarik dolar.';
@@ -1439,7 +1616,7 @@ function buildAutomatedMacroAnalysis(title: string, summary: string, meta: any, 
   };
 }
 
-// GLOBAL MACRO NEWS INTELLIGENCE Aggregator Endpoint
+// 24H CRYPTO + FOCUSED GLOBAL MACRO NEWS INTELLIGENCE Aggregator (100% Free Keyless Public APIs & Feeds)
 app.get('/api/macro/news', async (req: Request, res: Response) => {
   const newsDataKey = (req.query.newsDataKey as string) || process.env.NEWSDATA_API_KEY || '';
   const gnewsKey = (req.query.gnewsKey as string) || process.env.GNEWS_API_KEY || '';
@@ -1448,16 +1625,23 @@ app.get('/api/macro/news', async (req: Request, res: Response) => {
   const itemsList: any[] = [];
   const seenTitleSlugs = new Set<string>();
 
-  const addUnique = (rawTitle: string, rawSummary: string, source: string, sourceUrl: string, rawDate?: string) => {
+  const addUnique = (
+    rawTitle: string,
+    rawSummary: string,
+    source: string,
+    sourceUrl: string,
+    rawDate?: string,
+    domainHint?: 'CRYPTO' | 'MACRO'
+  ) => {
     if (!rawTitle || rawTitle.trim().length < 10) return;
     const cleanTitle = rawTitle.replace(/<[^>]*>/g, '').trim();
-    const slug = cleanTitle.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40);
+    const slug = cleanTitle.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 42);
     if (seenTitleSlugs.has(slug)) return;
     seenTitleSlugs.add(slug);
 
     const cleanSummary = (rawSummary || '').replace(/<[^>]*>/g, '').trim().slice(0, 320);
     const { wibString, timeAgo, iso } = formatWIBTime(rawDate);
-    const meta = classifyMacroNews(cleanTitle, cleanSummary);
+    const meta = classifyMacroNews(cleanTitle, cleanSummary, domainHint);
     const automatedAnalysis = buildAutomatedMacroAnalysis(cleanTitle, cleanSummary, meta, wibString);
 
     itemsList.push({
@@ -1465,10 +1649,11 @@ app.get('/api/macro/news', async (req: Request, res: Response) => {
       title: cleanTitle,
       summary: cleanSummary || cleanTitle,
       source: source.trim(),
-      sourceUrl: sourceUrl || 'https://www.reuters.com',
+      sourceUrl: sourceUrl || 'https://www.coindesk.com',
       pubDateIso: iso,
       timestampWIB: wibString,
       timeAgo,
+      newsDomain: meta.newsDomain,
       category: meta.category,
       categoryLabel: meta.categoryLabel,
       country: meta.country,
@@ -1482,77 +1667,123 @@ app.get('/api/macro/news', async (req: Request, res: Response) => {
     });
   };
 
-  // 1. Fetch RSS feeds in parallel (BBC, Al Jazeera, France 24, DW)
-  const rssFeeds = [
-    { source: 'BBC World News', url: 'https://feeds.bbci.co.uk/news/world/rss.xml' },
-    { source: 'BBC Business', url: 'https://feeds.bbci.co.uk/news/business/rss.xml' },
-    { source: 'Al Jazeera', url: 'https://www.aljazeera.com/xml/rss/all.xml' },
-    { source: 'France 24', url: 'https://www.france24.com/en/rss' },
-    { source: 'Deutsche Welle (DW)', url: 'https://rss.dw.com/rdf/rss-en-all' },
-  ];
-
-  const rssPromises = rssFeeds.map(async (f) => {
+  // Helper to fetch RSS cleanly with strict AbortSignal timeout so no single slow feed stalls response
+  const fetchRssFeed = async (
+    source: string,
+    url: string,
+    limit: number,
+    domainHint: 'CRYPTO' | 'MACRO'
+  ) => {
     try {
-      const feed = await rssParser.parseURL(f.url);
-      if (feed && feed.items) {
-        feed.items.slice(0, 8).forEach((item) => {
-          addUnique(item.title || '', item.contentSnippet || item.content || '', f.source, item.link || '', item.pubDate || item.isoDate);
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(4000),
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GhaliTerminal/2.0)' },
+      });
+      if (!response.ok) return;
+      const xml = await response.text();
+      const feed = await rssParser.parseString(xml);
+      if (feed && Array.isArray(feed.items)) {
+        feed.items.slice(0, limit).forEach((item) => {
+          addUnique(
+            item.title || '',
+            item.contentSnippet || item.content || '',
+            source,
+            item.link || '',
+            item.pubDate || item.isoDate,
+            domainHint
+          );
         });
       }
     } catch (_) {}
-  });
+  };
 
-  // 2. Fetch GDELT API
-  const gdeltPromise = (async () => {
+  // 1. FREE 24-HOUR CRYPTO RSS FEEDS (No API Key Required, Verified Live)
+  const cryptoRssFeeds = [
+    { source: 'CoinTelegraph', url: 'https://cointelegraph.com/rss', limit: 10 },
+    { source: 'CoinDesk', url: 'https://www.coindesk.com/arc/outboundfeeds/rss/', limit: 10 },
+    { source: 'The Block', url: 'https://www.theblock.co/rss.xml', limit: 8 },
+    { source: 'Decrypt', url: 'https://decrypt.co/feed', limit: 8 },
+    { source: 'U.Today', url: 'https://u.today/rss', limit: 8 },
+    { source: 'Bitcoinist', url: 'https://bitcoinist.com/feed/', limit: 6 },
+    { source: 'CryptoSlate', url: 'https://cryptoslate.com/feed/', limit: 6 },
+  ];
+
+  // 2. FOCUSED GLOBAL MACRO RSS (Trimmed to Business/Market Finance only, no noisy general news)
+  const macroRssFeeds = [
+    { source: 'BBC Business', url: 'https://feeds.bbci.co.uk/news/business/rss.xml', limit: 4 },
+  ];
+
+  const cryptoRssPromises = cryptoRssFeeds.map((f) => fetchRssFeed(f.source, f.url, f.limit, 'CRYPTO'));
+  const macroRssPromises = macroRssFeeds.map((f) => fetchRssFeed(f.source, f.url, f.limit, 'MACRO'));
+
+  // 3. FREE GDELT 24-HOUR CRYPTO API (Zero API Key)
+  const gdeltCryptoPromise = (async () => {
     try {
-      const url = 'https://api.gdeltproject.org/api/v2/doc/doc?query=(fed%20OR%20cpi%20OR%20inflation%20OR%20economy%20OR%20crypto%20OR%20geopolitics)&mode=ArtList&maxrecords=25&format=json';
-      const controller = new AbortController();
-      const tid = setTimeout(() => controller.abort(), 3500);
-      const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(tid);
-
+      const url =
+        'https://api.gdeltproject.org/api/v2/doc/doc?query=(bitcoin%20OR%20ethereum%20OR%20solana%20OR%20crypto%20OR%20defi%20OR%20stablecoin)&mode=ArtList&maxrecords=20&timespan=24h&format=json';
+      const res = await fetch(url, { signal: AbortSignal.timeout(3800) });
       if (res.ok) {
         const data = await res.json();
         if (data && Array.isArray(data.articles)) {
-          data.articles.forEach((art: any) => {
-            const rawSource = art.domain || art.source || 'GDELT Global News';
-            addUnique(art.title, art.title, rawSource, art.url, art.seendate);
+          data.articles.slice(0, 14).forEach((art: any) => {
+            const rawSource = art.domain ? `GDELT (${art.domain})` : 'GDELT Crypto 24H';
+            addUnique(art.title, art.title, rawSource, art.url, art.seendate, 'CRYPTO');
           });
         }
       }
     } catch (_) {}
   })();
 
-  // 3. Fetch The Guardian API
+  // 4. FREE GDELT 24-HOUR MACRO API (Zero API Key - Strict Fed/CPI/Rates/Central Bank focus, capped)
+  const gdeltMacroPromise = (async () => {
+    try {
+      const url =
+        'https://api.gdeltproject.org/api/v2/doc/doc?query=(%22federal%20reserve%22%20OR%20fomc%20OR%20cpi%20OR%20inflation%20OR%20%22interest%20rate%22%20OR%20%22treasury%20yield%22)&mode=ArtList&maxrecords=10&timespan=24h&format=json';
+      const res = await fetch(url, { signal: AbortSignal.timeout(3800) });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.articles)) {
+          data.articles.slice(0, 6).forEach((art: any) => {
+            const rawSource = art.domain ? `GDELT (${art.domain})` : 'GDELT Macro 24H';
+            addUnique(art.title, art.title, rawSource, art.url, art.seendate, 'MACRO');
+          });
+        }
+      }
+    } catch (_) {}
+  })();
+
+  // 5. The Guardian Free API (Capped to 4 macro/finance stories so global news doesn't overwhelm)
   const guardianPromise = (async () => {
     try {
-      const gUrl = `https://content.guardianapis.com/search?q=economy%20OR%20fed%20OR%20inflation%20OR%20geopolitics%20OR%20crypto&show-fields=headline,trailText&page-size=12&api-key=${encodeURIComponent(guardianKey)}`;
-      const controller = new AbortController();
-      const tid = setTimeout(() => controller.abort(), 3500);
-      const res = await fetch(gUrl, { signal: controller.signal });
-      clearTimeout(tid);
-
+      const gUrl = `https://content.guardianapis.com/search?section=business&q=economy%20OR%20inflation%20OR%20interest%20OR%20fed%20OR%20bitcoin&show-fields=headline,trailText&page-size=5&api-key=${encodeURIComponent(guardianKey)}`;
+      const res = await fetch(gUrl, { signal: AbortSignal.timeout(3500) });
       if (res.ok) {
         const data = await res.json();
         if (data?.response?.results) {
-          data.response.results.forEach((art: any) => {
-            addUnique(art.fields?.headline || art.webTitle, art.fields?.trailText || art.webTitle, 'The Guardian', art.webUrl, art.webPublicationDate);
+          data.response.results.slice(0, 4).forEach((art: any) => {
+            addUnique(
+              art.fields?.headline || art.webTitle,
+              art.fields?.trailText || art.webTitle,
+              'The Guardian',
+              art.webUrl,
+              art.webPublicationDate
+            );
           });
         }
       }
     } catch (_) {}
   })();
 
-  // 4. NewsData.io (if key provided)
+  // 6. Optional NewsData.io & GNews (if user supplied keys)
   const newsDataPromise = (async () => {
     if (!newsDataKey) return;
     try {
-      const ndUrl = `https://newsdata.io/api/1/news?apikey=${encodeURIComponent(newsDataKey)}&q=economy%20OR%20fed%20OR%20crypto&language=en`;
-      const res = await fetch(ndUrl);
+      const ndUrl = `https://newsdata.io/api/1/news?apikey=${encodeURIComponent(newsDataKey)}&q=bitcoin%20OR%20crypto%20OR%20fed%20OR%20inflation&language=en`;
+      const res = await fetch(ndUrl, { signal: AbortSignal.timeout(3500) });
       if (res.ok) {
         const data = await res.json();
         if (data && Array.isArray(data.results)) {
-          data.results.forEach((art: any) => {
+          data.results.slice(0, 10).forEach((art: any) => {
             addUnique(art.title, art.description || art.title, art.source_id || 'NewsData.io', art.link, art.pubDate);
           });
         }
@@ -1560,16 +1791,15 @@ app.get('/api/macro/news', async (req: Request, res: Response) => {
     } catch (_) {}
   })();
 
-  // 5. GNews API (if key provided)
   const gnewsPromise = (async () => {
     if (!gnewsKey) return;
     try {
-      const gnUrl = `https://gnews.io/api/v4/search?q=economy%20OR%20fed%20OR%20crypto&token=${encodeURIComponent(gnewsKey)}&lang=en`;
-      const res = await fetch(gnUrl);
+      const gnUrl = `https://gnews.io/api/v4/search?q=bitcoin%20OR%20crypto%20OR%20fed%20OR%20inflation&token=${encodeURIComponent(gnewsKey)}&lang=en`;
+      const res = await fetch(gnUrl, { signal: AbortSignal.timeout(3500) });
       if (res.ok) {
         const data = await res.json();
         if (data && Array.isArray(data.articles)) {
-          data.articles.forEach((art: any) => {
+          data.articles.slice(0, 10).forEach((art: any) => {
             addUnique(art.title, art.description || art.title, art.source?.name || 'GNews', art.url, art.publishedAt);
           });
         }
@@ -1577,74 +1807,58 @@ app.get('/api/macro/news', async (req: Request, res: Response) => {
     } catch (_) {}
   })();
 
-  await Promise.allSettled([...rssPromises, gdeltPromise, guardianPromise, newsDataPromise, gnewsPromise]);
-
-  // Fallback enriched live macro stories if feeds yielded fewer than 8 items
-  if (itemsList.length < 8) {
-    const fallbackMacro = [
-      {
-        title: 'US Fed Signals Liquidity Taper Pause as Treasury Yield Volatility Spikes',
-        summary: 'Federal Reserve Chairman Powell signals potential moderation in balance sheet runoff as overnight repo pressures expand across sovereign debt markets.',
-        source: 'Bloomberg Macro',
-        sourceUrl: 'https://www.bloomberg.com/markets',
-        pubDate: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-      },
-      {
-        title: 'US Core PCE Inflation Cools to 2.6% as Non-Farm Payrolls Benchmark Revised',
-        summary: 'Department of Labor reports cooling core price index while monthly employment figures show labor market rebalancing toward trend.',
-        source: 'Reuters',
-        sourceUrl: 'https://www.reuters.com/markets/',
-        pubDate: new Date(Date.now() - 1000 * 60 * 28).toISOString(),
-      },
-      {
-        title: 'ECB & BOJ Central Bank Governors Signal Divergent Interest Rate Policies',
-        summary: 'European Central Bank hints at rate cut trajectory to support Eurozone industrial sector while Bank of Japan prepares wage-driven normalization.',
-        source: 'DW Global',
-        sourceUrl: 'https://www.dw.com/en/business/s-1431',
-        pubDate: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-      },
-      {
-        title: 'Middle East Maritime Trade Sanctions Escalation Spikes Crude Oil Volatility',
-        summary: 'Strategic strait shipping security alerts trigger precautionary risk premiums on Brent Crude and spot energy futures contracts.',
-        source: 'Al Jazeera',
-        sourceUrl: 'https://www.aljazeera.com/economy',
-        pubDate: new Date(Date.now() - 1000 * 60 * 65).toISOString(),
-      },
-      {
-        title: 'US-China Tech Trade Friction Escalates with New High-Bandwidth Semiconductor Restrictions',
-        summary: 'Department of Commerce issues tightened export licensing guardrails on advanced AI silicon and semiconductor packaging tools.',
-        source: 'The Guardian',
-        sourceUrl: 'https://www.theguardian.com/business',
-        pubDate: new Date(Date.now() - 1000 * 60 * 95).toISOString(),
-      },
-      {
-        title: 'US 10-Year Treasury Yield Inversion Deepens Ahead of $42B Sovereign Debt Auction',
-        summary: 'Bond traders prepare for large-scale Treasury coupon auctions as primary dealers demand higher concession yields.',
-        source: 'BBC Business',
-        sourceUrl: 'https://www.bbc.com/news/business',
-        pubDate: new Date(Date.now() - 1000 * 60 * 130).toISOString(),
-      },
-      {
-        title: 'SEC Approves In-Kind Creation Options for Institutional Bitcoin and Ethereum Spot Funds',
-        summary: 'Regulators grant landmark clearance for qualified institutional brokers to settle spot digital asset baskets directly with physical custodians.',
-        source: 'France 24',
-        sourceUrl: 'https://www.france24.com/en/',
-        pubDate: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-      },
-    ];
-
-    fallbackMacro.forEach((fm) => addUnique(fm.title, fm.summary, fm.source, fm.sourceUrl, fm.pubDate));
-  }
+  await Promise.allSettled([
+    ...cryptoRssPromises,
+    ...macroRssPromises,
+    gdeltCryptoPromise,
+    gdeltMacroPromise,
+    guardianPromise,
+    newsDataPromise,
+    gnewsPromise,
+  ]);
 
   // Sort strictly by publication timestamp newest first
   itemsList.sort((a, b) => new Date(b.pubDateIso).getTime() - new Date(a.pubDateIso).getTime());
 
+  // Keep a balanced portfolio: prefer items from the last 48h, ensure Crypto 24H isn't buried by Global Macro
+  const nowMs = Date.now();
+  const cryptoItems = itemsList.filter((i) => i.newsDomain === 'CRYPTO');
+  const macroItems = itemsList.filter((i) => i.newsDomain !== 'CRYPTO').slice(0, 14);
+  const balancedList = [...cryptoItems.slice(0, 40), ...macroItems].sort(
+    (a, b) => new Date(b.pubDateIso).getTime() - new Date(a.pubDateIso).getTime()
+  );
+
+  // Fallback only if external networks are offline
+  if (balancedList.length < 4) {
+    const fallbackItems = [
+      {
+        title: 'Bitcoin Spot Liquidity & Exchange Flows Shift as BTC Tests Key Range',
+        summary: '24-hour on-chain exchange telemetry tracks spot accumulation across major BTC and ETH venues.',
+        source: 'CoinDesk',
+        sourceUrl: 'https://www.coindesk.com',
+        pubDate: new Date(nowMs - 1000 * 60 * 15).toISOString(),
+        hint: 'CRYPTO' as const,
+      },
+      {
+        title: 'US Fed Signals Liquidity Taper Pace as Treasury Yield Volatility Spikes',
+        summary: 'Federal Reserve officials monitor overnight repo pressures and core inflation trajectory.',
+        source: 'BBC Business',
+        sourceUrl: 'https://www.bbc.com/news/business',
+        pubDate: new Date(nowMs - 1000 * 60 * 35).toISOString(),
+        hint: 'MACRO' as const,
+      },
+    ];
+    fallbackItems.forEach((fm) => addUnique(fm.title, fm.summary, fm.source, fm.sourceUrl, fm.pubDate, fm.hint));
+  }
+
+  const finalItems = balancedList.length >= 4 ? balancedList : itemsList;
+
   res.json({
     success: true,
-    timestamp: Date.now(),
+    timestamp: nowMs,
     wibNow: formatWIBTime().wibString,
-    count: itemsList.length,
-    items: itemsList,
+    count: finalItems.length,
+    items: finalItems,
   });
 });
 
@@ -2372,6 +2586,100 @@ app.get('/api/crypto/narratives', async (_req: Request, res: Response) => {
   }
 
   res.json({ success: true, timestamp: Date.now(), count: narratives.length, narratives });
+});
+
+// =========================================================================
+// PRIVATE OWNER ID & PASSWORD AUTHENTICATION (SERVER-VERIFIED)
+// =========================================================================
+const OWNER_LOGIN_ID = process.env.OWNER_LOGIN_ID || '120403';
+const OWNER_LOGIN_PASSWORD = process.env.OWNER_LOGIN_PASSWORD || '120403@';
+const OWNER_SESSION_SECRET =
+  process.env.OWNER_SESSION_SECRET ||
+  crypto
+    .createHash('sha256')
+    .update(process.env.GEMINI_API_KEY || 'ghali-terminal-owner-hmac-key-v1')
+    .digest('hex');
+
+function sha256Equal(a: string, b: string): boolean {
+  const hashA = crypto.createHash('sha256').update(a).digest();
+  const hashB = crypto.createHash('sha256').update(b).digest();
+  return crypto.timingSafeEqual(hashA, hashB);
+}
+
+function signOwnerToken(payload: { uid: string; exp: number }): string {
+  const encoded = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+  const sig = crypto.createHmac('sha256', OWNER_SESSION_SECRET).update(encoded).digest('base64url');
+  return `${encoded}.${sig}`;
+}
+
+function verifyOwnerToken(token: string): { uid: string; exp: number } | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 2) return null;
+    const [encoded, sig] = parts;
+    const expectedSig = crypto
+      .createHmac('sha256', OWNER_SESSION_SECRET)
+      .update(encoded)
+      .digest('base64url');
+    if (!sha256Equal(sig, expectedSig)) return null;
+    const decoded = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8'));
+    if (!decoded?.uid || typeof decoded.exp !== 'number' || Date.now() > decoded.exp) {
+      return null;
+    }
+    return decoded;
+  } catch {
+    return null;
+  }
+}
+
+app.post('/api/auth/owner-login', (req: Request, res: Response) => {
+  const id = typeof req.body?.id === 'string' ? req.body.id.trim() : '';
+  const password = typeof req.body?.password === 'string' ? req.body.password : '';
+
+  if (!id || !password) {
+    return res.status(400).json({ success: false, error: 'ID dan Password wajib diisi.' });
+  }
+
+  const validId = sha256Equal(id, OWNER_LOGIN_ID);
+  const validPassword = sha256Equal(password, OWNER_LOGIN_PASSWORD);
+
+  if (!validId || !validPassword) {
+    return res.status(401).json({ success: false, error: 'ID atau Password tidak valid.' });
+  }
+
+  const exp = Date.now() + 7 * 24 * 60 * 60 * 1000;
+  const token = signOwnerToken({ uid: 'owner-120403', exp });
+
+  return res.json({
+    success: true,
+    token,
+    user: {
+      uid: 'owner-120403',
+      traderName: 'GHALI',
+      email: 'ghalcrypto@gmail.com',
+      role: 'Terminal Owner',
+    },
+  });
+});
+
+app.get('/api/auth/owner-session', (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  const verified = token ? verifyOwnerToken(token) : null;
+
+  if (!verified) {
+    return res.status(401).json({ authenticated: false });
+  }
+
+  return res.json({
+    authenticated: true,
+    user: {
+      uid: verified.uid,
+      traderName: 'GHALI',
+      email: 'ghalcrypto@gmail.com',
+      role: 'Terminal Owner',
+    },
+  });
 });
 
 async function startServer() {

@@ -1,4 +1,7 @@
 export type MacroCategory =
+  | 'CRYPTO_MARKET'
+  | 'DEFI_ONCHAIN'
+  | 'CRYPTO_REGULATION'
   | 'FED_FOMC'
   | 'CPI_INFLATION'
   | 'CENTRAL_BANKS'
@@ -7,8 +10,7 @@ export type MacroCategory =
   | 'GEOPOLITICS_WAR'
   | 'TRADE_WAR'
   | 'BANKING_CRISIS'
-  | 'DEBT_YIELDS'
-  | 'CRYPTO_REGULATION';
+  | 'DEBT_YIELDS';
 
 export interface CategoryDefinition {
   id: MacroCategory;
@@ -19,6 +21,27 @@ export interface CategoryDefinition {
 }
 
 export const MACRO_CATEGORIES: CategoryDefinition[] = [
+  {
+    id: 'CRYPTO_MARKET',
+    label: 'Crypto 24H (BTC & Alts)',
+    description: '24-hour live Bitcoin, Ethereum, Solana, altcoin price catalysts, ETF flows & exchange news',
+    keywords: ['bitcoin', 'btc', 'ethereum', 'eth', 'solana', 'xrp', 'altcoin', 'crypto', 'etf', 'binance', 'coinbase'],
+    color: 'cyan',
+  },
+  {
+    id: 'DEFI_ONCHAIN',
+    label: 'DeFi, Layer-2 & On-Chain',
+    description: 'DeFi protocols, stablecoins, whale on-chain flows, Layer-2 scaling & security alerts',
+    keywords: ['defi', 'on-chain', 'whale', 'stablecoin', 'usdt', 'usdc', 'layer-2', 'dex', 'staking', 'airdrop', 'hack'],
+    color: 'emerald',
+  },
+  {
+    id: 'CRYPTO_REGULATION',
+    label: 'Crypto Regulation & ETF',
+    description: 'SEC/CFTC enforcement, Bitcoin Spot ETFs, stablecoin legislation, sovereign BTC holdings',
+    keywords: ['sec', 'cftc', 'crypto regulation', 'etf', 'bitcoin reserve', 'stablecoin', 'institutional adoption'],
+    color: 'yellow',
+  },
   {
     id: 'FED_FOMC',
     label: 'Fed & FOMC',
@@ -36,7 +59,7 @@ export const MACRO_CATEGORIES: CategoryDefinition[] = [
   {
     id: 'CENTRAL_BANKS',
     label: 'Interest Rates & Central Banks',
-    description: 'ECB, BOJ, BOE, PBOC, rate hikes/cuts, monetary policy policy shifts',
+    description: 'ECB, BOJ, BOE, PBOC, rate hikes/cuts, monetary policy shifts',
     keywords: ['ecb', 'boj', 'boe', 'pboc', 'central bank', 'interest rate', 'rate hike', 'rate cut', 'yield curve'],
     color: 'blue',
   },
@@ -82,13 +105,6 @@ export const MACRO_CATEGORIES: CategoryDefinition[] = [
     keywords: ['treasury yield', 'bond yield', '10-year', 'sovereign debt', 'deficit', 'auction', 'yield inversion'],
     color: 'indigo',
   },
-  {
-    id: 'CRYPTO_REGULATION',
-    label: 'Crypto Regulation & Adoption',
-    description: 'SEC/CFTC enforcement, Bitcoin Spot ETFs, stablecoin legislation, sovereign BTC holdings',
-    keywords: ['sec', 'cftc', 'crypto regulation', 'etf', 'bitcoin reserve', 'stablecoin', 'institutional adoption'],
-    color: 'yellow',
-  },
 ];
 
 export interface AssetImpactDetail {
@@ -117,6 +133,7 @@ export interface MacroNewsItem {
   summary: string;
   source: string;
   sourceUrl: string;
+  newsDomain?: 'CRYPTO' | 'MACRO';
   category: MacroCategory;
   categoryLabel: string;
   country: 'US' | 'EU' | 'UK' | 'CN' | 'JP' | 'ME' | 'GLOBAL';

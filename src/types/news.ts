@@ -29,6 +29,9 @@ export interface MarketMover {
 
 export interface UserSession {
   isLoggedIn: boolean;
+  uid?: string;
+  email?: string;
+  photoURL?: string;
   traderName: string;
   role: string;
   avatarSeed: string;

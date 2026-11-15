@@ -179,14 +179,20 @@ export default function App() {
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       firebaseResolved = true;
-      if (firebaseUser && firebaseUser.email) {
+      if (firebaseUser) {
         hasFirebaseUser = true;
+        const resolvedEmail =
+          firebaseUser.email ||
+          firebaseUser.providerData?.find((p) => p.email)?.email ||
+          '';
         setSession({
           isLoggedIn: true,
           uid: firebaseUser.uid,
-          email: firebaseUser.email,
+          email: resolvedEmail,
           photoURL: firebaseUser.photoURL || '',
-          traderName: firebaseUser.displayName || firebaseUser.email.split('@')[0] || 'Google User',
+          traderName:
+            firebaseUser.displayName ||
+            (resolvedEmail ? resolvedEmail.split('@')[0] : 'Google User'),
           role: 'Verified Google Strategist',
           avatarSeed: firebaseUser.uid,
           connectedExchanges: ['BINANCE', 'BITGET'],

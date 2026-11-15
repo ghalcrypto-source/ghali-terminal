@@ -107,12 +107,17 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
         localStorage.removeItem(OWNER_TOKEN_STORAGE_KEY);
       } catch (_) {}
 
+      const resolvedEmail =
+        user.email || user.providerData?.find((p) => p.email)?.email || '';
+
       const session: UserSession = {
         isLoggedIn: true,
         uid: user.uid,
-        email: user.email || '',
+        email: resolvedEmail,
         photoURL: user.photoURL || '',
-        traderName: user.displayName || user.email?.split('@')[0] || 'Google User',
+        traderName:
+          user.displayName ||
+          (resolvedEmail ? resolvedEmail.split('@')[0] : 'Google User'),
         role: 'Verified Google Strategist',
         avatarSeed: user.uid,
         connectedExchanges: ['BINANCE', 'BITGET'],

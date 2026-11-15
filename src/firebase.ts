@@ -92,21 +92,27 @@ testConnection();
  * Syncs verified Google Account user profile into isolated Firestore document.
  */
 export async function syncGoogleUserProfile(user: User): Promise<void> {
-  if (!user || !user.uid || !user.email) return;
+  if (!user || !user.uid) return;
+  const resolvedEmail = (
+    user.email ||
+    user.providerData?.find((p) => p.email)?.email ||
+    ''
+  ).slice(0, 254);
+  if (resolvedEmail.length < 3) return;
+
   const profilePath = `users/${user.uid}/private/profile`;
   const profileRef = doc(db, 'users', user.uid, 'private', 'profile');
 
   try {
     const existingSnap = await getDoc(profileRef).catch(() => null);
-    const displayName = (user.displayName || user.email.split('@')[0] || 'Google Trader').slice(0, 120);
-    const email = user.email.slice(0, 254);
+    const displayName = (user.displayName || resolvedEmail.split('@')[0] || 'Google User').slice(0, 120);
     const photoURL = (user.photoURL || '').slice(0, 512);
 
     if (existingSnap && existingSnap.exists()) {
       await setDoc(
         profileRef,
         {
-          email,
+          email: resolvedEmail,
           displayName,
           ...(photoURL ? { photoURL } : {}),
           role: existingSnap.data()?.role || 'Verified Google Strategist',
@@ -117,7 +123,7 @@ export async function syncGoogleUserProfile(user: User): Promise<void> {
     } else {
       await setDoc(profileRef, {
         uid: user.uid,
-        email,
+        email: resolvedEmail,
         displayName,
         ...(photoURL ? { photoURL } : {}),
         role: 'Verified Google Strategist',
@@ -131,14 +137,16 @@ export async function syncGoogleUserProfile(user: User): Promise<void> {
 }
 
 /**
- * Authentic Google Sign-In via Firebase Auth Server (no mock bypass).
+ * Authentic Google Sign-In via Firebase Auth Server (open to all Google accounts).
  */
 export async function signInWithGoogle(): Promise<User> {
   const credential = await signInWithPopup(auth, googleProvider);
   if (!credential.user) {
     throw new Error('Autentikasi Google tidak mengembalikan data akun.');
   }
-  await syncGoogleUserProfile(credential.user);
+  syncGoogleUserProfile(credential.user).catch((err) => {
+    console.warn('Firestore profile sync skipped/deferred:', err);
+  });
   return credential.user;
 }
 

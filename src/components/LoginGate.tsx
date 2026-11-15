@@ -209,14 +209,13 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
           {/* Password-Only Gate Form */}
           <form onSubmit={handleOwnerLogin} className="space-y-4">
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
+              <div>
                 <label
                   htmlFor="owner-password"
                   className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400"
                 >
-                  Kode Akses / Password
+                  Password Akses
                 </label>
-                <span className="text-[10px] text-amber-400/90 font-mono">Cukup 170819@</span>
               </div>
               <div className="relative">
                 <input

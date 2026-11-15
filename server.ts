@@ -2754,13 +2754,12 @@ app.get('/api/crypto/narratives', async (req: Request, res: Response) => {
 // =========================================================================
 // PRIVATE OWNER ID & PASSWORD AUTHENTICATION (SERVER-VERIFIED)
 // =========================================================================
-const OWNER_LOGIN_ID = process.env.OWNER_LOGIN_ID || '120403';
-const OWNER_LOGIN_PASSWORD = process.env.OWNER_LOGIN_PASSWORD || '120403@';
+const OWNER_LOGIN_PASSWORD = process.env.OWNER_LOGIN_PASSWORD || '170819@';
 const OWNER_SESSION_SECRET =
   process.env.OWNER_SESSION_SECRET ||
   crypto
     .createHash('sha256')
-    .update(process.env.GEMINI_API_KEY || 'ghali-terminal-owner-hmac-key-v1')
+    .update(process.env.GEMINI_API_KEY || 'ghali-terminal-owner-hmac-key-v2-170819')
     .digest('hex');
 
 function sha256Equal(a: string, b: string): boolean {
@@ -2796,18 +2795,16 @@ function verifyOwnerToken(token: string): { uid: string; exp: number } | null {
 }
 
 app.post('/api/auth/owner-login', (req: Request, res: Response) => {
-  const id = typeof req.body?.id === 'string' ? req.body.id.trim() : '';
   const password = typeof req.body?.password === 'string' ? req.body.password.trim() : '';
 
-  if (!id || !password) {
-    return res.status(400).json({ success: false, error: 'ID dan Password wajib diisi.' });
+  if (!password) {
+    return res.status(400).json({ success: false, error: 'Password wajib diisi.' });
   }
 
-  const validId = sha256Equal(id, OWNER_LOGIN_ID);
   const validPassword = sha256Equal(password, OWNER_LOGIN_PASSWORD);
 
-  if (!validId || !validPassword) {
-    return res.status(401).json({ success: false, error: 'ID atau Password tidak valid.' });
+  if (!validPassword) {
+    return res.status(401).json({ success: false, error: 'Password salah. Akses ditolak.' });
   }
 
   const exp = Date.now() + 7 * 24 * 60 * 60 * 1000;

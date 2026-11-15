@@ -1,16 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   X,
   ShieldCheck,
   KeyRound,
   LogOut,
   CheckCircle2,
-  AlertCircle,
-  Loader2,
   Mail,
+  Lock,
 } from 'lucide-react';
 import { UserSession } from '../types/news';
-import { signInWithGoogle } from '../firebase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -24,41 +22,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
   session,
-  onLogin,
   onLogout,
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   if (!isOpen) return null;
-
-  const handleGoogleSignIn = async () => {
-    setErrorMsg(null);
-    setIsLoading(true);
-    try {
-      const user = await signInWithGoogle();
-      const resolvedEmail =
-        user.email || user.providerData?.find((p) => p.email)?.email || '';
-      onLogin({
-        isLoggedIn: true,
-        uid: user.uid,
-        email: resolvedEmail,
-        photoURL: user.photoURL || '',
-        traderName:
-          user.displayName ||
-          (resolvedEmail ? resolvedEmail.split('@')[0] : 'Google User'),
-        role: 'Verified Google Strategist',
-        avatarSeed: user.uid,
-        connectedExchanges: ['BINANCE', 'BITGET'],
-        riskPreference: 'CONVEX ASYMMETRIC',
-      });
-      onClose();
-    } catch (err: any) {
-      setErrorMsg(err?.message || 'Gagal melakukan autentikasi Google.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80">
@@ -71,18 +37,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-mono font-bold tracking-wider text-slate-100">
-                {session.isLoggedIn
-                  ? session.uid === 'owner-120403'
-                    ? 'AKSES OWNER TERMINAL'
-                    : 'AKUN GOOGLE TERVERIFIKASI'
-                  : 'AUTENTIKASI AKUN GOOGLE'}
+                AKSES OWNER TERMINAL
               </h2>
               <p className="text-[11px] font-mono text-slate-400">
-                {session.isLoggedIn
-                  ? session.uid === 'owner-120403'
-                    ? 'Terverifikasi sebagai Pemilik Terminal'
-                    : 'Terhubung langsung dengan server Google Identity'
-                  : 'Wajib login akun Google untuk mengakses terminal'}
+                Terverifikasi melalui Password Privat Terminal
               </p>
             </div>
           </div>
@@ -99,25 +57,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {session.isLoggedIn ? (
             <div className="space-y-4">
               <div className="bg-[#0e1422] border border-[#1f2b42] rounded-lg p-4 flex items-center gap-3.5">
-                {session.photoURL ? (
-                  <img
-                    src={session.photoURL}
-                    alt={session.traderName}
-                    referrerPolicy="no-referrer"
-                    className="w-12 h-12 rounded-full border-2 border-amber-400 object-cover shadow-md"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center font-mono font-bold text-lg text-black shadow-md">
-                    {session.traderName.slice(0, 2).toUpperCase()}
-                  </div>
-                )}
+                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center font-mono font-bold text-lg text-black shadow-md">
+                  {session.traderName.slice(0, 2).toUpperCase()}
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-mono font-bold text-sm text-slate-100 truncate">
                       {session.traderName}
                     </h3>
                     <span className="text-[9px] font-mono uppercase bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/40 shrink-0">
-                      {session.uid === 'owner-120403' ? 'OWNER ACCESS' : 'GOOGLE VERIFIED'}
+                      OWNER ACCESS
                     </span>
                   </div>
                   {session.email && (
@@ -138,7 +87,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div className="flex items-center justify-between p-2 rounded bg-[#121826] border border-[#1d273d]">
                   <span className="text-slate-200 font-bold flex items-center gap-2">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    {session.uid === 'owner-120403' ? 'OWNER SERVER AUTH' : 'GOOGLE ACCOUNT SERVER'}
+                    OWNER PRIVATE LOCK
                   </span>
                   <span className="text-emerald-400 font-semibold text-[11px] flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />
@@ -172,29 +121,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
-              {errorMsg && (
-                <div className="p-3 bg-red-950/50 border border-red-800 text-red-300 rounded-lg text-xs flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                  <span>{errorMsg}</span>
-                </div>
-              )}
-
-              <button
-                type="button"
-                disabled={isLoading}
-                onClick={handleGoogleSignIn}
-                className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-100 text-slate-900 font-sans font-bold text-sm py-3 px-4 rounded-xl transition-all cursor-pointer shadow-lg"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Menghubungkan Google...</span>
-                  </>
-                ) : (
-                  <span>Masuk dengan Akun Google</span>
-                )}
-              </button>
+            <div className="p-4 rounded-xl bg-[#0e1422] border border-[#1f2b42] text-center space-y-2">
+              <Lock className="w-6 h-6 text-amber-400 mx-auto" />
+              <p className="text-xs font-mono text-slate-300">
+                Akses terkunci. Masuk menggunakan password terminal yang valid.
+              </p>
             </div>
           )}
         </div>

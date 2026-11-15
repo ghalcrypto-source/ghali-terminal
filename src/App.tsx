@@ -27,8 +27,7 @@ import { UserSession } from './types/news';
 import { MacroNewsItem, ApiKeysConfig } from './types/macroNews';
 import { PartInfo, Altcoin5mMetric } from './three/MonolithScene';
 import { sound } from './audio/soundEngine';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth, signOutGoogle, syncGoogleUserProfile } from './firebase';
+import { signOutGoogle } from './firebase';
 import {
   Newspaper,
   Home,
@@ -104,30 +103,18 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
-    let firebaseResolved = false;
-    let ownerCheckResolved = false;
-    let hasFirebaseUser = false;
-
-    const finalizeReady = () => {
-      if (!cancelled && firebaseResolved && ownerCheckResolved) {
-        setAuthReady(true);
-      }
-    };
-
-    // Never leave users on another device stuck forever if Firebase Auth network takes too long
-    const authSafetyTimer = window.setTimeout(() => {
-      firebaseResolved = true;
-      ownerCheckResolved = true;
-      finalizeReady();
-    }, 2500);
 
     const verifyStoredOwnerToken = async () => {
       try {
+        try {
+          localStorage.removeItem('ghali_owner_session_token');
+        } catch (_) {}
+
         const token = localStorage.getItem(OWNER_TOKEN_STORAGE_KEY);
         if (!token) return;
 
-        if (token === 'static.85b5b4e3fb2b418a') {
-          if (!cancelled && !hasFirebaseUser) {
+        if (token === 'static.095d3c3d863fe869') {
+          if (!cancelled) {
             setSession({
               isLoggedIn: true,
               uid: 'owner-120403',
@@ -154,7 +141,7 @@ export default function App() {
           return;
         }
         const data = await res.json();
-        if (!cancelled && data?.authenticated && data?.user && !hasFirebaseUser) {
+        if (!cancelled && data?.authenticated && data?.user) {
           setSession({
             isLoggedIn: true,
             uid: data.user.uid,
@@ -169,59 +156,16 @@ export default function App() {
         }
       } catch (_) {
       } finally {
-        ownerCheckResolved = true;
-        finalizeReady();
+        if (!cancelled) {
+          setAuthReady(true);
+        }
       }
     };
 
     verifyStoredOwnerToken();
 
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      firebaseResolved = true;
-      if (firebaseUser) {
-        hasFirebaseUser = true;
-        const resolvedEmail =
-          firebaseUser.email ||
-          firebaseUser.providerData?.find((p) => p.email)?.email ||
-          '';
-        setSession({
-          isLoggedIn: true,
-          uid: firebaseUser.uid,
-          email: resolvedEmail,
-          photoURL: firebaseUser.photoURL || '',
-          traderName:
-            firebaseUser.displayName ||
-            (resolvedEmail ? resolvedEmail.split('@')[0] : 'Google User'),
-          role: 'Verified Google Strategist',
-          avatarSeed: firebaseUser.uid,
-          connectedExchanges: ['BINANCE', 'BITGET'],
-          riskPreference: 'CONVEX ASYMMETRIC',
-        });
-        syncGoogleUserProfile(firebaseUser).catch((err) =>
-          console.error('Google profile sync warning:', err)
-        );
-      } else {
-        hasFirebaseUser = false;
-        setSession((prev) =>
-          prev.uid === 'owner-120403'
-            ? prev
-            : {
-                isLoggedIn: false,
-                traderName: '',
-                role: 'Observer',
-                avatarSeed: 'guest',
-                connectedExchanges: [],
-                riskPreference: 'CONVEX ASYMMETRIC',
-              }
-        );
-      }
-      finalizeReady();
-    });
-
     return () => {
       cancelled = true;
-      window.clearTimeout(authSafetyTimer);
-      unsubscribe();
     };
   }, []);
 
@@ -346,12 +290,12 @@ export default function App() {
     return (
       <div className="w-screen h-screen bg-[#04060a] flex flex-col items-center justify-center gap-3 font-mono text-xs text-amber-300">
         <div className="w-8 h-8 rounded-full border-2 border-amber-400/30 border-t-amber-400 animate-spin" />
-        <span className="tracking-widest uppercase">Memverifikasi Sesi Server Google...</span>
+        <span className="tracking-widest uppercase">Memverifikasi Akses Terminal...</span>
       </div>
     );
   }
 
-  // If user is not authenticated with Google, render mandatory Google Auth Gate
+  // Mandatory password gate: no other login method is allowed
   if (!session.isLoggedIn || !session.uid) {
     return <LoginGate onLoginSuccess={handleLogin} />;
   }

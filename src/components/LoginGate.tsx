@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { Compass, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Compass, AlertCircle, Loader2, Eye, EyeOff, Lock } from 'lucide-react';
 import { UserSession } from '../types/news';
-import { signInWithGoogle } from '../firebase';
 
-export const OWNER_TOKEN_STORAGE_KEY = 'ghali_owner_session_token';
+export const OWNER_TOKEN_STORAGE_KEY = 'ghali_owner_session_token_v2';
 
-const OWNER_ID_SHA256 = '85b5b4e3fb2b418aa2de2d517a2199409bc934b4b36a73a8abcf52663e55b356';
-const OWNER_PW_SHA256 = '25f4e0b397849c3f88f576919e593c9ea7f6f6e6be4914af04e11456b7cfbf82';
+const OWNER_PW_SHA256 = '095d3c3d863fe869c3dce845e9ebc0f5ddf212d6bbd05192d61d4e4e31076b87';
 
 function sha256Fallback(ascii: string): string {
   const rightRotate = (value: number, amount: number) => (value >>> amount) | (value << (32 - amount));
@@ -90,58 +88,19 @@ interface LoginGateProps {
 
 export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isGoogleAuth, setIsGoogleAuth] = useState(false);
   const [isOwnerAuth, setIsOwnerAuth] = useState(false);
 
-  const [loginId, setLoginId] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleGoogleSignIn = async () => {
-    setErrorMsg(null);
-    setIsGoogleAuth(true);
-
+  const completeOwnerLogin = (
+    token: string,
+    traderName = 'GHALI',
+    email = 'ghalcrypto@gmail.com',
+    role = 'Terminal Owner'
+  ) => {
     try {
-      const user = await signInWithGoogle();
-      try {
-        localStorage.removeItem(OWNER_TOKEN_STORAGE_KEY);
-      } catch (_) {}
-
-      const resolvedEmail =
-        user.email || user.providerData?.find((p) => p.email)?.email || '';
-
-      const session: UserSession = {
-        isLoggedIn: true,
-        uid: user.uid,
-        email: resolvedEmail,
-        photoURL: user.photoURL || '',
-        traderName:
-          user.displayName ||
-          (resolvedEmail ? resolvedEmail.split('@')[0] : 'Google User'),
-        role: 'Verified Google Strategist',
-        avatarSeed: user.uid,
-        connectedExchanges: ['BINANCE', 'BITGET'],
-        riskPreference: 'CONVEX ASYMMETRIC',
-      };
-      onLoginSuccess(session);
-    } catch (err: any) {
-      const code = err?.code || '';
-      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-        setErrorMsg('Popup login Google ditutup sebelum selesai. Silakan coba lagi.');
-      } else if (code === 'auth/popup-blocked') {
-        setErrorMsg('Popup diblokir browser. Izinkan popup lalu coba lagi.');
-      } else if (code === 'auth/unauthorized-domain') {
-        setErrorMsg('Domain ini belum terdaftar di Firebase Auth. Silakan gunakan Login ID & Password atau buka lewat URL resmi aplikasi.');
-      } else {
-        setErrorMsg(`Gagal masuk dengan Google: ${err?.message || 'Silakan coba lagi.'}`);
-      }
-    } finally {
-      setIsGoogleAuth(false);
-    }
-  };
-
-  const completeOwnerLogin = (token: string, traderName = 'GHALI', email = 'ghalcrypto@gmail.com', role = 'Terminal Owner') => {
-    try {
+      localStorage.removeItem('ghali_owner_session_token');
       localStorage.setItem(OWNER_TOKEN_STORAGE_KEY, token);
     } catch (_) {}
 
@@ -163,7 +122,6 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
     setErrorMsg(null);
     setIsOwnerAuth(true);
 
-    const cleanId = loginId.trim();
     const cleanPw = loginPassword.trim();
 
     try {
@@ -171,7 +129,6 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: cleanId,
           password: cleanPw,
         }),
       });
@@ -180,7 +137,7 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
       if (contentType.includes('application/json')) {
         const data = await res.json();
         if (!res.ok || !data?.success || !data?.token) {
-          setErrorMsg(data?.error || 'ID atau Password tidak valid.');
+          setErrorMsg(data?.error || 'Password salah. Akses ditolak.');
           return;
         }
         completeOwnerLogin(
@@ -192,23 +149,23 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
         return;
       }
 
-      // If hosting returned non-JSON (e.g. static SPA 404 rewrite), verify via SHA-256
-      const [idHash, pwHash] = await Promise.all([sha256Hex(cleanId), sha256Hex(cleanPw)]);
-      if (idHash === OWNER_ID_SHA256 && pwHash === OWNER_PW_SHA256) {
-        completeOwnerLogin(`static.${OWNER_ID_SHA256.slice(0, 16)}`);
+      // If hosting returned non-JSON (e.g. static SPA fallback), verify via SHA-256
+      const pwHash = await sha256Hex(cleanPw);
+      if (pwHash === OWNER_PW_SHA256) {
+        completeOwnerLogin(`static.${OWNER_PW_SHA256.slice(0, 16)}`);
         return;
       }
-      setErrorMsg('ID atau Password tidak valid.');
+      setErrorMsg('Password salah. Akses ditolak.');
     } catch {
       try {
-        const [idHash, pwHash] = await Promise.all([sha256Hex(cleanId), sha256Hex(cleanPw)]);
-        if (idHash === OWNER_ID_SHA256 && pwHash === OWNER_PW_SHA256) {
-          completeOwnerLogin(`static.${OWNER_ID_SHA256.slice(0, 16)}`);
+        const pwHash = await sha256Hex(cleanPw);
+        if (pwHash === OWNER_PW_SHA256) {
+          completeOwnerLogin(`static.${OWNER_PW_SHA256.slice(0, 16)}`);
           return;
         }
-        setErrorMsg('ID atau Password tidak valid.');
+        setErrorMsg('Password salah. Akses ditolak.');
       } catch {
-        setErrorMsg('Gagal terhubung ke server autentikasi.');
+        setErrorMsg('Gagal memverifikasi password akses.');
       }
     } finally {
       setIsOwnerAuth(false);
@@ -229,13 +186,17 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
       />
 
       <div className="relative min-h-full w-full flex items-center justify-center p-4 py-8 z-10">
-        {/* Minimalist Auth Gate */}
+        {/* Minimalist Private Access Gate */}
         <div className="w-full max-w-sm bg-[#080c14] border border-[#1d2b45] rounded-2xl shadow-2xl p-6 sm:p-8 space-y-6">
           <div className="flex flex-col items-center justify-center gap-3 text-center">
             <Compass className="w-8 h-8 text-amber-400" />
             <h1 className="font-display text-xl sm:text-2xl font-bold tracking-[0.22em] bg-gradient-to-r from-amber-100 via-amber-300 to-amber-100 bg-clip-text text-transparent">
               GHALI ON CHAIN
             </h1>
+            <div className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
+              <Lock className="w-3.5 h-3.5 text-amber-400/80" />
+              <span>Akses Privat Terminal</span>
+            </div>
           </div>
 
           {errorMsg && (
@@ -245,78 +206,14 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
             </div>
           )}
 
-          <button
-            type="button"
-            disabled={isGoogleAuth || isOwnerAuth}
-            onClick={handleGoogleSignIn}
-            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 disabled:bg-slate-300 text-slate-900 font-sans font-bold text-sm py-3.5 px-5 rounded-xl transition-all cursor-pointer shadow-lg shadow-white/10"
-          >
-            {isGoogleAuth ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin text-slate-800" />
-                <span>Menghubungkan Google...</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    fill="#4285F4"
-                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"
-                  />
-                </svg>
-                <span>Log In &amp; Sign Up Akun Google</span>
-              </>
-            )}
-          </button>
-
-          {/* Divider */}
-          <div className="relative flex items-center py-0.5">
-            <div className="flex-grow border-t border-[#1d2b45]" />
-            <span className="px-3 text-[10px] uppercase tracking-widest text-slate-500">atau</span>
-            <div className="flex-grow border-t border-[#1d2b45]" />
-          </div>
-
-          {/* Private ID & Password Form */}
-          <form onSubmit={handleOwnerLogin} className="space-y-3">
-            <div className="space-y-1">
-              <label
-                htmlFor="owner-id"
-                className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400"
-              >
-                ID
-              </label>
-              <input
-                id="owner-id"
-                type="text"
-                autoComplete="username"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                value={loginId}
-                onChange={(e) => setLoginId(e.target.value)}
-                placeholder="Masukkan ID"
-                className="w-full select-text bg-[#0d1322] border border-[#23324f] focus:border-amber-400/70 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors"
-              />
-            </div>
-
-            <div className="space-y-1">
+          {/* Password-Only Gate Form */}
+          <form onSubmit={handleOwnerLogin} className="space-y-4">
+            <div className="space-y-1.5">
               <label
                 htmlFor="owner-password"
                 className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400"
               >
-                Password
+                Password Masuk
               </label>
               <div className="relative">
                 <input
@@ -326,10 +223,11 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}
+                  autoFocus
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="Masukkan Password"
-                  className="w-full select-text bg-[#0d1322] border border-[#23324f] focus:border-amber-400/70 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors"
+                  className="w-full select-text bg-[#0d1322] border border-[#23324f] focus:border-amber-400/70 rounded-xl pl-3.5 pr-10 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none transition-colors"
                 />
                 <button
                   type="button"
@@ -344,7 +242,7 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
 
             <button
               type="submit"
-              disabled={isGoogleAuth || isOwnerAuth || !loginId.trim() || !loginPassword}
+              disabled={isOwnerAuth || !loginPassword.trim()}
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 disabled:opacity-50 text-black font-bold text-xs uppercase tracking-widest py-3 rounded-xl transition-all cursor-pointer shadow-lg shadow-amber-500/15"
             >
               {isOwnerAuth ? (
@@ -353,7 +251,7 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
                   <span>Memverifikasi...</span>
                 </>
               ) : (
-                <span>Log In ID &amp; Password</span>
+                <span>Masuk Terminal</span>
               )}
             </button>
           </form>
@@ -362,6 +260,3 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
     </div>
   );
 };
-
-
-

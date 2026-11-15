@@ -22,7 +22,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete }) => {
       { pct: 45, text: 'CONNECTING 8 PUBLIC TELEMETRY APIs...' },
       { pct: 70, text: 'SYNCHRONIZING WIB UTC+7 TIMESTAMPS...' },
       { pct: 90, text: 'READY FOR INSTANTIATION...' },
-      { pct: 100, text: 'GHALI TERMINAL OPERATIONAL' },
+      { pct: 100, text: 'GHALI ON CHAIN OPERATIONAL' },
     ];
 
     let currentStep = 0;
@@ -81,11 +81,11 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete }) => {
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 bg-[#121b2d] border border-[#223352] px-3.5 py-1.5 rounded-full text-xs text-amber-300 shadow-md">
             <Terminal className="w-3.5 h-3.5 text-amber-400" />
-            <span className="font-bold tracking-wider">WELCOME TO GHALI TERMINAL</span>
+            <span className="font-bold tracking-wider">WELCOME TO GHALI ON CHAIN</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-black tracking-wider text-white bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent">
-            GHALI TERMINAL
+            GHALI ON CHAIN
           </h1>
           <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
             Global Macro News & Real-Time Market Intelligence System
@@ -114,7 +114,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete }) => {
               onClick={handleEnter}
               className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-400 hover:from-amber-500 hover:to-amber-300 text-black font-bold text-xs sm:text-sm py-3 px-6 rounded-xl transition-all transform hover:scale-[1.02] shadow-xl shadow-amber-500/20 cursor-pointer tracking-wider animate-pulse"
             >
-              <span>MASUK KE GHALI TERMINAL LOGIN</span>
+              <span>MASUK KE GHALI ON CHAIN LOGIN</span>
               <ArrowRight className="w-4 h-4 text-black" />
             </button>
           ) : (

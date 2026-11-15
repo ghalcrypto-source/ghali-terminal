@@ -385,20 +385,20 @@ export default function App() {
 
       {/* 2. Contextual Mini-App Top Strip (only shown inside opened Mini-Apps) */}
       {viewMode !== 'home' && (
-        <div className="shrink-0 bg-[#090d16] border-b border-[#162033] px-3 sm:px-6 h-11 flex items-center justify-between gap-3 z-20">
+        <div className="shrink-0 bg-[#080c15] border-b border-[#192234] px-3 sm:px-6 h-11 flex items-center justify-between gap-3 z-20">
           <button
             onClick={() => {
               sound.playClick();
               setViewMode('home');
             }}
-            className="inline-flex items-center gap-1 text-xs font-medium text-slate-300 hover:text-white py-1.5 px-2.5 rounded-lg bg-[#101726] hover:bg-[#172136] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            className="inline-flex items-center gap-1 text-xs font-medium text-slate-200 hover:text-[#f3df9b] py-1.5 px-2.5 rounded-lg bg-[#0f1523] hover:bg-[#151e31] border border-[#202b40] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
           >
-            <ChevronLeft className="w-3.5 h-3.5 text-amber-300" />
+            <ChevronLeft className="w-3.5 h-3.5 text-[#e7cc82]" />
             <span>Beranda</span>
           </button>
 
           {isMarketMode && (
-            <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#0d1320] border border-[#1a2438] overflow-x-auto">
+            <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#0c111d] border border-[#1d273b] overflow-x-auto">
               {marketTabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -406,10 +406,10 @@ export default function App() {
                     sound.playClick();
                     setViewMode(tab.id);
                   }}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+                  className={`px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
                     viewMode === tab.id
-                      ? 'bg-amber-400 text-black font-semibold'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-[#172034] text-[#f4e4b4] border border-[#d4af37]/40'
+                      : 'text-slate-400 hover:text-slate-100 border border-transparent'
                   }`}
                 >
                   {tab.label}
@@ -419,7 +419,7 @@ export default function App() {
           )}
 
           {isNewsMode && (
-            <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#0d1320] border border-[#1a2438] overflow-x-auto">
+            <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#0c111d] border border-[#1d273b] overflow-x-auto">
               {newsTabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -427,10 +427,10 @@ export default function App() {
                     sound.playClick();
                     setViewMode(tab.id);
                   }}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+                  className={`px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
                     viewMode === tab.id
-                      ? 'bg-amber-400 text-black font-semibold'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-[#172034] text-[#f4e4b4] border border-[#d4af37]/40'
+                      : 'text-slate-400 hover:text-slate-100 border border-transparent'
                   }`}
                 >
                   {tab.label}
@@ -440,7 +440,7 @@ export default function App() {
           )}
 
           {!isMarketMode && !isNewsMode && (
-            <span className="text-xs font-semibold text-slate-200 truncate">
+            <span className="text-xs font-medium text-[#e7cc82] truncate">
               {viewMode === 'room_chat'
                 ? 'Room Chat Komunitas'
                 : viewMode === 'telemetry'
@@ -453,9 +453,9 @@ export default function App() {
 
       {/* 3. Main Superapp Workspace Canvas */}
       <div className="flex-1 min-h-0 w-full relative overflow-hidden flex pb-[58px] md:pb-0">
-        {/* LIVE 3D MONOLITH BACKGROUND (Active on Beranda Home & full 3D Monolith View) */}
+        {/* LIVE 3D MONOLITH BACKGROUND (Interactive Center Stage on Home & full 3D Monolith View) */}
         {(viewMode === 'home' || viewMode === 'monolith') && (
-          <div className={`absolute inset-0 z-0 ${viewMode === 'home' ? 'pointer-events-none' : ''}`}>
+          <div className="absolute inset-0 z-0">
             <ThreeCanvas
               finish={finish}
               exploded={exploded}
@@ -463,25 +463,30 @@ export default function App() {
               autoRotate={autoRotate}
               rotationSpeed={rotationSpeed}
               altcoin5m={altcoin5mMetrics}
-              onPartHover={viewMode === 'monolith' ? setHoveredPart : undefined}
-              onPartSelect={viewMode === 'monolith' ? handlePartSelect : undefined}
+              onPartHover={setHoveredPart}
+              onPartSelect={handlePartSelect}
             />
             {viewMode === 'home' && (
-              <div className="absolute inset-0 bg-gradient-to-b from-[#070a11]/45 via-[#070a11]/35 to-[#070a11]/70 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#070a11]/25 via-transparent to-[#070a11]/45 pointer-events-none" />
             )}
           </div>
         )}
 
-        {/* DEFAULT VIEW: SUPERAPP HOME HUB OVER 3D MONOLITH */}
+        {/* DEFAULT VIEW: LEFT & RIGHT ANIMATED WINGS FLANKING THE 3D MONOLITH */}
         {viewMode === 'home' && (
           <SuperAppHome
             session={session}
             macroNews={macroNews}
             newsLoading={newsLoading}
+            onRefreshNews={fetchMacroNews}
+            wibNow={wibNow}
             altcoin5m={altcoin5mMetrics}
+            hoveredPart={hoveredPart}
+            chartTargetSymbol={chartTargetSymbol}
             soundEnabled={soundEnabled}
             onToggleSound={toggleSound}
             onNavigate={setViewMode}
+            onLoadToChart={handleLoadToChart}
             onSelectNewsForAI={handleSelectNewsForAI}
             onOpenTA={() => setIsTAOpen(true)}
             onOpenTopMovers={() => setIsTopMoversOpen(true)}
@@ -489,7 +494,6 @@ export default function App() {
             onOpenRadar={() => setIsRadarOpen(true)}
             onOpenAlerts={() => setIsAlertsOpen(true)}
             onOpenExchangeSentiment={() => setIsExchangeSentimentOpen(true)}
-            onOpenApiKeys={() => setIsApiKeysOpen(true)}
           />
         )}
 
@@ -623,7 +627,7 @@ export default function App() {
       {/* 4. Mobile Fixed Bottom Tab Bar (China Superapp Thumb Navigation) */}
       <nav
         aria-label="Navigasi utama"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-[58px] bg-[#090d16]/94 border-t border-[#162033] grid grid-cols-4 items-center"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-[58px] bg-[#080c15]/95 border-t border-[#192234] grid grid-cols-4 items-center"
       >
         {[
           { id: 'home' as TerminalViewMode, label: 'Beranda', active: viewMode === 'home', icon: Home },
@@ -640,10 +644,10 @@ export default function App() {
                 setViewMode(tab.id);
               }}
               className={`h-full min-h-[44px] flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer ${
-                tab.active ? 'text-amber-300' : 'text-slate-400 hover:text-slate-200'
+                tab.active ? 'text-[#e7cc82]' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-[18px] h-[18px]" strokeWidth={tab.active ? 2 : 1.6} />
               <span className="text-[11px] font-medium tracking-tight">{tab.label}</span>
             </button>
           );

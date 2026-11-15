@@ -472,7 +472,7 @@ export const RoomChatView: React.FC<RoomChatViewProps> = ({ session }) => {
                 Belum ada pesan di #{currentRoomMeta.label}
               </p>
               <p className="text-[11px] text-slate-500 mt-1 max-w-md">
-                Mulai diskusi real-time bersama sesama pengguna Google & Trader GHALI TERMINAL di sini.
+                Mulai diskusi real-time bersama sesama pengguna Google & Trader GHALI ON CHAIN di sini.
               </p>
             </div>
           ) : (

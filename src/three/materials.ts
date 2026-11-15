@@ -69,116 +69,66 @@ export const FINISH_THEMES: Record<FinishId, FinishTheme> = {
 };
 
 /**
- * Creates high-precision procedural dial face texture with calibration ticks,
- * Roman degrees, and contrarian quadrant inscriptions.
+ * Creates an understated, edge-faded rectangular Trading Chart Grid texture
+ * with subtle support/resistance levels and session intervals (zero round watch pedestal).
  */
-export function createVernierDialTexture(accentHex: string): THREE.CanvasTexture {
+export function createTradingChartGridTexture(accentHex: string): THREE.CanvasTexture {
   const size = 1024;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d')!;
 
-  const cx = size / 2;
-  const cy = size / 2;
+  ctx.clearRect(0, 0, size, size);
 
-  // Dark metallic slate background with subtle concentric rings
-  ctx.fillStyle = '#0a0d14';
+  // Subtle dark translucent chart stage backing
+  ctx.fillStyle = 'rgba(10, 14, 24, 0.72)';
   ctx.fillRect(0, 0, size, size);
 
-  // Concentric etched rings
-  const radii = [480, 450, 420, 380, 350, 240, 160, 100];
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-  ctx.lineWidth = 1.5;
-  for (const r of radii) {
+  // Horizontal Support / Resistance levels & Vertical Session Grid
+  const step = 64;
+  for (let i = step; i < size; i += step) {
+    const isMajor = i % 256 === 0;
+    ctx.strokeStyle = isMajor ? 'rgba(231, 204, 130, 0.16)' : 'rgba(148, 163, 184, 0.08)';
+    ctx.lineWidth = isMajor ? 1.5 : 1;
+
     ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.moveTo(0, i);
+    ctx.lineTo(size, i);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(i, 0);
+    ctx.lineTo(i, size);
     ctx.stroke();
   }
 
-  // Accent circular track
-  ctx.strokeStyle = accentHex;
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 450, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Draw 360 degree radial tick marks
-  for (let i = 0; i < 360; i++) {
-    const angle = (i * Math.PI) / 180;
-    const isMajor = i % 30 === 0;
-    const isMid = i % 10 === 0 && !isMajor;
-    const isQuarter = i % 90 === 0;
-
-    const rOuter = 450;
-    const rInner = isQuarter ? 400 : isMajor ? 415 : isMid ? 430 : 440;
-
-    const x1 = cx + Math.cos(angle) * rOuter;
-    const y1 = cy + Math.sin(angle) * rOuter;
-    const x2 = cx + Math.cos(angle) * rInner;
-    const y2 = cy + Math.sin(angle) * rInner;
-
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.strokeStyle = isQuarter
-      ? accentHex
-      : isMajor
-      ? 'rgba(255, 255, 255, 0.7)'
-      : isMid
-      ? 'rgba(255, 255, 255, 0.35)'
-      : 'rgba(255, 255, 255, 0.15)';
-    ctx.lineWidth = isQuarter ? 3 : isMajor ? 2 : 1;
-    ctx.stroke();
-
-    // Degree numbers at major intervals
-    if (isMajor) {
-      const textR = 390;
-      const tx = cx + Math.cos(angle) * textR;
-      const ty = cy + Math.sin(angle) * textR;
-      ctx.save();
-      ctx.translate(tx, ty);
-      ctx.rotate(angle + Math.PI / 2);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-      ctx.font = '600 13px monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`${i}°`, 0, 0);
-      ctx.restore();
-    }
-  }
-
-  // Contrarian Quadrants labels
-  const quadrants = [
-    { text: 'QUADRANT I • HERD EUPHORIA (FRAGILE)', angle: 0 },
-    { text: 'QUADRANT II • ASYMMETRIC SHORT DISLOCATION', angle: Math.PI / 2 },
-    { text: 'QUADRANT III • CAPITULATION / DEEP VALUE', angle: Math.PI },
-    { text: 'QUADRANT IV • CONVEX REFLATION ACCELERATOR', angle: (3 * Math.PI) / 2 },
-  ];
-
-  for (const q of quadrants) {
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(q.angle);
-    ctx.fillStyle = accentHex;
-    ctx.font = 'bold 15px monospace';
-    ctx.textAlign = 'center';
-    ctx.letterSpacing = '2px';
-    ctx.fillText(q.text, 0, -320);
-    ctx.restore();
-  }
-
-  // Center emblem
+  // Subtle center equilibrium dashed price line
   ctx.save();
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-  ctx.font = 'bold 18px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('GHALI TERMINAL', cx, cy - 25);
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-  ctx.font = '12px monospace';
-  ctx.fillText('VERNIER SENTIMENT HORIZON • 0.001 RAD', cx, cy - 5);
-  ctx.fillText('AUTONOMOUS REFLEXIVITY AUDIT', cx, cy + 15);
+  ctx.setLineDash([12, 10]);
+  ctx.strokeStyle = accentHex + '77';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(64, size / 2);
+  ctx.lineTo(size - 64, size / 2);
+  ctx.stroke();
   ctx.restore();
+
+  // Quiet architectural watermark label near front-bottom edge
+  ctx.fillStyle = 'rgba(231, 204, 130, 0.52)';
+  ctx.font = '600 18px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('GHALI ON CHAIN · MARKET STRUCTURE', size / 2, size - 135);
+
+  // Smooth radial vignette mask so edges melt seamlessly into obsidian background
+  ctx.globalCompositeOperation = 'destination-in';
+  const mask = ctx.createRadialGradient(size / 2, size / 2, size * 0.16, size / 2, size / 2, size * 0.49);
+  mask.addColorStop(0, 'rgba(0,0,0,1)');
+  mask.addColorStop(0.68, 'rgba(0,0,0,0.85)');
+  mask.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = mask;
+  ctx.fillRect(0, 0, size, size);
+  ctx.globalCompositeOperation = 'source-over';
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -245,9 +195,9 @@ export function createBrushedMetalRoughnessTexture(): THREE.CanvasTexture {
 }
 
 /**
- * Creates high-craft procedural 24k Gold Bitcoin Sovereign Core face texture
+ * Creates a refined, understated champagne-gold & obsidian Bitcoin (₿) core face texture
  */
-export function createBitcoinCoreTexture(accentHex = '#f59e0b'): THREE.CanvasTexture {
+export function createBitcoinCoreTexture(_accentHex = '#e7cc82'): THREE.CanvasTexture {
   const size = 1024;
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -257,101 +207,56 @@ export function createBitcoinCoreTexture(accentHex = '#f59e0b'): THREE.CanvasTex
   const cx = size / 2;
   const cy = size / 2;
 
-  // Metallic sovereign gold radial gradient
-  const grad = ctx.createRadialGradient(cx - 120, cy - 120, 40, cx, cy, 512);
-  grad.addColorStop(0, '#fef08a');
-  grad.addColorStop(0.28, '#f59e0b');
-  grad.addColorStop(0.68, '#b45309');
-  grad.addColorStop(1, '#451a03');
+  // Satin brushed obsidian-to-champagne backdrop
+  const grad = ctx.createRadialGradient(cx - 100, cy - 100, 30, cx, cy, 512);
+  grad.addColorStop(0, '#1e2433');
+  grad.addColorStop(0.55, '#0c101b');
+  grad.addColorStop(1, '#06080f');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, size, size);
 
-  // Dark inner medallion backdrop for sharp ₿ contrast
+  // Refined champagne gold hairline circles
+  ctx.strokeStyle = 'rgba(231, 204, 130, 0.72)';
+  ctx.lineWidth = 6;
   ctx.beginPath();
-  ctx.arc(cx, cy, 380, 0, Math.PI * 2);
-  ctx.fillStyle = '#140c02';
-  ctx.fill();
-  ctx.lineWidth = 10;
-  ctx.strokeStyle = '#fbbf24';
+  ctx.arc(cx, cy, 430, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Concentric calibration rings
-  ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
-  ctx.lineWidth = 3;
-  for (const r of [430, 350, 315, 250]) {
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  // 72 milled radial coin ticks around perimeter
-  for (let i = 0; i < 72; i++) {
-    const a = (i / 72) * Math.PI * 2;
-    const isMajor = i % 6 === 0;
-    const r1 = 465;
-    const r2 = isMajor ? 415 : 438;
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
-    ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2);
-    ctx.strokeStyle = isMajor ? '#fef08a' : 'rgba(251, 191, 36, 0.55)';
-    ctx.lineWidth = isMajor ? 5 : 2;
-    ctx.stroke();
-  }
-
-  // Subtle cryptographic hex grid lines inside medallion
-  ctx.strokeStyle = 'rgba(245, 158, 11, 0.14)';
+  ctx.strokeStyle = 'rgba(231, 204, 130, 0.25)';
   ctx.lineWidth = 2;
-  for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * Math.PI * 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 388, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Subtle 24 minimal radial markers
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * Math.PI * 2;
     ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(a) * 340, cy + Math.sin(a) * 340);
+    ctx.moveTo(cx + Math.cos(a) * 428, cy + Math.sin(a) * 428);
+    ctx.lineTo(cx + Math.cos(a) * 408, cy + Math.sin(a) * 408);
+    ctx.strokeStyle = 'rgba(231, 204, 130, 0.45)';
+    ctx.lineWidth = 2;
     ctx.stroke();
   }
 
-  // Embossed glow behind ₿ symbol
-  const glow = ctx.createRadialGradient(cx, cy, 20, cx, cy, 240);
-  glow.addColorStop(0, 'rgba(251, 191, 36, 0.42)');
-  glow.addColorStop(0.6, accentHex + '22');
-  glow.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 240, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Iconic tilted Bitcoin ₿ emblem
+  // Clean tilted Bitcoin ₿ emblem in satin champagne gold
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.rotate(0.18); // Classic ~10 deg Bitcoin tilt
+  ctx.rotate(0.16);
 
-  // Shadow layer
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-  ctx.font = '900 390px system-ui, -apple-system, sans-serif';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+  ctx.font = '700 410px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('₿', 8, 18);
+  ctx.fillText('₿', 6, 14);
 
-  // Gold gradient fill for ₿
   const bGrad = ctx.createLinearGradient(-150, -200, 150, 200);
-  bGrad.addColorStop(0, '#fef9c3');
-  bGrad.addColorStop(0.45, '#fbbf24');
-  bGrad.addColorStop(1, '#d97706');
+  bGrad.addColorStop(0, '#faf0ca');
+  bGrad.addColorStop(0.5, '#e7cc82');
+  bGrad.addColorStop(1, '#b68d2d');
   ctx.fillStyle = bGrad;
-  ctx.fillText('₿', 0, 8);
-
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = '#fef08a';
-  ctx.strokeText('₿', 0, 8);
+  ctx.fillText('₿', 0, 6);
   ctx.restore();
-
-  // Top & Bottom Sovereign Inscriptions
-  ctx.fillStyle = '#fde68a';
-  ctx.font = 'bold 28px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('BITCOIN • BTC', cx, 190);
-  ctx.fillStyle = 'rgba(253, 230, 138, 0.8)';
-  ctx.font = 'bold 22px monospace';
-  ctx.fillText('SOVEREIGN LIQUIDITY CORE', cx, size - 178);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -685,11 +590,11 @@ export function drawAltcoinLogo(
 }
 
 /**
- * Creates crisp procedural medallion face texture for orbiting Altcoins with logo + live 5m +/- sign
+ * Creates sleek obsidian & brushed metallic medallion face texture for orbiting Altcoins
  */
 export function createAltcoinFaceTexture(
   symbol: string,
-  name: string,
+  _name: string,
   colorHex: string,
   change5m = 0
 ): THREE.CanvasTexture {
@@ -704,69 +609,47 @@ export function createAltcoinFaceTexture(
 
   const isPositive = change5m > 0;
   const isNegative = change5m < 0;
-  const statusColor = isPositive ? '#10b981' : isNegative ? '#ef4444' : '#94a3b8';
   const statusText = isPositive ? '#6ee7b7' : isNegative ? '#fda4af' : '#cbd5e1';
 
-  // Deep obsidian base
-  ctx.fillStyle = '#090d16';
+  // Deep matte obsidian face with very subtle sheen
+  const grad = ctx.createRadialGradient(cx - 50, cy - 50, 12, cx, cy, 250);
+  grad.addColorStop(0, '#171e30');
+  grad.addColorStop(0.65, '#0b101b');
+  grad.addColorStop(1, '#06080f');
+  ctx.fillStyle = grad;
   ctx.fillRect(0, 0, size, size);
 
-  // Brand color radial halo
-  const grad = ctx.createRadialGradient(cx, cy - 30, 15, cx, cy, 250);
-  grad.addColorStop(0, colorHex + '55');
-  grad.addColorStop(0.6, colorHex + '1a');
-  grad.addColorStop(1, '#070a12');
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 250, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Outer glowing border ring colored by 5m +/- momentum
+  // Subtle champagne-gold outer hairline
   ctx.beginPath();
   ctx.arc(cx, cy, 224, 0, Math.PI * 2);
-  ctx.lineWidth = 14;
-  ctx.strokeStyle = statusColor;
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(231, 204, 130, 0.52)';
   ctx.stroke();
 
-  // Inner brand ring
+  // Inner thin brand accent ring
   ctx.beginPath();
-  ctx.arc(cx, cy, 196, 0, Math.PI * 2);
-  ctx.lineWidth = 5;
-  ctx.strokeStyle = colorHex;
+  ctx.arc(cx, cy, 200, 0, Math.PI * 2);
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = colorHex + '55';
   ctx.stroke();
 
-  // Prominent Vector Altcoin Logo (upper-center)
-  drawAltcoinLogo(ctx, symbol, cx, cy - 92, 66, colorHex);
+  // Crisp Altcoin vector emblem
+  drawAltcoinLogo(ctx, symbol, cx, cy - 68, 62, colorHex);
 
-  // Ticker symbol below logo
-  ctx.fillStyle = '#ffffff';
-  const fontSize = symbol.length >= 4 ? 64 : 74;
-  ctx.font = `900 ${fontSize}px monospace`;
+  // Clean Ticker symbol
+  ctx.fillStyle = '#f8fafc';
+  const fontSize = symbol.length >= 4 ? 54 : 62;
+  ctx.font = `700 ${fontSize}px monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(symbol, cx, cy + 4);
+  ctx.fillText(symbol, cx, cy + 36);
 
-  // 5-Minute +/- Pill directly on coin face
+  // Unboxed clean 5m readout
   const sign = change5m > 0 ? '+' : '';
-  const arrow = change5m > 0 ? '▲' : change5m < 0 ? '▼' : '●';
-  const pctStr = `${arrow} ${sign}${change5m.toFixed(2)}%`;
-
-  ctx.fillStyle = isPositive ? 'rgba(16, 185, 129, 0.24)' : isNegative ? 'rgba(239, 68, 68, 0.26)' : 'rgba(148, 163, 184, 0.2)';
-  ctx.strokeStyle = statusColor;
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.roundRect(cx - 135, cy + 44, 270, 62, 14);
-  ctx.fill();
-  ctx.stroke();
-
+  const pctStr = `${sign}${change5m.toFixed(2)}%`;
   ctx.fillStyle = statusText;
-  ctx.font = '900 38px monospace';
-  ctx.fillText(pctStr, cx, cy + 76);
-
-  // 5M & Name subtitle
-  ctx.fillStyle = colorHex;
-  ctx.font = 'bold 21px monospace';
-  ctx.fillText(`5M • ${name.toUpperCase()}`, cx, cy + 136);
+  ctx.font = '600 32px monospace';
+  ctx.fillText(pctStr, cx, cy + 104);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -774,15 +657,15 @@ export function createAltcoinFaceTexture(
 }
 
 /**
- * Creates camera-facing floating 3D sprite badge texture showing Altcoin Logo + Ticker + 5M +/- status
+ * Retained for compatibility: minimal unboxed sprite label if ever rendered
  */
 export function createAltcoinBadgeSpriteTexture(
   symbol: string,
   change5m: number,
-  colorHex = '#38bdf8'
+  _colorHex = '#e7cc82'
 ): THREE.CanvasTexture {
-  const width = 580;
-  const height = 160;
+  const width = 420;
+  const height = 100;
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -792,62 +675,28 @@ export function createAltcoinBadgeSpriteTexture(
 
   const isPositive = change5m > 0;
   const isNegative = change5m < 0;
-  const borderColor = isPositive ? '#10b981' : isNegative ? '#ef4444' : '#64748b';
-  const bgColor = isPositive
-    ? 'rgba(6, 36, 26, 0.94)'
-    : isNegative
-    ? 'rgba(42, 10, 16, 0.94)'
-    : 'rgba(15, 23, 42, 0.94)';
-  const valueColor = isPositive ? '#34d399' : isNegative ? '#fb7185' : '#cbd5e1';
+  const valueColor = isPositive ? '#6ee7b7' : isNegative ? '#fda4af' : '#cbd5e1';
 
-  // Badge body
-  ctx.fillStyle = bgColor;
-  ctx.strokeStyle = borderColor;
-  ctx.lineWidth = 6;
+  ctx.fillStyle = 'rgba(9, 13, 22, 0.86)';
+  ctx.strokeStyle = 'rgba(231, 204, 130, 0.35)';
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.roundRect(12, 14, width - 24, height - 28, 28);
+  ctx.roundRect(10, 12, width - 20, height - 24, 16);
   ctx.fill();
   ctx.stroke();
 
-  // Circular Coin Logo Emblem on the left
-  ctx.fillStyle = '#090d16';
-  ctx.strokeStyle = colorHex;
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.arc(76, height / 2, 46, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  drawAltcoinLogo(ctx, symbol, 76, height / 2, 34, colorHex);
-
-  // Ticker label (middle-left)
   ctx.fillStyle = '#f8fafc';
-  ctx.font = '900 46px monospace';
+  ctx.font = '700 34px monospace';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillText(symbol, 138, height / 2 - 15);
+  ctx.fillText(symbol, 34, height / 2 + 1);
 
-  // 5M micro sub-label under ticker
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = 'bold 24px monospace';
-  ctx.fillText('5 MENIT', 138, height / 2 + 32);
-
-  // Divider line
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(278, 32);
-  ctx.lineTo(278, height - 32);
-  ctx.stroke();
-
-  // Prominent Plus / Minus Value (right)
   const sign = change5m > 0 ? '+' : '';
-  const arrow = change5m > 0 ? '▲' : change5m < 0 ? '▼' : '●';
-  const text = `${arrow} ${sign}${change5m.toFixed(2)}%`;
-
+  const text = `${sign}${change5m.toFixed(2)}%`;
   ctx.fillStyle = valueColor;
-  ctx.font = '900 48px monospace';
+  ctx.font = '600 34px monospace';
   ctx.textAlign = 'right';
-  ctx.fillText(text, width - 34, height / 2 + 2);
+  ctx.fillText(text, width - 34, height / 2 + 1);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;

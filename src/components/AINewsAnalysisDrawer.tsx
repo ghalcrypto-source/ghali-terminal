@@ -317,7 +317,7 @@ export const AINewsAnalysisDrawer: React.FC<AINewsAnalysisDrawerProps> = ({
 
               {/* Timestamp Footer */}
               <div className="p-3 rounded-lg bg-[#070b13] border border-[#1a263d] text-center text-[11px] font-mono text-slate-500">
-                Audit Makro Ghali Terminal dieksekusi pada: <span className="text-slate-300 font-semibold">{analysis.analyzedAtWIB}</span>
+                Audit Makro Ghali On Chain dieksekusi pada: <span className="text-slate-300 font-semibold">{analysis.analyzedAtWIB}</span>
               </div>
             </div>
           ) : null}

@@ -234,7 +234,7 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
           <div className="flex flex-col items-center justify-center gap-3 text-center">
             <Compass className="w-8 h-8 text-amber-400" />
             <h1 className="font-display text-xl sm:text-2xl font-bold tracking-[0.22em] bg-gradient-to-r from-amber-100 via-amber-300 to-amber-100 bg-clip-text text-transparent">
-              GHALI TERMINAL
+              GHALI ON CHAIN
             </h1>
           </div>
 

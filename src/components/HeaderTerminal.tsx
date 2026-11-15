@@ -56,21 +56,21 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
   ];
 
   return (
-    <header className="shrink-0 z-30 h-13 sm:h-14 bg-[#070a11]/92 border-b border-[#162033] px-4 sm:px-6">
-      <div className="max-w-7xl mx-auto h-full flex items-center justify-between gap-8">
-        {/* Zone 1: Single-element Brand Wordmark */}
+    <header className="shrink-0 z-30 h-14 bg-[#070a11]/92 border-b border-[#192234] px-4 sm:px-6">
+      <div className="max-w-6xl mx-auto h-full flex items-center justify-between gap-8">
+        {/* Zone 1: Refined Brand Wordmark */}
         <button
           onClick={() => {
             sound.playClick();
             onChangeViewMode('home');
           }}
-          className="font-display font-bold text-sm sm:text-base tracking-[0.16em] text-amber-200 hover:text-amber-100 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+          className="font-display font-bold text-sm sm:text-[15px] tracking-[0.2em] text-[#e7cc82] hover:text-[#f5e3af] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
         >
-          GHALI TERMINAL
+          GHALI ON CHAIN
         </button>
 
-        {/* Zone 2: Clean 4-item Primary Navigation (Desktop) */}
-        <nav className="hidden md:flex items-center gap-7 h-full">
+        {/* Zone 2: Clean Editorial 4-Item Nav */}
+        <nav className="hidden md:flex items-center gap-8 h-full">
           {navItems.map((item) => (
             <button
               key={item.label}
@@ -78,9 +78,9 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
                 sound.playClick();
                 onChangeViewMode(item.target);
               }}
-              className={`h-full flex items-center text-sm font-medium transition-colors whitespace-nowrap shrink-0 border-b-2 cursor-pointer ${
+              className={`h-full flex items-center text-[13px] font-medium tracking-wide transition-colors whitespace-nowrap shrink-0 border-b-[1.5px] cursor-pointer ${
                 item.active
-                  ? 'border-amber-400 text-white'
+                  ? 'border-[#d4af37] text-[#f6e8be]'
                   : 'border-transparent text-slate-400 hover:text-slate-100'
               }`}
             >
@@ -89,7 +89,7 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
           ))}
         </nav>
 
-        {/* Zone 3: Single Primary Account Trigger */}
+        {/* Zone 3: Minimalist Account Trigger */}
         <div className="flex items-center shrink-0">
           {session.isLoggedIn ? (
             <button
@@ -98,29 +98,29 @@ export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
                 onOpenAuth();
               }}
               title={session.email || session.traderName}
-              className="flex items-center gap-2 py-1.5 px-2.5 rounded-xl bg-[#0e1524] hover:bg-[#152036] border border-[#1f2c46] text-slate-100 text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer min-h-[40px]"
+              className="flex items-center gap-2 py-1.5 px-3 rounded-xl bg-[#0d1320] hover:bg-[#131b2d] border border-[#222c40] hover:border-[#d4af37]/45 text-slate-100 text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer min-h-[38px]"
             >
               {session.photoURL ? (
                 <img
                   src={session.photoURL}
                   alt={session.traderName}
                   referrerPolicy="no-referrer"
-                  className="w-6 h-6 rounded-full object-cover"
+                  className="w-5 h-5 rounded-full object-cover ring-1 ring-[#d4af37]/40"
                 />
               ) : (
-                <div className="w-6 h-6 rounded-full bg-amber-400 text-black font-bold flex items-center justify-center text-[11px]">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#e7cc82] to-[#b88f28] text-[#070a11] font-bold flex items-center justify-center text-[10px]">
                   {session.traderName.slice(0, 1).toUpperCase()}
                 </div>
               )}
-              <span className="truncate max-w-[90px] sm:max-w-[140px]">
+              <span className="truncate max-w-[90px] sm:max-w-[130px] text-slate-200">
                 {session.traderName}
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.6} />
             </button>
           ) : (
             <button
               onClick={onOpenAuth}
-              className="flex items-center gap-1.5 py-2 px-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer min-h-[40px]"
+              className="flex items-center gap-1.5 py-2 px-3.5 rounded-xl bg-[#e7cc82] hover:bg-[#f2da99] text-[#070a11] text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer min-h-[38px]"
             >
               <User className="w-3.5 h-3.5" />
               <span>Masuk</span>

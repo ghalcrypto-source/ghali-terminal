@@ -178,7 +178,7 @@ export const CHAT_ROOMS: ChatRoomMeta[] = [
     id: 'general',
     label: 'General Lounge',
     tag: 'GLOBAL',
-    description: 'Diskusi terbuka lintas semua trader & pengguna GHALI TERMINAL',
+    description: 'Diskusi terbuka lintas semua trader & pengguna GHALI ON CHAIN',
   },
   {
     id: 'btc-alpha',

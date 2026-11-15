@@ -19,6 +19,8 @@ import { TechnicalAnalysisPanel } from './components/TechnicalAnalysisPanel';
 import { WhaleIntelligenceModal } from './components/WhaleIntelligenceModal';
 import { PriceAlertManager } from './components/PriceAlertManager';
 import { CryptoLiquidityMoversPanel } from './components/CryptoLiquidityMoversPanel';
+import { RoomChatView } from './components/RoomChatView';
+import { SuperAppHome } from './components/SuperAppHome';
 
 import { FinishId, CameraPreset } from './types/contrarian';
 import { UserSession } from './types/news';
@@ -29,15 +31,10 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth, signOutGoogle, syncGoogleUserProfile } from './firebase';
 import {
   Newspaper,
-  Activity,
-  Flame,
-  Radar,
-  LayoutGrid,
-  Box,
-  ChevronRight,
-  Radio,
+  Home,
+  ChevronLeft,
   TrendingUp,
-  Compass,
+  MessageSquare,
 } from 'lucide-react';
 
 export default function App() {
@@ -46,6 +43,7 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       const v = params.get('view');
       const path = window.location.pathname.toLowerCase();
+      if (v === 'home') return 'home';
       if (v === 'impact_matrix' || v === 'matrix' || path.includes('matrix')) return 'impact_matrix';
       if (v === 'high_impact' || v === 'priority' || path.includes('high_impact') || path.includes('priority')) return 'high_impact';
       if (v === 'macro_terminal' || v === 'macro' || v === 'macroview' || path.includes('macroview') || path.includes('macro')) return 'macro_terminal';
@@ -53,10 +51,11 @@ export default function App() {
       if (v === 'narratives' || v === 'chatter' || path.includes('narratives') || path.includes('chatter')) return 'narratives';
       if (v === 'bitcoin_cycle' || v === 'cycle' || path.includes('cycle') || path.includes('bitcoin')) return 'bitcoin_cycle';
       if (v === 'liquidity_movers' || v === 'liquidity' || v === 'movers' || path.includes('liquidity')) return 'liquidity_movers';
+      if (v === 'room_chat' || v === 'chat' || path.includes('chat')) return 'room_chat';
       if (v === 'multichart' || path.includes('multichart')) return 'multichart';
       if (v === 'monolith' || path.includes('monolith')) return 'monolith';
     } catch (_) {}
-    return 'monolith';
+    return 'home';
   });
 
   useEffect(() => {
@@ -357,269 +356,149 @@ export default function App() {
     return <LoginGate onLoginSuccess={handleLogin} />;
   }
 
+  const marketTabs: { id: TerminalViewMode; label: string }[] = [
+    { id: 'bitcoin_cycle', label: 'Bitcoin Cycle' },
+    { id: 'liquidity_movers', label: 'Likuiditas' },
+    { id: 'monolith', label: '3D Monolith' },
+    { id: 'multichart', label: 'Multichart' },
+  ];
+
+  const newsTabs: { id: TerminalViewMode; label: string }[] = [
+    { id: 'macro_terminal', label: 'Macro Wire' },
+    { id: 'high_impact', label: 'Prioritas' },
+    { id: 'impact_matrix', label: 'Impact Matrix' },
+    { id: 'narratives', label: 'Narratives' },
+  ];
+
+  const isMarketMode = marketTabs.some((t) => t.id === viewMode);
+  const isNewsMode = newsTabs.some((t) => t.id === viewMode);
+
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-[#06080d] font-sans flex flex-col">
-      {/* 1. Header Bar with Ticker & Top Controls */}
+    <main className="relative w-screen h-screen overflow-hidden bg-[#070a11] font-sans flex flex-col">
+      {/* 1. Clean Superapp Header */}
       <HeaderTerminal
         viewMode={viewMode}
         onChangeViewMode={setViewMode}
-        onOpenApiKeys={() => setIsApiKeysOpen(true)}
-        onOpenRadar={() => setIsRadarOpen(true)}
-        onOpenExchangeSentiment={() => setIsExchangeSentimentOpen(true)}
-        onOpenTopMovers={() => setIsTopMoversOpen(true)}
-        onOpenWhale={() => setIsWhaleOpen(true)}
-        onOpenAlerts={() => setIsAlertsOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
-        onOpenTA={() => setIsTAOpen(true)}
         session={session}
-        soundEnabled={soundEnabled}
-        onToggleSound={toggleSound}
       />
 
-      {/* 2. Main Workspace Layout with Left Sidebar Menu */}
-      <div className="flex-1 min-h-0 w-full relative flex flex-col lg:flex-row overflow-hidden">
-        {/* Mobile Top Quick Navigation Bar (< lg) */}
-        <div className="lg:hidden w-full bg-[#080b12] border-b border-[#1a253a] px-3 py-2 flex items-center gap-1.5 overflow-x-auto shrink-0 text-[11px] font-mono z-10">
-          {[
-            { id: 'monolith' as TerminalViewMode, label: '3D Monolith BTC' },
-            { id: 'bitcoin_cycle' as TerminalViewMode, label: 'Bitcoin Cycle' },
-            { id: 'liquidity_movers' as TerminalViewMode, label: 'Arus Likuiditas' },
-            { id: 'macro_terminal' as TerminalViewMode, label: 'Macro Wire' },
-            { id: 'narratives' as TerminalViewMode, label: 'Narratives' },
-            { id: 'impact_matrix' as TerminalViewMode, label: 'Impact Matrix' },
-            { id: 'high_impact' as TerminalViewMode, label: 'High Impact' },
-            { id: 'telemetry' as TerminalViewMode, label: '8-API' },
-            { id: 'multichart' as TerminalViewMode, label: 'Multichart' },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                sound.playClick();
-                setViewMode(item.id);
-              }}
-              className={`px-2.5 py-1 rounded-lg font-bold whitespace-nowrap cursor-pointer transition-colors ${
-                viewMode === item.id
-                  ? 'bg-amber-500 text-black'
-                  : 'bg-[#101726] text-slate-300 border border-[#1d2a42]'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+      {/* 2. Contextual Mini-App Top Strip (only shown inside opened Mini-Apps) */}
+      {viewMode !== 'home' && (
+        <div className="shrink-0 bg-[#090d16] border-b border-[#162033] px-3 sm:px-6 h-11 flex items-center justify-between gap-3 z-20">
+          <button
+            onClick={() => {
+              sound.playClick();
+              setViewMode('home');
+            }}
+            className="inline-flex items-center gap-1 text-xs font-medium text-slate-300 hover:text-white py-1.5 px-2.5 rounded-lg bg-[#101726] hover:bg-[#172136] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            <ChevronLeft className="w-3.5 h-3.5 text-amber-300" />
+            <span>Beranda</span>
+          </button>
 
-        {/* ============================================================ */}
-        {/* LEFT SIDEBAR NAVIGATION MENU                                 */}
-        {/* ============================================================ */}
-        <aside className="w-64 shrink-0 bg-[#080b12] border-r border-[#1a253a] flex flex-col justify-between p-3.5 overflow-y-auto hidden lg:flex text-xs font-mono z-10">
-          <div className="space-y-6">
-            <div className="px-2 pt-1 pb-2.5 border-b border-[#18243b] flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold tracking-[0.2em] bg-gradient-to-r from-amber-100 via-amber-300 to-amber-100 bg-clip-text text-transparent font-display block">
-                  GHALI TERMINAL
-                </span>
-                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
-                  Macro & Crypto Desk
-                </span>
-              </div>
-              <span className="w-2 h-2 rounded-full bg-emerald-400" title="System Live" />
-            </div>
-
-            <div className="space-y-1.5">
-              {/* 1. 3D Monolith Sentiment (PALING ATAS) */}
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setViewMode('monolith');
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
-                  viewMode === 'monolith'
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Box className={`w-4 h-4 ${viewMode === 'monolith' ? 'text-black' : 'text-emerald-400'}`} />
-                  <span>3D Monolith Sentiment</span>
-                </div>
-                <span
-                  className={`px-1.5 py-0.2 rounded text-[10px] font-bold border ${
-                    viewMode === 'monolith'
-                      ? 'bg-black/20 text-black border-black/30'
-                      : 'bg-emerald-950 text-emerald-300 border-emerald-800'
+          {isMarketMode && (
+            <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#0d1320] border border-[#1a2438] overflow-x-auto">
+              {marketTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    sound.playClick();
+                    setViewMode(tab.id);
+                  }}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+                    viewMode === tab.id
+                      ? 'bg-amber-400 text-black font-semibold'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  3D BTC
-                </span>
-              </button>
-
-              {/* 2. Bitcoin Cycle & Expert Analysis (Directly below 3D Monolith) */}
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setViewMode('bitcoin_cycle');
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
-                  viewMode === 'bitcoin_cycle'
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <TrendingUp className={`w-4 h-4 ${viewMode === 'bitcoin_cycle' ? 'text-black' : 'text-amber-400'}`} />
-                  <span>Bitcoin Cycle & Analysis</span>
-                </div>
-                <span className="px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 text-[10px] font-bold border border-amber-800">
-                  2026
-                </span>
-              </button>
-
-              {/* 3. Arus Likuiditas & Movers (Directly below Bitcoin Cycle) */}
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setViewMode('liquidity_movers');
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
-                  viewMode === 'liquidity_movers'
-                    ? 'bg-gradient-to-r from-cyan-500 to-cyan-400 text-black shadow-lg shadow-cyan-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Compass className={`w-4 h-4 ${viewMode === 'liquidity_movers' ? 'text-black' : 'text-cyan-400'}`} />
-                  <span>Arus Likuiditas & Movers</span>
-                </div>
-                <span className="px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 text-[10px] font-bold border border-cyan-800">
-                  TOP 5 L/S
-                </span>
-              </button>
-
-              {/* 4. Macro Wire / MacroView */}
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setViewMode('macro_terminal');
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
-                  viewMode === 'macro_terminal'
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Newspaper className="w-4 h-4" />
-                  <span>Macro Wire (MacroView)</span>
-                </div>
-                <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'macro_terminal' ? 'text-black' : 'text-slate-500'}`} />
-              </button>
-
-              {/* 5. 24/7 Crypto Narratives */}
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setViewMode('narratives');
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
-                  viewMode === 'narratives'
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Radio className="w-4 h-4 text-amber-400" />
-                  <span>24/7 Crypto Narratives</span>
-                </div>
-                <span className="px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 text-[10px] font-bold border border-amber-800">
-                  LIVE
-                </span>
-              </button>
-
-              {/* 6. Impact Matrix */}
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setViewMode('impact_matrix');
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
-                  viewMode === 'impact_matrix'
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Activity className="w-4 h-4" />
-                  <span>Impact Matrix</span>
-                </div>
-                <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'impact_matrix' ? 'text-black' : 'text-slate-500'}`} />
-              </button>
-
-              {/* 7. High Impact */}
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setViewMode('high_impact');
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
-                  viewMode === 'high_impact'
-                    ? 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg shadow-red-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Flame className="w-4 h-4 text-amber-300" />
-                  <span>High Impact Priority</span>
-                </div>
-                <span className="px-1.5 py-0.2 rounded bg-red-950 text-red-300 text-[10px] font-bold border border-red-800">
-                  HOT
-                </span>
-              </button>
-
-              {/* 8. 8-API Telemetry */}
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setViewMode('telemetry');
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
-                  viewMode === 'telemetry'
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Radar className="w-4 h-4 text-cyan-400" />
-                  <span>8-API Telemetry</span>
-                </div>
-                <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'telemetry' ? 'text-black' : 'text-slate-500'}`} />
-              </button>
-
-              {/* 9. Multichart */}
-              <button
-                onClick={() => {
-                  sound.playClick();
-                  setViewMode('multichart');
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold transition-all cursor-pointer ${
-                  viewMode === 'multichart'
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-lg shadow-amber-500/20'
-                    : 'text-slate-300 hover:text-white hover:bg-[#101726]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <LayoutGrid className="w-4 h-4 text-blue-400" />
-                  <span>Multichart Grid</span>
-                </div>
-                <ChevronRight className={`w-3.5 h-3.5 ${viewMode === 'multichart' ? 'text-black' : 'text-slate-500'}`} />
-              </button>
+                  {tab.label}
+                </button>
+              ))}
             </div>
-          </div>
-        </aside>
+          )}
 
-        {/* ============================================================ */}
-        {/* RIGHT CONTENT AREA                                           */}
-        {/* ============================================================ */}
-        <div className="flex-1 w-full h-full relative overflow-hidden flex">
+          {isNewsMode && (
+            <div className="flex items-center gap-1 p-0.5 rounded-lg bg-[#0d1320] border border-[#1a2438] overflow-x-auto">
+              {newsTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    sound.playClick();
+                    setViewMode(tab.id);
+                  }}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+                    viewMode === tab.id
+                      ? 'bg-amber-400 text-black font-semibold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!isMarketMode && !isNewsMode && (
+            <span className="text-xs font-semibold text-slate-200 truncate">
+              {viewMode === 'room_chat'
+                ? 'Room Chat Komunitas'
+                : viewMode === 'telemetry'
+                ? '8-API Telemetry'
+                : 'Layanan'}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* 3. Main Superapp Workspace Canvas */}
+      <div className="flex-1 min-h-0 w-full relative overflow-hidden flex pb-[58px] md:pb-0">
+        {/* LIVE 3D MONOLITH BACKGROUND (Active on Beranda Home & full 3D Monolith View) */}
+        {(viewMode === 'home' || viewMode === 'monolith') && (
+          <div className={`absolute inset-0 z-0 ${viewMode === 'home' ? 'pointer-events-none' : ''}`}>
+            <ThreeCanvas
+              finish={finish}
+              exploded={exploded}
+              cameraPreset={cameraPreset}
+              autoRotate={autoRotate}
+              rotationSpeed={rotationSpeed}
+              altcoin5m={altcoin5mMetrics}
+              onPartHover={viewMode === 'monolith' ? setHoveredPart : undefined}
+              onPartSelect={viewMode === 'monolith' ? handlePartSelect : undefined}
+            />
+            {viewMode === 'home' && (
+              <div className="absolute inset-0 bg-gradient-to-b from-[#070a11]/45 via-[#070a11]/35 to-[#070a11]/70 pointer-events-none" />
+            )}
+          </div>
+        )}
+
+        {/* DEFAULT VIEW: SUPERAPP HOME HUB OVER 3D MONOLITH */}
+        {viewMode === 'home' && (
+          <SuperAppHome
+            session={session}
+            macroNews={macroNews}
+            newsLoading={newsLoading}
+            altcoin5m={altcoin5mMetrics}
+            soundEnabled={soundEnabled}
+            onToggleSound={toggleSound}
+            onNavigate={setViewMode}
+            onSelectNewsForAI={handleSelectNewsForAI}
+            onOpenTA={() => setIsTAOpen(true)}
+            onOpenTopMovers={() => setIsTopMoversOpen(true)}
+            onOpenWhale={() => setIsWhaleOpen(true)}
+            onOpenRadar={() => setIsRadarOpen(true)}
+            onOpenAlerts={() => setIsAlertsOpen(true)}
+            onOpenExchangeSentiment={() => setIsExchangeSentimentOpen(true)}
+            onOpenApiKeys={() => setIsApiKeysOpen(true)}
+          />
+        )}
+
+        {/* VIEW: MULTI-USER ROOM CHAT */}
+        {viewMode === 'room_chat' && (
+          <div className="w-full h-full relative flex overflow-hidden">
+            <RoomChatView session={session} />
+          </div>
+        )}
           {/* VIEW A: GLOBAL MACRO NEWS WIRE TERMINAL */}
           {viewMode === 'macro_terminal' && (
             <div className="w-full h-full relative flex overflow-hidden">
@@ -703,55 +582,26 @@ export default function App() {
             </div>
           )}
 
-          {/* VIEW H: 3D BITCOIN & ORBITING ALTCOINS MONOLITH */}
+          {/* VIEW H: 3D BITCOIN & ORBITING ALTCOINS MONOLITH OVERLAY CONTROLS */}
           {viewMode === 'monolith' && (
-            <div className="w-full h-full relative">
-              <ThreeCanvas
-                finish={finish}
-                exploded={exploded}
-                cameraPreset={cameraPreset}
-                autoRotate={autoRotate}
-                rotationSpeed={rotationSpeed}
-                altcoin5m={altcoin5mMetrics}
-                onPartHover={setHoveredPart}
-                onPartSelect={handlePartSelect}
-              />
-              {/* Elegant Top-Center Crest & Spec Badge (Positioned cleanly below header & TradingView) */}
-              <div className="absolute top-6 sm:top-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none flex flex-col items-center gap-1 w-full max-w-xl px-4">
-                <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-2.5">
-                    <span className="h-[1px] w-6 sm:w-10 bg-gradient-to-r from-transparent to-amber-400/75" />
-                    <span className="text-amber-400/85 text-[8px]">◆</span>
-                    <h1 className="font-display text-xs sm:text-sm font-bold tracking-[0.26em] bg-gradient-to-r from-amber-100 via-amber-300 to-amber-100 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(245,158,11,0.25)] whitespace-nowrap">
-                      GHALI TERMINAL
-                    </h1>
-                    <span className="text-amber-400/85 text-[8px]">◆</span>
-                    <span className="h-[1px] w-6 sm:w-10 bg-gradient-to-l from-transparent to-amber-400/75" />
-                  </div>
-                  <span className="text-[8px] sm:text-[9px] font-mono tracking-[0.22em] text-amber-200/60 uppercase">
-                    Sovereign Bitcoin & Altcoin Orbital Architecture
-                  </span>
-                </div>
-
-                <div className="hidden sm:flex items-center gap-2 bg-[#0b0f19]/95 border border-amber-500/25 px-3 py-0.5 rounded text-[10px] font-mono text-slate-300 shadow-lg">
-                  <span className="text-amber-300 font-bold">₿ BITCOIN CORE CENTER</span>
-                  <span className="text-slate-600">•</span>
-                  <span className="text-cyan-300 font-semibold">10 ALTCOINS ORBITING</span>
-                  <span className="text-slate-600">•</span>
-                  {(() => {
-                    const orbitKeys = ['ETH', 'SOL', 'BNB', 'XRP', 'DOGE', 'SUI', 'ADA', 'AVAX', 'LINK', 'TAO'];
-                    const plusCount = orbitKeys.filter((k) => (altcoin5mMetrics[k]?.change5m ?? 0) > 0).length;
-                    const minusCount = orbitKeys.filter((k) => (altcoin5mMetrics[k]?.change5m ?? 0) < 0).length;
-                    return (
-                      <span className="font-bold">
-                        <span className="text-emerald-400">▲ {plusCount} PLUS</span>
-                        <span className="text-slate-500 mx-1">/</span>
-                        <span className="text-rose-400">▼ {minusCount} MINUS</span>
-                        <span className="text-slate-400 ml-1">(5M LIVE)</span>
-                      </span>
-                    );
-                  })()}
-                </div>
+            <div className="w-full h-full relative pointer-events-none z-10">
+              {/* Minimalist Top-Center Spec Readout */}
+              <div className="hidden sm:flex absolute top-5 left-1/2 -translate-x-1/2 z-10 pointer-events-none items-center gap-3 bg-[#090e1a]/90 border border-[#1d2940] px-4 py-1.5 rounded-full text-xs font-mono text-slate-300">
+                <span className="text-amber-300 font-semibold">Bitcoin Core</span>
+                <span className="text-slate-600">·</span>
+                {(() => {
+                  const orbitKeys = ['ETH', 'SOL', 'BNB', 'XRP', 'DOGE', 'SUI', 'ADA', 'AVAX', 'LINK', 'TAO'];
+                  const plusCount = orbitKeys.filter((k) => (altcoin5mMetrics[k]?.change5m ?? 0) > 0).length;
+                  const minusCount = orbitKeys.filter((k) => (altcoin5mMetrics[k]?.change5m ?? 0) < 0).length;
+                  return (
+                    <span className="tabular-nums">
+                      <span className="text-emerald-400">{plusCount} Naik</span>
+                      <span className="text-slate-600 mx-1.5">/</span>
+                      <span className="text-rose-400">{minusCount} Turun</span>
+                      <span className="text-slate-500 ml-1.5">(5M)</span>
+                    </span>
+                  );
+                })()}
               </div>
               <BottomControlDock
                 finish={finish}
@@ -768,8 +618,37 @@ export default function App() {
               />
             </div>
           )}
-        </div>
       </div>
+
+      {/* 4. Mobile Fixed Bottom Tab Bar (China Superapp Thumb Navigation) */}
+      <nav
+        aria-label="Navigasi utama"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-[58px] bg-[#090d16]/94 border-t border-[#162033] grid grid-cols-4 items-center"
+      >
+        {[
+          { id: 'home' as TerminalViewMode, label: 'Beranda', active: viewMode === 'home', icon: Home },
+          { id: 'bitcoin_cycle' as TerminalViewMode, label: 'Pasar', active: isMarketMode, icon: TrendingUp },
+          { id: 'macro_terminal' as TerminalViewMode, label: 'Berita', active: isNewsMode, icon: Newspaper },
+          { id: 'room_chat' as TerminalViewMode, label: 'Room Chat', active: viewMode === 'room_chat', icon: MessageSquare },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.label}
+              onClick={() => {
+                sound.playClick();
+                setViewMode(tab.id);
+              }}
+              className={`h-full min-h-[44px] flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer ${
+                tab.active ? 'text-amber-300' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="text-[11px] font-medium tracking-tight">{tab.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
       {/* 3. AI News Analysis Drawer */}
       <AINewsAnalysisDrawer

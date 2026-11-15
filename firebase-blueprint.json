@@ -78,6 +78,67 @@
         }
       },
       "required": ["ownerId", "symbol", "targetPrice", "direction", "createdAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Real-time multi-user room chat message inside GHALI TERMINAL.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Unique message identifier."
+        },
+        "roomId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "enum": ["general", "btc-alpha", "altcoins", "macro-fed"],
+          "description": "Chat room channel identifier."
+        },
+        "senderUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of message author."
+        },
+        "senderName": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Display name of the sender."
+        },
+        "senderEmail": {
+          "type": "string",
+          "maxLength": 254,
+          "description": "Email of the sender."
+        },
+        "senderPhoto": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "Profile avatar URL."
+        },
+        "senderRole": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Role badge of the sender."
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Chat message content."
+        },
+        "createdAtMs": {
+          "type": "number",
+          "description": "Epoch timestamp in milliseconds for deterministic ordering."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Firestore server timestamp."
+        }
+      },
+      "required": ["id", "roomId", "senderUid", "senderName", "text", "createdAtMs", "createdAt"]
     }
   },
   "firestore": {
@@ -92,6 +153,12 @@
         "$ref": "#/entities/PriceAlertRecord"
       },
       "description": "Custom price alerts belonging to authenticated user."
+    },
+    "/chatRooms/{roomId}/messages/{messageId}": {
+      "schema": {
+        "$ref": "#/entities/ChatMessage"
+      },
+      "description": "Multi-user real-time chat room messages shared across authenticated users."
     }
   }
 }

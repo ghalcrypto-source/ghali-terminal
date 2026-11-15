@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import path from 'path';
+import fs from 'fs';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
@@ -2376,216 +2377,378 @@ app.get('/api/contrarian/radar', (_req: Request, res: Response) => {
   res.json({ success: true, items: PRESET_RADAR });
 });
 
-// 24/7 Crypto Community Narrative & Social Chatter API (Free Public APIs: CryptoPanic, Reddit, CoinGecko, & Crypto RSS)
-app.get('/api/crypto/narratives', async (_req: Request, res: Response) => {
+// 24/7 Crypto Narrative Intelligence Cache (30s TTL to respect keyless public API limits)
+let cachedNarrativesPayload: { timestamp: number; data: any } | null = null;
+
+function classifyCryptoNarrativeTheme(text: string): {
+  theme: 'AI & Agent' | 'RWA & Inst.' | 'DeFi & On-Chain' | 'Layer 1' | 'Meme & Viral' | 'Regulasi & Makro';
+  sentiment: 'BULLISH' | 'BEARISH' | 'VIRAL';
+} {
+  const lower = text.toLowerCase();
+  let sentiment: 'BULLISH' | 'BEARISH' | 'VIRAL' = 'BULLISH';
+  if (/(crash|hack|exploit|drain|lawsuit|ban|sec sue|liquidation|drop|plunge|fear)/.test(lower)) {
+    sentiment = 'BEARISH';
+  } else if (/(surge|soar|boost|viral|ath|record|trending|boom|100x|rally)/.test(lower)) {
+    sentiment = 'VIRAL';
+  }
+
+  if (/(\bai\b|agent|agentic|compute|gpu|bittensor|tao|virtuals|fetch|render|llm|venice)/.test(lower)) {
+    return { theme: 'AI & Agent', sentiment };
+  }
+  if (/(rwa|real world|etf|blackrock|institutional|treasury|fidelity|custody|pension|sovereign|tokenized)/.test(lower)) {
+    return { theme: 'RWA & Inst.', sentiment };
+  }
+  if (/(meme|pepe|doge|wif|bonk|pump|shib|fartcoin|floki|viral)/.test(lower)) {
+    return { theme: 'Meme & Viral', sentiment };
+  }
+  if (/(defi|dex|yield|staking|restaking|tvl|uniswap|aave|lending|swap|pool|liquidity|stablecoin|usdc|usdt)/.test(lower)) {
+    return { theme: 'DeFi & On-Chain', sentiment };
+  }
+  if (/(sec\b|cftc|fed\b|fomc|cpi|inflation|tariff|regulation|policy|tax|congress|senate|doj)/.test(lower)) {
+    return { theme: 'Regulasi & Makro', sentiment };
+  }
+  return { theme: 'Layer 1', sentiment };
+}
+
+// 24/7 Crypto Narrative Engine (100% Free Keyless Public APIs running 24h)
+app.get('/api/crypto/narratives', async (req: Request, res: Response) => {
+  const forceRefresh = req.query.refresh === '1';
+  const nowMs = Date.now();
+
+  if (!forceRefresh && cachedNarrativesPayload && nowMs - cachedNarrativesPayload.timestamp < 30000) {
+    return res.json(cachedNarrativesPayload.data);
+  }
+
   const narratives: any[] = [];
+  const hotSectors: any[] = [];
+  const seenTitles = new Set<string>();
+  const sourceStats: Record<string, number> = {
+    coingecko: 0,
+    dexscreener: 0,
+    geckoterminal: 0,
+    hackernews: 0,
+    rss: 0,
+  };
 
-  // 1. Fetch CryptoPanic Free Public API
-  try {
-    const cpController = new AbortController();
-    const cpTid = setTimeout(() => cpController.abort(), 3500);
-    const cpRes = await fetch('https://cryptopanic.com/api/v1/posts/?auth_key=free&public=true', {
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-      signal: cpController.signal,
-    });
-    clearTimeout(cpTid);
+  const pushNarrative = (item: any) => {
+    const slug = String(item.title || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .slice(0, 48);
+    if (!slug || seenTitles.has(slug)) return;
+    seenTitles.add(slug);
+    narratives.push(item);
+  };
 
-    if (cpRes.ok) {
-      const cpData = await cpRes.json();
-      if (cpData?.results) {
-        cpData.results.slice(0, 15).forEach((post: any, idx: number) => {
-          const title = post.title;
-          const sourceName = post.source?.title || 'CryptoPanic Wire';
-          const postUrl = post.url || 'https://cryptopanic.com';
-          
-          const lower = title.toLowerCase();
-          let sentiment = 'BULLISH';
-          let theme = 'Layer-1 & Scaling';
-          if (lower.includes('drop') || lower.includes('crash') || lower.includes('sec') || lower.includes('lawsuit') || lower.includes('hack')) {
-            sentiment = 'BEARISH';
-            theme = 'Regulatory & Risk';
-          } else if (lower.includes('ai') || lower.includes('agent') || lower.includes('bull') || lower.includes('surge') || lower.includes('record')) {
-            sentiment = 'VIRAL HYPE';
-            theme = 'AI & Agentic Web3';
-          } else if (lower.includes('etf') || lower.includes('institutional') || lower.includes('fund') || lower.includes('reserve')) {
-            sentiment = 'BULLISH';
-            theme = 'Institutional Inflows';
-          }
+  // 1. CoinGecko Categories API (Free Keyless - 24h Narrative Sector Performance)
+  const cgCategoriesPromise = (async () => {
+    try {
+      const cgRes = await fetch('https://api.coingecko.com/api/v3/coins/categories', {
+        signal: AbortSignal.timeout(4500),
+        headers: { 'User-Agent': 'GhaliTerminal/2.0' },
+      });
+      if (!cgRes.ok) return;
+      const cats = await cgRes.json();
+      if (!Array.isArray(cats)) return;
 
-          narratives.push({
-            id: `cp-${post.id || idx}`,
-            title,
-            source: `CryptoPanic (${sourceName})`,
-            upvotes: 350 + idx * 55,
-            comments: 45 + idx * 10,
-            sentiment,
-            narrativeTheme: theme,
-            url: postUrl,
-            timestamp: 'Live 24h',
-          });
+      const meaningful = cats.filter(
+        (c: any) =>
+          c &&
+          typeof c.name === 'string' &&
+          typeof c.market_cap_change_24h === 'number' &&
+          (c.volume_24h || 0) > 25_000_000 &&
+          (c.market_cap || 0) > 100_000_000
+      );
+
+      // Top 8 gaining/high-momentum narrative sectors in last 24h
+      const byMomentum = [...meaningful]
+        .sort((a: any, b: any) => b.market_cap_change_24h - a.market_cap_change_24h)
+        .slice(0, 8);
+
+      byMomentum.forEach((cat: any) => {
+        const chg = Number(cat.market_cap_change_24h.toFixed(2));
+        hotSectors.push({
+          id: cat.id,
+          name: cat.name,
+          change24h: chg,
+          volume24hUSD: cat.volume_24h || 0,
+          marketCapUSD: cat.market_cap || 0,
+          topCoins: Array.isArray(cat.top_3_coins_id) ? cat.top_3_coins_id : [],
         });
-      }
-    }
-  } catch (err) {
-    console.log('CryptoPanic fetch fallback:', (err as any)?.message);
-  }
 
-  // 2. Fetch Reddit r/CryptoCurrency hot posts
-  try {
-    const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 3500);
-    const rRes = await fetch('https://www.reddit.com/r/cryptocurrency/hot.json?limit=12', {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) GlobalMacroIntelligence/2.0' },
-      signal: controller.signal,
-    });
-    clearTimeout(tid);
+        const { theme } = classifyCryptoNarrativeTheme(cat.name);
+        const volStr =
+          cat.volume_24h >= 1e9
+            ? `$${(cat.volume_24h / 1e9).toFixed(2)}B`
+            : `$${(cat.volume_24h / 1e6).toFixed(0)}M`;
 
-    if (rRes.ok) {
-      const rData = await rRes.json();
-      if (rData?.data?.children) {
-        rData.data.children.forEach((child: any, idx: number) => {
-          const post = child.data;
-          if (post && post.title && !post.stickied) {
-            const title = post.title;
-            const score = post.score || 120 + idx * 45;
-            const comments = post.num_comments || 35 + idx * 12;
-            const permalink = post.permalink ? `https://reddit.com${post.permalink}` : 'https://reddit.com/r/cryptocurrency';
-            
-            const lower = title.toLowerCase();
-            let sentiment = 'BULLISH';
-            let theme = 'Layer-1 & Scaling';
-            if (lower.includes('crash') || lower.includes('drop') || lower.includes('sec') || lower.includes('ban') || lower.includes('hack')) {
-              sentiment = 'BEARISH';
-              theme = 'Regulatory & Risk';
-            } else if (lower.includes('ai') || lower.includes('agent') || lower.includes('virtual') || lower.includes('bull') || lower.includes('moon') || lower.includes('ATH')) {
-              sentiment = 'VIRAL HYPE';
-              theme = 'AI & Agentic Web3';
-            } else if (lower.includes('etf') || lower.includes('institutional') || lower.includes('blackrock') || lower.includes('reserve')) {
-              sentiment = 'BULLISH';
-              theme = 'Institutional Inflows';
-            }
-
-            narratives.push({
-              id: `reddit-${post.id || idx}`,
-              title,
-              source: 'Reddit r/CryptoCurrency (24/7 Chatter)',
-              upvotes: score,
-              comments,
-              sentiment,
-              narrativeTheme: theme,
-              url: permalink,
-              timestamp: `${Math.floor(Math.random() * 5) + 1}h ago`,
-            });
-          }
+        pushNarrative({
+          id: `cg-cat-${cat.id}`,
+          title: `Sektor Narasi ${cat.name}: ${chg >= 0 ? '+' : ''}${chg}% (24J) · Vol ${volStr}`,
+          summary: `Kapitalisasi sektor ${cat.name} bergerak ${chg >= 0 ? 'naik' : 'turun'} ${Math.abs(chg)}% dalam 24 jam terakhir dengan volume transaksi ${volStr}.`,
+          source: 'CoinGecko Categories API',
+          sourceType: 'COINGECKO',
+          narrativeTheme: theme,
+          sentiment: chg >= 3 ? 'VIRAL' : chg >= 0 ? 'BULLISH' : 'BEARISH',
+          metricLabel: `${chg >= 0 ? '+' : ''}${chg}% 24J`,
+          change24h: chg,
+          url: `https://www.coingecko.com/en/categories/${cat.id}`,
+          timestamp: 'Live 24J',
+          timestampMs: nowMs - 1000 * 60,
+          wibTime: formatWIBTime().wibString,
         });
-      }
-    }
-  } catch (err) {
-    console.log('Reddit narrative fetch fallback:', (err as any)?.message);
-  }
+        sourceStats.coingecko++;
+      });
+    } catch (_) {}
+  })();
 
-  // 3. Fetch CoinGecko Trending Search
-  try {
-    const cgController = new AbortController();
-    const cgTid = setTimeout(() => cgController.abort(), 3500);
-    const cgRes = await fetch('https://api.coingecko.com/api/v3/search/trending', {
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-      signal: cgController.signal,
-    });
-    clearTimeout(cgTid);
-
-    if (cgRes.ok) {
+  // 2. CoinGecko Search Trending API (Free Keyless - Trending Categories & Coins 24h)
+  const cgTrendingPromise = (async () => {
+    try {
+      const cgRes = await fetch('https://api.coingecko.com/api/v3/search/trending', {
+        signal: AbortSignal.timeout(4500),
+        headers: { 'User-Agent': 'GhaliTerminal/2.0' },
+      });
+      if (!cgRes.ok) return;
       const cgData = await cgRes.json();
-      if (cgData?.coins) {
-        cgData.coins.slice(0, 6).forEach((item: any, idx: number) => {
-          const coin = item.item;
-          narratives.push({
-            id: `coingecko-trend-${idx}`,
-            title: `Community Trending Search Surge: ${coin.name} (${coin.symbol}) ranked #${coin.market_cap_rank || idx + 1} on CoinGecko 24h search`,
+
+      if (Array.isArray(cgData?.categories)) {
+        cgData.categories.slice(0, 4).forEach((cat: any) => {
+          const chg = Number((cat?.data?.market_cap_change_percentage_24h?.usd ?? cat?.market_cap_1h_change ?? 0).toFixed(2));
+          const { theme } = classifyCryptoNarrativeTheme(cat.name || '');
+          pushNarrative({
+            id: `cg-trend-cat-${cat.slug || cat.id}`,
+            title: `Trending Kategori: ${cat.name} (${chg >= 0 ? '+' : ''}${chg}% 24J)`,
+            summary: `Kategori ${cat.name} masuk jajaran pencarian trending 24 jam di CoinGecko dengan perubahan market cap ${chg >= 0 ? '+' : ''}${chg}%.`,
             source: 'CoinGecko Trending API',
-            upvotes: 850 + idx * 140,
-            comments: 110 + idx * 25,
-            sentiment: 'VIRAL HYPE',
-            narrativeTheme: 'Retail Momentum & Attention',
-            url: `https://www.coingecko.com/en/coins/${coin.id}`,
-            timestamp: 'Trending 24h',
+            sourceType: 'COINGECKO',
+            narrativeTheme: theme,
+            sentiment: chg >= 0 ? 'VIRAL' : 'BEARISH',
+            metricLabel: `${chg >= 0 ? '+' : ''}${chg}% 24J`,
+            change24h: chg,
+            url: `https://www.coingecko.com/en/categories/${cat.slug || ''}`,
+            timestamp: 'Trending 24J',
+            timestampMs: nowMs - 1000 * 120,
+            wibTime: formatWIBTime().wibString,
           });
+          sourceStats.coingecko++;
         });
       }
-    }
-  } catch (err) {
-    console.log('CoinGecko trending fetch fallback:', (err as any)?.message);
-  }
 
-  // 4. Fetch Cointelegraph & CoinDesk RSS feeds
-  const rssFeeds = [
-    { source: 'Cointelegraph RSS', url: 'https://cointelegraph.com/rss' },
-    { source: 'CoinDesk RSS', url: 'https://www.coindesk.com/arc/outboundfeeds/rss/' },
+      if (Array.isArray(cgData?.coins)) {
+        cgData.coins.slice(0, 6).forEach((entry: any) => {
+          const coin = entry?.item;
+          if (!coin) return;
+          const pct24h = Number((coin?.data?.price_change_percentage_24h?.usd ?? 0).toFixed(2));
+          const { theme } = classifyCryptoNarrativeTheme(`${coin.name} ${coin.symbol}`);
+          pushNarrative({
+            id: `cg-coin-${coin.id}`,
+            title: `Trending Token: ${coin.name} (${coin.symbol}) Rank #${coin.market_cap_rank || '-'}`,
+            summary: `${coin.name} (${coin.symbol}) sedang ramai dicari dalam 24 jam terakhir dengan perubahan harga ${pct24h >= 0 ? '+' : ''}${pct24h}%.`,
+            source: 'CoinGecko Trending API',
+            sourceType: 'COINGECKO',
+            narrativeTheme: theme,
+            sentiment: pct24h >= 5 ? 'VIRAL' : pct24h >= 0 ? 'BULLISH' : 'BEARISH',
+            metricLabel: `${pct24h >= 0 ? '+' : ''}${pct24h}% 24J`,
+            change24h: pct24h,
+            url: `https://www.coingecko.com/en/coins/${coin.id}`,
+            timestamp: 'Trending 24J',
+            timestampMs: nowMs - 1000 * 180,
+            wibTime: formatWIBTime().wibString,
+          });
+          sourceStats.coingecko++;
+        });
+      }
+    } catch (_) {}
+  })();
+
+  // 3. DexScreener Token Boosts API (Free Keyless - Real-time On-Chain Narrative Meta)
+  const dexScreenerPromise = (async () => {
+    try {
+      const dsRes = await fetch('https://api.dexscreener.com/token-boosts/top/v1', {
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!dsRes.ok) return;
+      const tokens = await dsRes.json();
+      if (!Array.isArray(tokens)) return;
+
+      tokens.slice(0, 6).forEach((t: any, idx: number) => {
+        const desc = (t.description || '').replace(/\s+/g, ' ').trim();
+        const shortAddr = t.tokenAddress ? `${t.tokenAddress.slice(0, 6)}...${t.tokenAddress.slice(-4)}` : 'Token';
+        const chain = String(t.chainId || 'onchain').toUpperCase();
+        const label = desc ? desc.slice(0, 95) : `Token On-Chain (${shortAddr})`;
+        const { theme } = classifyCryptoNarrativeTheme(`${desc} ${chain} meme`);
+
+        pushNarrative({
+          id: `ds-boost-${t.tokenAddress || idx}`,
+          title: `[${chain}] On-Chain Boosted Meta: ${label}`,
+          summary: desc || `Aktivitas boost komunitas aktif di jaringan ${chain} pada pasangan ${shortAddr}.`,
+          source: `DexScreener (${chain})`,
+          sourceType: 'DEXSCREENER',
+          narrativeTheme: theme === 'Layer 1' ? 'Meme & Viral' : theme,
+          sentiment: 'VIRAL',
+          metricLabel: t.totalAmount ? `${t.totalAmount} Boosts` : `${chain} DEX`,
+          url: t.url || 'https://dexscreener.com',
+          timestamp: 'On-Chain Live',
+          timestampMs: nowMs - 1000 * 90 - idx * 1000,
+          wibTime: formatWIBTime().wibString,
+        });
+        sourceStats.dexscreener++;
+      });
+    } catch (_) {}
+  })();
+
+  // 4. GeckoTerminal Trending Pools API (Free Keyless - 24h DEX Liquidity Momentum)
+  const geckoTerminalPromise = (async () => {
+    try {
+      const gtRes = await fetch('https://api.geckoterminal.com/api/v2/networks/trending_pools', {
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!gtRes.ok) return;
+      const gtJson = await gtRes.json();
+      const pools = gtJson?.data;
+      if (!Array.isArray(pools)) return;
+
+      pools.slice(0, 5).forEach((p: any, idx: number) => {
+        const attr = p?.attributes;
+        if (!attr?.name) return;
+        const chg24 = Number(parseFloat(attr?.price_change_percentage?.h24 || '0').toFixed(2));
+        const vol24 = parseFloat(attr?.volume_usd?.h24 || '0');
+        const volStr = vol24 >= 1e6 ? `$${(vol24 / 1e6).toFixed(1)}M` : `$${(vol24 / 1e3).toFixed(0)}K`;
+        const networkId = p?.relationships?.network?.data?.id || 'DEX';
+
+        pushNarrative({
+          id: `gt-pool-${p.id || idx}`,
+          title: `Pool DEX Trending (${String(networkId).toUpperCase()}): ${attr.name} · Vol ${volStr}`,
+          summary: `Likuiditas on-chain pada pool ${attr.name} mencatat volume 24 jam sebesar ${volStr} dengan perubahan harga ${chg24 >= 0 ? '+' : ''}${chg24}%.`,
+          source: 'GeckoTerminal DEX API',
+          sourceType: 'GECKOTERMINAL',
+          narrativeTheme: 'DeFi & On-Chain',
+          sentiment: chg24 >= 5 ? 'VIRAL' : chg24 >= 0 ? 'BULLISH' : 'BEARISH',
+          metricLabel: `${chg24 >= 0 ? '+' : ''}${chg24}% · ${volStr}`,
+          change24h: chg24,
+          url: `https://www.geckoterminal.com/${networkId}/pools/${attr.address || ''}`,
+          timestamp: '24J DEX Pool',
+          timestampMs: nowMs - 1000 * 150 - idx * 1000,
+          wibTime: formatWIBTime().wibString,
+        });
+        sourceStats.geckoterminal++;
+      });
+    } catch (_) {}
+  })();
+
+  // 5. HackerNews Algolia API (Free Keyless - 24h Builder & Macro Crypto Discussions)
+  const hnPromise = (async () => {
+    try {
+      const hnRes = await fetch(
+        'https://hn.algolia.com/api/v1/search_by_date?query=bitcoin+OR+crypto+OR+ethereum+OR+solana+OR+stablecoin&tags=story&hitsPerPage=10',
+        { signal: AbortSignal.timeout(4000) }
+      );
+      if (!hnRes.ok) return;
+      const hnData = await hnRes.json();
+      const hits = hnData?.hits;
+      if (!Array.isArray(hits)) return;
+
+      hits.slice(0, 6).forEach((h: any) => {
+        if (!h?.title) return;
+        const { theme, sentiment } = classifyCryptoNarrativeTheme(h.title);
+        const { wibString, timeAgo, iso } = formatWIBTime(h.created_at);
+        const pts = h.points || 1;
+        const cmts = h.num_comments || 0;
+
+        pushNarrative({
+          id: `hn-${h.objectID}`,
+          title: h.title,
+          summary: `Diskusi komunitas teknologi & builder di Hacker News (${pts} poin, ${cmts} komentar).`,
+          source: 'HackerNews Crypto API',
+          sourceType: 'HACKERNEWS',
+          narrativeTheme: theme,
+          sentiment,
+          metricLabel: `${pts} pts · ${cmts} cmt`,
+          url: h.url || `https://news.ycombinator.com/item?id=${h.objectID}`,
+          timestamp: timeAgo,
+          timestampMs: new Date(iso).getTime(),
+          wibTime: wibString,
+        });
+        sourceStats.hackernews++;
+      });
+    } catch (_) {}
+  })();
+
+  // 6. 24-Hour Crypto News RSS Feeds (Verified Live 200 OK)
+  const cryptoRssSources = [
+    { source: 'CoinTelegraph', url: 'https://cointelegraph.com/rss' },
+    { source: 'CoinDesk', url: 'https://www.coindesk.com/arc/outboundfeeds/rss/' },
+    { source: 'Decrypt', url: 'https://decrypt.co/feed' },
+    { source: 'The Block', url: 'https://www.theblock.co/rss.xml' },
+    { source: 'Blockworks', url: 'https://blockworks.co/feed' },
   ];
 
-  try {
-    const rssPromises = rssFeeds.map(async (f) => {
-      try {
-        const feed = await rssParser.parseURL(f.url);
-        if (feed && feed.items) {
-          feed.items.slice(0, 5).forEach((item, idx) => {
-            narratives.push({
-              id: `rss-${f.source}-${idx}`,
-              title: item.title || 'Crypto News Update',
-              source: f.source,
-              upvotes: 450 + idx * 80,
-              comments: 60 + idx * 15,
-              sentiment: 'BULLISH',
-              narrativeTheme: 'Layer-1 & Scaling',
-              url: item.link || 'https://cointelegraph.com',
-              timestamp: 'Recent 24h',
-            });
-          });
-        }
-      } catch (_) {}
-    });
-    await Promise.allSettled(rssPromises);
-  } catch (_) {}
+  const rssPromises = cryptoRssSources.map(async (f) => {
+    try {
+      const response = await fetch(f.url, {
+        signal: AbortSignal.timeout(4000),
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GhaliTerminal/2.0)' },
+      });
+      if (!response.ok) return;
+      const xml = await response.text();
+      const feed = await rssParser.parseString(xml);
+      if (feed && Array.isArray(feed.items)) {
+        feed.items.slice(0, 5).forEach((item, idx) => {
+          const title = (item.title || '').replace(/<[^>]*>/g, '').trim();
+          if (!title) return;
+          const summary = (item.contentSnippet || item.content || title)
+            .replace(/<[^>]*>/g, '')
+            .trim()
+            .slice(0, 240);
+          const { theme, sentiment } = classifyCryptoNarrativeTheme(`${title} ${summary}`);
+          const { wibString, timeAgo, iso } = formatWIBTime(item.pubDate || item.isoDate);
 
-  if (narratives.length < 5) {
-    narratives.push(
-      {
-        id: 'nar-1',
-        title: 'Global Macro Funds Pivot to Bitcoin as Sovereign Debt Refinancing Escalates',
-        source: '24/7 Macro Chatter Wire',
-        upvotes: 2450,
-        comments: 420,
-        sentiment: 'BULLISH',
-        narrativeTheme: 'Sovereign Hedge & De-dollarization',
-        url: 'https://www.bloomberg.com/crypto',
-        timestamp: '1h ago',
-      },
-      {
-        id: 'nar-2',
-        title: 'Autonomous AI Agents & Decentralized Compute Subnets Dominate On-Chain Gas Burn',
-        source: 'Crypto Twitter & Discord Pulse',
-        upvotes: 1890,
-        comments: 310,
-        sentiment: 'VIRAL HYPE',
-        narrativeTheme: 'AI & Agentic Web3',
-        url: 'https://www.theblock.co',
-        timestamp: '3h ago',
-      },
-      {
-        id: 'nar-3',
-        title: 'SEC Regulatory Clarity Roadmap Opens Dormant Institutional Pension Capital',
-        source: 'Policy & Regulatory Wire',
-        upvotes: 1420,
-        comments: 215,
-        sentiment: 'BULLISH',
-        narrativeTheme: 'Institutional Compliance',
-        url: 'https://www.coindesk.com',
-        timestamp: '5h ago',
+          pushNarrative({
+            id: `rss-${f.source.toLowerCase().replace(/\s+/g, '')}-${idx}-${Date.parse(iso)}`,
+            title,
+            summary,
+            source: f.source,
+            sourceType: 'RSS',
+            narrativeTheme: theme,
+            sentiment,
+            url: item.link || 'https://cointelegraph.com',
+            timestamp: timeAgo,
+            timestampMs: new Date(iso).getTime(),
+            wibTime: wibString,
+          });
+          sourceStats.rss++;
+        });
       }
-    );
+    } catch (_) {}
+  });
+
+  await Promise.allSettled([
+    cgCategoriesPromise,
+    cgTrendingPromise,
+    dexScreenerPromise,
+    geckoTerminalPromise,
+    hnPromise,
+    ...rssPromises,
+  ]);
+
+  narratives.sort((a, b) => (b.timestampMs || 0) - (a.timestampMs || 0));
+
+  const payload = {
+    success: true,
+    timestamp: nowMs,
+    wibNow: formatWIBTime().wibString,
+    count: narratives.length,
+    hotSectors,
+    sourceStats,
+    narratives,
+  };
+
+  if (narratives.length > 0) {
+    cachedNarrativesPayload = { timestamp: nowMs, data: payload };
   }
 
-  res.json({ success: true, timestamp: Date.now(), count: narratives.length, narratives });
+  return res.json(payload);
 });
 
 // =========================================================================
@@ -2680,6 +2843,263 @@ app.get('/api/auth/owner-session', (req: Request, res: Response) => {
       role: 'Terminal Owner',
     },
   });
+});
+
+// =========================================================================
+// MULTI-USER REAL-TIME ROOM CHAT (SSE + DISK PERSISTENCE)
+// =========================================================================
+const VALID_CHAT_ROOMS = ['general', 'btc-alpha', 'altcoins', 'macro-fed'] as const;
+type ChatRoomId = (typeof VALID_CHAT_ROOMS)[number];
+
+interface ServerChatMessage {
+  id: string;
+  roomId: ChatRoomId;
+  senderUid: string;
+  senderName: string;
+  senderEmail?: string;
+  senderPhoto?: string;
+  senderRole?: string;
+  text: string;
+  createdAtMs: number;
+}
+
+interface SseParticipant {
+  res: Response;
+  uid: string;
+  name: string;
+  role: string;
+  photo: string;
+}
+
+const CHAT_STORAGE_PATH = '/tmp/ghali_room_chat.json';
+const MAX_MESSAGES_PER_ROOM = 150;
+const SAFE_ID_REGEX = /^[a-zA-Z0-9_\-]{1,128}$/;
+
+const chatMessagesByRoom: Record<ChatRoomId, ServerChatMessage[]> = {
+  general: [],
+  'btc-alpha': [],
+  altcoins: [],
+  'macro-fed': [],
+};
+
+const sseClientsByRoom: Record<ChatRoomId, Set<SseParticipant>> = {
+  general: new Set(),
+  'btc-alpha': new Set(),
+  altcoins: new Set(),
+  'macro-fed': new Set(),
+};
+
+function isValidRoomId(val: unknown): val is ChatRoomId {
+  return typeof val === 'string' && (VALID_CHAT_ROOMS as readonly string[]).includes(val);
+}
+
+function loadChatHistoryFromDisk() {
+  try {
+    if (!fs.existsSync(CHAT_STORAGE_PATH)) return;
+    const raw = fs.readFileSync(CHAT_STORAGE_PATH, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      for (const roomId of VALID_CHAT_ROOMS) {
+        if (Array.isArray(parsed[roomId])) {
+          chatMessagesByRoom[roomId] = parsed[roomId]
+            .filter(
+              (m: any) =>
+                m &&
+                typeof m.id === 'string' &&
+                SAFE_ID_REGEX.test(m.id) &&
+                typeof m.text === 'string' &&
+                typeof m.senderUid === 'string' &&
+                typeof m.createdAtMs === 'number'
+            )
+            .slice(-MAX_MESSAGES_PER_ROOM);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Could not load chat history from disk:', err);
+  }
+}
+
+function saveChatHistoryToDisk() {
+  try {
+    fs.writeFileSync(CHAT_STORAGE_PATH, JSON.stringify(chatMessagesByRoom), 'utf8');
+  } catch (err) {
+    console.warn('Could not persist chat history to disk:', err);
+  }
+}
+
+loadChatHistoryFromDisk();
+
+function getOnlineUsersForRoom(roomId: ChatRoomId) {
+  const unique = new Map<string, { uid: string; name: string; role: string; photo: string }>();
+  for (const client of sseClientsByRoom[roomId]) {
+    if (!unique.has(client.uid)) {
+      unique.set(client.uid, {
+        uid: client.uid,
+        name: client.name,
+        role: client.role,
+        photo: client.photo,
+      });
+    }
+  }
+  return Array.from(unique.values());
+}
+
+function broadcastSseEvent(roomId: ChatRoomId, event: string, data: unknown) {
+  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const client of sseClientsByRoom[roomId]) {
+    try {
+      client.res.write(payload);
+    } catch (_) {
+      sseClientsByRoom[roomId].delete(client);
+    }
+  }
+}
+
+app.get('/api/chat/stream', (req: Request, res: Response) => {
+  const rawRoom = req.query.roomId;
+  const roomId: ChatRoomId = isValidRoomId(rawRoom) ? rawRoom : 'general';
+  const uid = String(req.query.uid || '').trim().slice(0, 128);
+  const name = String(req.query.name || 'Trader').trim().slice(0, 120) || 'Trader';
+  const role = String(req.query.role || 'Verified Strategist').trim().slice(0, 80);
+  const photo = String(req.query.photo || '').trim().slice(0, 512);
+
+  if (!uid) {
+    return res.status(401).json({ success: false, error: 'Autentikasi diperlukan untuk bergabung ke Room Chat.' });
+  }
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders?.();
+
+  const participant: SseParticipant = { res, uid, name, role, photo };
+  sseClientsByRoom[roomId].add(participant);
+
+  const onlineUsers = getOnlineUsersForRoom(roomId);
+  res.write(
+    `event: init\ndata: ${JSON.stringify({
+      roomId,
+      messages: chatMessagesByRoom[roomId],
+      onlineUsers,
+    })}\n\n`
+  );
+
+  broadcastSseEvent(roomId, 'presence', { roomId, onlineUsers });
+
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(': ping\n\n');
+    } catch (_) {
+      clearInterval(heartbeat);
+    }
+  }, 25000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    sseClientsByRoom[roomId].delete(participant);
+    broadcastSseEvent(roomId, 'presence', {
+      roomId,
+      onlineUsers: getOnlineUsersForRoom(roomId),
+    });
+  });
+});
+
+app.get('/api/chat/messages', (req: Request, res: Response) => {
+  const rawRoom = req.query.roomId;
+  const roomId: ChatRoomId = isValidRoomId(rawRoom) ? rawRoom : 'general';
+  return res.json({
+    success: true,
+    roomId,
+    messages: chatMessagesByRoom[roomId],
+    onlineUsers: getOnlineUsersForRoom(roomId),
+  });
+});
+
+app.post('/api/chat/messages', (req: Request, res: Response) => {
+  const body = req.body || {};
+  const roomId = body.roomId;
+  if (!isValidRoomId(roomId)) {
+    return res.status(400).json({ success: false, error: 'Room chat tidak valid.' });
+  }
+
+  const id = typeof body.id === 'string' && SAFE_ID_REGEX.test(body.id)
+    ? body.id
+    : `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const senderUid = typeof body.senderUid === 'string' ? body.senderUid.trim().slice(0, 128) : '';
+  const senderName = typeof body.senderName === 'string' ? body.senderName.trim().slice(0, 120) : '';
+  const text = typeof body.text === 'string' ? body.text.trim().slice(0, 1000) : '';
+
+  if (!senderUid || !senderName || !text) {
+    return res.status(400).json({ success: false, error: 'Pengirim dan isi pesan tidak boleh kosong.' });
+  }
+
+  const existing = chatMessagesByRoom[roomId].find((m) => m.id === id);
+  if (existing) {
+    return res.json({ success: true, message: existing, duplicate: true });
+  }
+
+  const createdAtMs =
+    typeof body.createdAtMs === 'number' && Number.isFinite(body.createdAtMs) && body.createdAtMs > 0
+      ? body.createdAtMs
+      : Date.now();
+
+  const newMessage: ServerChatMessage = {
+    id,
+    roomId,
+    senderUid,
+    senderName,
+    ...(typeof body.senderEmail === 'string' && body.senderEmail.trim()
+      ? { senderEmail: body.senderEmail.trim().slice(0, 254) }
+      : {}),
+    ...(typeof body.senderPhoto === 'string' && body.senderPhoto.trim()
+      ? { senderPhoto: body.senderPhoto.trim().slice(0, 512) }
+      : {}),
+    ...(typeof body.senderRole === 'string' && body.senderRole.trim()
+      ? { senderRole: body.senderRole.trim().slice(0, 80) }
+      : {}),
+    text,
+    createdAtMs,
+  };
+
+  chatMessagesByRoom[roomId].push(newMessage);
+  chatMessagesByRoom[roomId].sort((a, b) => a.createdAtMs - b.createdAtMs);
+  if (chatMessagesByRoom[roomId].length > MAX_MESSAGES_PER_ROOM) {
+    chatMessagesByRoom[roomId] = chatMessagesByRoom[roomId].slice(-MAX_MESSAGES_PER_ROOM);
+  }
+  saveChatHistoryToDisk();
+
+  broadcastSseEvent(roomId, 'message', newMessage);
+
+  return res.json({ success: true, message: newMessage });
+});
+
+app.delete('/api/chat/messages/:id', (req: Request, res: Response) => {
+  const messageId = String(req.params.id || '').trim();
+  const roomIdParam = req.query.roomId || req.body?.roomId;
+  const senderUid = String(req.query.senderUid || req.body?.senderUid || '').trim();
+
+  if (!SAFE_ID_REGEX.test(messageId) || !isValidRoomId(roomIdParam) || !senderUid) {
+    return res.status(400).json({ success: false, error: 'Parameter hapus pesan tidak valid.' });
+  }
+
+  const list = chatMessagesByRoom[roomIdParam];
+  const idx = list.findIndex((m) => m.id === messageId);
+  if (idx === -1) {
+    return res.json({ success: true, deletedId: messageId });
+  }
+
+  const target = list[idx];
+  if (target.senderUid !== senderUid && senderUid !== 'owner-120403') {
+    return res.status(403).json({ success: false, error: 'Anda hanya dapat menghapus pesan Anda sendiri.' });
+  }
+
+  list.splice(idx, 1);
+  saveChatHistoryToDisk();
+  broadcastSseEvent(roomIdParam, 'delete', { roomId: roomIdParam, id: messageId });
+
+  return res.json({ success: true, deletedId: messageId });
 });
 
 async function startServer() {

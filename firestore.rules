@@ -81,5 +81,36 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if isValidId(userId) && isValidId(alertId) && isVerifiedOwner(userId);
     }
+
+    // 6. Multi-User Real-Time Room Chat Messages
+    function isValidChatMessage(data, roomId, messageId) {
+      return data.keys().hasAll(['id', 'roomId', 'senderUid', 'senderName', 'text', 'createdAtMs', 'createdAt'])
+        && data.keys().hasOnly(['id', 'roomId', 'senderUid', 'senderName', 'senderEmail', 'senderPhoto', 'senderRole', 'text', 'createdAtMs', 'createdAt'])
+        && data.id is string && data.id == messageId && data.id.size() >= 1 && data.id.size() <= 128
+        && data.roomId is string && data.roomId == roomId && data.roomId in ['general', 'btc-alpha', 'altcoins', 'macro-fed']
+        && data.senderUid is string && data.senderUid == request.auth.uid && data.senderUid.size() >= 1 && data.senderUid.size() <= 128
+        && data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 120
+        && (!data.keys().hasAny(['senderEmail']) || (data.senderEmail is string && data.senderEmail.size() <= 254))
+        && (!data.keys().hasAny(['senderPhoto']) || (data.senderPhoto is string && data.senderPhoto.size() <= 512))
+        && (!data.keys().hasAny(['senderRole']) || (data.senderRole is string && data.senderRole.size() <= 80))
+        && data.text is string && data.text.size() >= 1 && data.text.size() <= 1000
+        && (data.createdAtMs is int || data.createdAtMs is float) && data.createdAtMs > 0
+        && data.createdAt is timestamp;
+    }
+
+    match /chatRooms/{roomId}/messages/{messageId} {
+      allow get: if isSignedIn() && isValidId(roomId) && isValidId(messageId);
+      allow list: if isSignedIn() && isValidId(roomId) && resource.data.createdAtMs > 0;
+      allow create: if isSignedIn()
+        && isValidId(roomId)
+        && isValidId(messageId)
+        && isValidChatMessage(incoming(), roomId, messageId)
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isSignedIn()
+        && isValidId(roomId)
+        && isValidId(messageId)
+        && resource.data.senderUid == request.auth.uid;
+    }
   }
 }

@@ -1,19 +1,10 @@
 import React from 'react';
-import {
-  Volume2,
-  VolumeX,
-  User,
-  LogOut,
-  Sliders,
-  BellRing,
-  Globe,
-  Key,
-} from 'lucide-react';
+import { User, ChevronDown } from 'lucide-react';
 import { sound } from '../audio/soundEngine';
 import { UserSession } from '../types/news';
-import { TradingViewTickerTape } from './TradingViewWidgets';
 
 export type TerminalViewMode =
+  | 'home'
   | 'macro_terminal'
   | 'impact_matrix'
   | 'high_impact'
@@ -22,150 +13,117 @@ export type TerminalViewMode =
   | 'telemetry'
   | 'narratives'
   | 'bitcoin_cycle'
-  | 'liquidity_movers';
+  | 'liquidity_movers'
+  | 'room_chat';
 
 interface HeaderTerminalProps {
   viewMode: TerminalViewMode;
   onChangeViewMode: (mode: TerminalViewMode) => void;
-  onOpenApiKeys: () => void;
-  onOpenRadar: () => void;
-  onOpenExchangeSentiment: () => void;
-  onOpenTopMovers: () => void;
-  onOpenWhale: () => void;
-  onOpenAlerts: () => void;
   onOpenAuth: () => void;
-  onOpenTA: () => void;
   session: UserSession;
-  soundEnabled: boolean;
-  onToggleSound: () => void;
 }
+
+const MARKET_MODES: TerminalViewMode[] = [
+  'monolith',
+  'bitcoin_cycle',
+  'liquidity_movers',
+  'multichart',
+];
+
+const NEWS_MODES: TerminalViewMode[] = [
+  'macro_terminal',
+  'high_impact',
+  'impact_matrix',
+  'narratives',
+];
 
 export const HeaderTerminal: React.FC<HeaderTerminalProps> = ({
   viewMode,
   onChangeViewMode,
-  onOpenApiKeys,
-  onOpenRadar,
-  onOpenExchangeSentiment,
-  onOpenTopMovers,
-  onOpenWhale,
-  onOpenAlerts,
   onOpenAuth,
-  onOpenTA,
   session,
-  soundEnabled,
-  onToggleSound,
 }) => {
+  const isHomeActive = viewMode === 'home';
+  const isMarketActive = MARKET_MODES.includes(viewMode);
+  const isNewsActive = NEWS_MODES.includes(viewMode);
+  const isChatActive = viewMode === 'room_chat';
+
+  const navItems: { label: string; active: boolean; target: TerminalViewMode }[] = [
+    { label: 'Beranda', active: isHomeActive, target: 'home' },
+    { label: 'Pasar', active: isMarketActive, target: 'bitcoin_cycle' },
+    { label: 'Berita', active: isNewsActive, target: 'macro_terminal' },
+    { label: 'Room Chat', active: isChatActive, target: 'room_chat' },
+  ];
+
   return (
-    <header className="relative shrink-0 z-20 pointer-events-none p-2 sm:p-2.5 bg-[#06080d] border-b border-[#141d30]">
-      <div className="max-w-[1780px] mx-auto flex items-center justify-between gap-2">
-        {/* Left: Branding Logo Badge (GHALI TERMINAL) */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="flex items-center gap-2 bg-[#0c1220]/95 border border-amber-500/35 px-2.5 py-1 rounded-lg shadow-lg group relative overflow-hidden">
-            <div className="relative w-4 h-4 flex items-center justify-center shrink-0">
-              <span className="absolute inset-0 rounded-full border border-amber-400/45 animate-spin-slow" />
-              <Globe className="w-3.5 h-3.5 text-amber-300 shrink-0 relative z-10" />
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-display font-bold text-[11px] sm:text-xs tracking-[0.16em] bg-gradient-to-r from-amber-100 via-amber-300 to-amber-100 bg-clip-text text-transparent">
-                GHALI TERMINAL
-              </span>
-              <span className="text-[8px] font-mono uppercase bg-[#18263e] text-amber-200/90 px-1.5 py-0.5 rounded border border-amber-500/30 font-semibold tracking-wider">
-                PRO INTEL
-              </span>
-            </div>
-          </div>
-        </div>
+    <header className="shrink-0 z-30 h-13 sm:h-14 bg-[#070a11]/92 border-b border-[#162033] px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto h-full flex items-center justify-between gap-8">
+        {/* Zone 1: Single-element Brand Wordmark */}
+        <button
+          onClick={() => {
+            sound.playClick();
+            onChangeViewMode('home');
+          }}
+          className="font-display font-bold text-sm sm:text-base tracking-[0.16em] text-amber-200 hover:text-amber-100 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+        >
+          GHALI TERMINAL
+        </button>
 
-        {/* Center: Live TradingView Ticker Tape */}
-        <div className="hidden xl:flex items-center flex-1 max-w-xl mx-2 pointer-events-auto overflow-hidden rounded border border-[#1b273e] bg-[#070a12]/80">
-          <TradingViewTickerTape />
-        </div>
+        {/* Zone 2: Clean 4-item Primary Navigation (Desktop) */}
+        <nav className="hidden md:flex items-center gap-7 h-full">
+          {navItems.map((item) => (
+            <button
+              key={item.label}
+              onClick={() => {
+                sound.playClick();
+                onChangeViewMode(item.target);
+              }}
+              className={`h-full flex items-center text-sm font-medium transition-colors whitespace-nowrap shrink-0 border-b-2 cursor-pointer ${
+                item.active
+                  ? 'border-amber-400 text-white'
+                  : 'border-transparent text-slate-400 hover:text-slate-100'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-1.5 pointer-events-auto flex-wrap justify-end">
-          {/* API Key Settings Button */}
-          <button
-            onClick={() => {
-              sound.playClick();
-              onOpenApiKeys();
-            }}
-            className="flex items-center gap-1.5 bg-[#0c1220] hover:bg-[#162138] border border-[#233454] text-amber-300 hover:text-white px-2.5 py-1.5 rounded text-xs font-mono font-bold transition-colors shadow-md cursor-pointer"
-            title="Konfigurasi API Keys Sumber Berita"
-          >
-            <Key className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">API KEYS</span>
-          </button>
-
-          {/* Price Alert Button */}
-          <button
-            onClick={() => {
-              sound.playClick();
-              onOpenAlerts();
-            }}
-            className="flex items-center gap-1.5 bg-[#0c1220] hover:bg-[#162138] border border-[#233454] hover:border-red-400/50 text-slate-200 px-2.5 py-1.5 rounded text-xs font-mono font-medium transition-colors shadow-md cursor-pointer"
-            title="Pusat Alert & Notifikasi"
-          >
-            <BellRing className="w-3.5 h-3.5 text-red-400" />
-            <span className="hidden sm:inline">ALERTS</span>
-          </button>
-
-          {/* Technical Analysis Button */}
-          <button
-            onClick={() => {
-              sound.playClick();
-              onOpenTA();
-            }}
-            className="flex items-center gap-1.5 bg-[#0c1220] hover:bg-[#162138] border border-[#233454] hover:border-amber-400/50 text-slate-200 px-2.5 py-1.5 rounded text-xs font-mono font-medium transition-colors shadow-md cursor-pointer"
-            title="Buka Suite Teknikal Analisis"
-          >
-            <Sliders className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden md:inline">TEKNIKAL</span>
-          </button>
-
-          {/* Alert Audio toggle */}
-          <button
-            onClick={onToggleSound}
-            title={soundEnabled ? 'Matikan Suara Alert Cekring' : 'Aktifkan Suara Alert Cekring'}
-            className="flex items-center bg-[#0c1220] hover:bg-[#162138] border border-[#233454] text-slate-300 hover:text-white p-1.5 rounded text-xs font-mono transition-colors shadow-md cursor-pointer"
-          >
-            {soundEnabled ? (
-              <Volume2 className="w-3.5 h-3.5 text-amber-400" />
-            ) : (
-              <VolumeX className="w-3.5 h-3.5 text-slate-500" />
-            )}
-          </button>
-
-          {/* Authenticated Google User Account */}
+        {/* Zone 3: Single Primary Account Trigger */}
+        <div className="flex items-center shrink-0">
           {session.isLoggedIn ? (
             <button
-              onClick={onOpenAuth}
+              onClick={() => {
+                sound.playClick();
+                onOpenAuth();
+              }}
               title={session.email || session.traderName}
-              className="flex items-center gap-1.5 bg-[#141d2e] hover:bg-[#1c2940] border border-[#2a3c5e] text-slate-200 px-2.5 py-1 rounded text-xs font-mono transition-colors shadow-md cursor-pointer"
+              className="flex items-center gap-2 py-1.5 px-2.5 rounded-xl bg-[#0e1524] hover:bg-[#152036] border border-[#1f2c46] text-slate-100 text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer min-h-[40px]"
             >
               {session.photoURL ? (
                 <img
                   src={session.photoURL}
                   alt={session.traderName}
                   referrerPolicy="no-referrer"
-                  className="w-4 h-4 rounded-full object-cover border border-amber-400/60"
+                  className="w-6 h-6 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-4 h-4 rounded-full bg-amber-500 text-black font-bold flex items-center justify-center text-[10px]">
+                <div className="w-6 h-6 rounded-full bg-amber-400 text-black font-bold flex items-center justify-center text-[11px]">
                   {session.traderName.slice(0, 1).toUpperCase()}
                 </div>
               )}
-              <span className="font-semibold text-amber-300 truncate max-w-[80px] sm:max-w-[130px]">
+              <span className="truncate max-w-[90px] sm:max-w-[140px]">
                 {session.traderName}
               </span>
-              <LogOut className="w-3 h-3 text-slate-400 ml-1" />
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
           ) : (
             <button
               onClick={onOpenAuth}
-              className="flex items-center gap-1.5 bg-[#172236] hover:bg-[#20304c] border border-amber-500/40 text-amber-300 hover:text-white px-2.5 py-1.5 rounded text-xs font-mono font-bold transition-colors shadow-md cursor-pointer"
+              className="flex items-center gap-1.5 py-2 px-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer min-h-[40px]"
             >
-              <User className="w-3.5 h-3.5 text-amber-400" />
-              <span>MASUK GOOGLE</span>
+              <User className="w-3.5 h-3.5" />
+              <span>Masuk</span>
             </button>
           )}
         </div>

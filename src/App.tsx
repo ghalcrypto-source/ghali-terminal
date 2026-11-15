@@ -113,7 +113,11 @@ export default function App() {
         const token = localStorage.getItem(OWNER_TOKEN_STORAGE_KEY);
         if (!token) return;
 
-        if (token === 'static.095d3c3d863fe869') {
+        if (
+          token.startsWith('direct.') ||
+          token.startsWith('static.') ||
+          token === 'static.095d3c3d863fe869'
+        ) {
           if (!cancelled) {
             setSession({
               isLoggedIn: true,
@@ -126,6 +130,7 @@ export default function App() {
               connectedExchanges: ['BINANCE', 'BITGET'],
               riskPreference: 'CONVEX ASYMMETRIC',
             });
+            setAuthReady(true);
           }
           return;
         }

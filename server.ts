@@ -2634,7 +2634,7 @@ function verifyOwnerToken(token: string): { uid: string; exp: number } | null {
 
 app.post('/api/auth/owner-login', (req: Request, res: Response) => {
   const id = typeof req.body?.id === 'string' ? req.body.id.trim() : '';
-  const password = typeof req.body?.password === 'string' ? req.body.password : '';
+  const password = typeof req.body?.password === 'string' ? req.body.password.trim() : '';
 
   if (!id || !password) {
     return res.status(400).json({ success: false, error: 'ID dan Password wajib diisi.' });

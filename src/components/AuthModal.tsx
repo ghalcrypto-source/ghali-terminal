@@ -37,10 +37,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-mono font-bold tracking-wider text-slate-100">
-                AKSES OWNER TERMINAL
+                AKSES TERMINAL GHALI ON CHAIN
               </h2>
               <p className="text-[11px] font-mono text-slate-400">
-                Terverifikasi melalui Password Privat Terminal
+                Terverifikasi dengan Kode Akses Masuk
               </p>
             </div>
           </div>
@@ -66,7 +66,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       {session.traderName}
                     </h3>
                     <span className="text-[9px] font-mono uppercase bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/40 shrink-0">
-                      OWNER ACCESS
+                      ON-CHAIN TRADER
                     </span>
                   </div>
                   {session.email && (
@@ -87,7 +87,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div className="flex items-center justify-between p-2 rounded bg-[#121826] border border-[#1d273d]">
                   <span className="text-slate-200 font-bold flex items-center gap-2">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    OWNER PRIVATE LOCK
+                    TERMINAL AUTHENTICATED
                   </span>
                   <span className="text-emerald-400 font-semibold text-[11px] flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />

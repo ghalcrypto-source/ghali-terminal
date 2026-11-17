@@ -72,7 +72,6 @@ export const CryptoNarrativeStream: React.FC = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Continuous 24-hour auto-sync loop every 45 seconds
   useEffect(() => {
     fetchNarratives(false);
     const refreshTimer = setInterval(() => {
@@ -110,8 +109,173 @@ export const CryptoNarrativeStream: React.FC = () => {
 
   return (
     <div className="w-full h-full bg-[#070a11] text-slate-100 overflow-y-auto">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-6 space-y-5">
-        {/* Top Clean Header */}
+      {/* =================================================================== */}
+      {/* 1. MOBILE SUPERAPP NARRATIVE STREAM (OBS-GOLD TOUCH EXPERIENCE)     */}
+      {/* =================================================================== */}
+      <div className="block md:hidden w-full min-h-full bg-[#070a11] pb-6">
+        <div className="sticky top-0 z-20 px-4 pt-3 pb-2.5 bg-[#070a11]/95 backdrop-blur-md border-b border-[#1c263b] space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h1 className="text-[15px] font-semibold text-[#f5e3af] truncate">
+                Narasi Crypto 24 Jam
+              </h1>
+              <p className="text-[11px] text-slate-400 truncate tabular-nums">
+                {filteredNarratives.length} narasi · Sync {countdown}d
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                sound.playClick();
+                fetchNarratives(true);
+              }}
+              aria-label="Sync Narasi"
+              className="min-h-[40px] min-w-[40px] rounded-xl bg-gradient-to-br from-[#f2d98a] to-[#c4972c] text-[#080b12] flex items-center justify-center shadow cursor-pointer active:scale-95 transition-transform"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari tema, narasi, atau token..."
+              className="w-full min-h-[40px] pl-10 pr-3 rounded-2xl bg-[#0a0f1c] border border-[#1d283f] focus:border-[#d4af37] text-xs text-white placeholder-slate-500 outline-none"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            {THEMES.map((theme) => {
+              const active = selectedTheme === theme;
+              return (
+                <button
+                  key={`mob-th-${theme}`}
+                  onClick={() => {
+                    sound.playClick();
+                    setSelectedTheme(theme);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-[11px] font-medium whitespace-nowrap shrink-0 border transition-colors cursor-pointer ${
+                    active
+                      ? 'bg-[#e7cc82] text-[#080b12] border-[#f5e3af] font-semibold'
+                      : 'bg-[#0b101d] text-slate-300 border-[#1c263b]'
+                  }`}
+                >
+                  {theme}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="px-4 pt-3.5 space-y-4">
+          {/* Swipeable Horizontal Hot Sectors Carousel */}
+          {hotSectors.length > 0 && (
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xs font-semibold text-[#f5e3af]">
+                  Momentum Sektor 24J
+                </h2>
+                <span className="text-[11px] text-slate-500">Geser</span>
+              </div>
+              <div className="flex gap-2.5 overflow-x-auto pb-1 snap-x snap-mandatory">
+                {hotSectors.slice(0, 8).map((sec) => {
+                  const pos = sec.change24h >= 0;
+                  return (
+                    <a
+                      key={`mob-sec-${sec.id}`}
+                      href={`https://www.coingecko.com/en/categories/${sec.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="snap-start shrink-0 w-[165px] rounded-2xl bg-[#0b101d] border border-[#1d283f] p-3 flex flex-col justify-between gap-2"
+                    >
+                      <span className="text-xs font-semibold text-white line-clamp-1">
+                        {sec.name}
+                      </span>
+                      <div className="flex items-baseline justify-between font-mono tabular-nums">
+                        <span
+                          className={`text-xs font-bold ${
+                            pos ? 'text-emerald-400' : 'text-rose-400'
+                          }`}
+                        >
+                          {pos ? '+' : ''}
+                          {sec.change24h}%
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          {formatVolume(sec.volume24hUSD)}
+                        </span>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Editorial Hairline List */}
+          {loading && narratives.length === 0 ? (
+            <div className="py-16 flex flex-col items-center justify-center gap-3 text-xs text-slate-400">
+              <RefreshCw className="w-6 h-6 text-[#e7cc82] animate-spin" />
+              <span>Memuat narasi crypto 24 jam...</span>
+            </div>
+          ) : filteredNarratives.length === 0 ? (
+            <div className="py-14 text-center rounded-3xl bg-[#0b101d] border border-[#1d283f] text-xs text-slate-400">
+              Tidak ada narasi yang cocok dengan filter saat ini.
+            </div>
+          ) : (
+            <div className="rounded-3xl bg-[#0b101d] border border-[#1d283f] divide-y divide-[#162035] overflow-hidden">
+              {filteredNarratives.map((item) => {
+                const isPos =
+                  typeof item.change24h === 'number'
+                    ? item.change24h >= 0
+                    : item.sentiment !== 'BEARISH';
+                return (
+                  <article key={`mob-nar-${item.id}`} className="p-4 space-y-2">
+                    <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400">
+                      <span className="text-[#e7cc82] font-medium truncate">
+                        {item.narrativeTheme} · {item.source}
+                      </span>
+                      <span className="font-mono tabular-nums shrink-0 text-slate-500">
+                        {item.timestamp}
+                      </span>
+                    </div>
+
+                    <h3 className="text-[14px] font-semibold text-white leading-snug">
+                      {item.title}
+                    </h3>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <span
+                        className={`text-[11px] font-mono tabular-nums font-medium ${
+                          isPos ? 'text-emerald-400' : 'text-rose-400'
+                        }`}
+                      >
+                        {item.metricLabel || item.sentiment}
+                      </span>
+                      <button
+                        onClick={() => {
+                          sound.playClick();
+                          setActiveNarrativeModal(item);
+                        }}
+                        className="min-h-[38px] px-3 rounded-xl bg-[#162035] border border-[#d4af37]/35 text-[#f5e3af] text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>Ringkasan</span>
+                        <ChevronRight className="w-3.5 h-3.5 text-[#e7cc82]" />
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* =================================================================== */}
+      {/* 2. DESKTOP WEB TERMINAL STREAM (PRESERVED INTACT)                   */}
+      {/* =================================================================== */}
+      <div className="hidden md:block max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-6 space-y-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#162033]">
           <div>
             <h1 className="text-lg sm:text-xl font-semibold text-white tracking-tight">
@@ -148,7 +312,6 @@ export const CryptoNarrativeStream: React.FC = () => {
           </div>
         </div>
 
-        {/* Live 24H Sector Performance Strip (CoinGecko Categories) */}
         {hotSectors.length > 0 && (
           <section className="space-y-2.5">
             <div className="flex items-center justify-between">
@@ -177,11 +340,7 @@ export const CryptoNarrativeStream: React.FC = () => {
                           pos ? 'text-emerald-400' : 'text-rose-400'
                         }`}
                       >
-                        {pos ? (
-                          <TrendingUp className="w-3 h-3" />
-                        ) : (
-                          <TrendingDown className="w-3 h-3" />
-                        )}
+                        {pos ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                         {pos ? '+' : ''}
                         {sec.change24h}%
                       </span>
@@ -196,7 +355,6 @@ export const CryptoNarrativeStream: React.FC = () => {
           </section>
         )}
 
-        {/* Theme Segmented Filter Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
           {THEMES.map((theme) => {
             const count =
@@ -223,7 +381,6 @@ export const CryptoNarrativeStream: React.FC = () => {
           })}
         </div>
 
-        {/* Live 24H Narratives Feed */}
         {loading && narratives.length === 0 ? (
           <div className="py-24 flex flex-col items-center justify-center gap-3 text-xs text-slate-400">
             <RefreshCw className="w-6 h-6 text-amber-400 animate-spin" />
@@ -246,7 +403,6 @@ export const CryptoNarrativeStream: React.FC = () => {
                   className="rounded-2xl bg-[#0c121e] border border-[#1a2438] hover:border-[#2a3b5c] p-4 flex flex-col justify-between gap-3 transition-colors"
                 >
                   <div className="space-y-2">
-                    {/* Unboxed Clean Metadata Row */}
                     <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <span className="text-amber-300 font-medium truncate">
@@ -304,13 +460,14 @@ export const CryptoNarrativeStream: React.FC = () => {
         )}
       </div>
 
-      {/* Clean Narrative Summary Modal */}
+      {/* Narrative Summary Bottom Sheet on Mobile / Modal on Desktop */}
       {activeNarrativeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75">
-          <div className="bg-[#0b101b] border border-[#222f47] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl text-slate-100">
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-4 bg-black/75">
+          <div className="bg-[#080c15] md:bg-[#0b101b] border-t md:border border-[#d4af37]/50 md:border-[#222f47] rounded-t-3xl md:rounded-2xl w-full md:max-w-lg overflow-hidden shadow-2xl text-slate-100 animate-content-rise">
+            <div className="md:hidden w-10 h-1 rounded-full bg-slate-600/70 mx-auto mt-2.5" />
             <div className="px-5 py-4 border-b border-[#192338] flex items-center justify-between">
               <div className="min-w-0 pr-3">
-                <div className="text-xs text-amber-300 font-medium">
+                <div className="text-xs text-[#e7cc82] font-medium">
                   {activeNarrativeModal.narrativeTheme} · {activeNarrativeModal.source}
                 </div>
                 <h3 className="text-sm font-semibold text-white mt-0.5">
@@ -320,7 +477,7 @@ export const CryptoNarrativeStream: React.FC = () => {
               <button
                 onClick={() => setActiveNarrativeModal(null)}
                 aria-label="Tutup"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#152036] cursor-pointer"
+                className="min-h-[40px] min-w-[40px] rounded-xl text-slate-400 hover:text-white bg-[#121a2b] border border-[#222f47] flex items-center justify-center cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -345,7 +502,7 @@ export const CryptoNarrativeStream: React.FC = () => {
                   href={activeNarrativeModal.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-amber-300 hover:text-amber-200 font-semibold"
+                  className="inline-flex items-center gap-1.5 text-[#e7cc82] hover:text-[#f5e3af] font-semibold"
                 >
                   <span>Buka Sumber Asli</span>
                   <ExternalLink className="w-3.5 h-3.5" />

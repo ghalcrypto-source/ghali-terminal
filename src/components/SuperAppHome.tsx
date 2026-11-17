@@ -22,6 +22,8 @@ import {
   ChevronRight,
   Maximize2,
   X,
+  Sparkles,
+  PlayCircle,
 } from 'lucide-react';
 import { TerminalViewMode } from './HeaderTerminal';
 import { UserSession } from '../types/news';
@@ -70,6 +72,7 @@ interface SuperAppHomeProps {
   onOpenRadar: () => void;
   onOpenAlerts: () => void;
   onOpenExchangeSentiment: () => void;
+  onOpenPanduan: () => void;
 }
 
 interface WingItem {
@@ -105,9 +108,11 @@ export const SuperAppHome: React.FC<SuperAppHomeProps> = ({
   onOpenRadar,
   onOpenAlerts,
   onOpenExchangeSentiment,
+  onOpenPanduan,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+  const [mobileGroup, setMobileGroup] = useState<'utama' | 'semua' | 'pasar' | 'riset'>('utama');
   const [activeLeftTool, setActiveLeftTool] = useState<LeftDrawerToolId | null>(null);
   const [activeRightTool, setActiveRightTool] = useState<RightDrawerToolId | null>(null);
 
@@ -189,12 +194,13 @@ export const SuperAppHome: React.FC<SuperAppHomeProps> = ({
       },
       {
         id: 'multichart',
-        label: 'Multichart',
-        subtitle: 'Grafik TradingView',
-        keywords: 'chart grafik candle multichart',
+        label: 'AI Chart',
+        subtitle: 'Auto-Draw & Multi',
+        keywords: 'chart grafik candle multichart ai fibonacci elliott trendline ict snr',
+        featured: true,
         drawerSide: 'left',
         drawerKey: 'multichart',
-        icon: LayoutGrid,
+        icon: Sparkles,
         onSelect: () => openLeftDrawer('multichart'),
       },
       {
@@ -215,8 +221,19 @@ export const SuperAppHome: React.FC<SuperAppHomeProps> = ({
         icon: BarChart2,
         onSelect: onOpenExchangeSentiment,
       },
+      {
+        id: 'panduan_video',
+        label: 'Panduan',
+        subtitle: 'Video 40d semua fitur',
+        keywords: 'panduan tutorial video cara pakai bantuan 40 detik',
+        featured: true,
+        drawerSide: 'modal',
+        badgeText: '40s',
+        icon: PlayCircle,
+        onSelect: onOpenPanduan,
+      },
     ],
-    [onOpenExchangeSentiment, onOpenTopMovers]
+    [onOpenExchangeSentiment, onOpenPanduan, onOpenTopMovers]
   );
 
   // RIGHT WING: ALAT & BERITA (Tools, Research, News & Community)
@@ -447,8 +464,447 @@ export const SuperAppHome: React.FC<SuperAppHomeProps> = ({
     );
   };
 
+  const mobileOrbitCoins = useMemo(
+    () =>
+      ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'SUI', 'DOGE', 'TAO', 'AVAX', 'LINK'].map((sym) => ({
+        sym,
+        metric: altcoin5m[sym],
+      })),
+    [altcoin5m]
+  );
+
+  const mobileGridItems = useMemo(() => {
+    const coreIds = new Set([
+      'bitcoin_cycle',
+      'liquidity_movers',
+      'multichart',
+      'movers',
+      'exchange_ls',
+      'panduan_video',
+      'macro_terminal',
+      'narratives',
+    ]);
+    const marketIds = new Set([
+      'bitcoin_cycle',
+      'multichart',
+      'liquidity_movers',
+      'movers',
+      'exchange_ls',
+      'panduan_video',
+      'ta',
+      'alerts',
+      'monolith_view',
+    ]);
+    const all = [...leftItems, ...rightItems];
+    if (mobileGroup === 'utama') return all.filter((i) => coreIds.has(i.id));
+    if (mobileGroup === 'pasar') return all.filter((i) => marketIds.has(i.id));
+    if (mobileGroup === 'riset') return all.filter((i) => !marketIds.has(i.id));
+    return all;
+  }, [leftItems, rightItems, mobileGroup]);
+
+  const orbitTotal = Math.max(1, orbitSummary.up + orbitSummary.down);
+  const orbitUpPct = Math.round((orbitSummary.up / orbitTotal) * 100);
+
   return (
     <div className="relative z-10 w-full h-full pointer-events-none overflow-hidden">
+      {/* =================================================================== */}
+      {/* A. MOBILE NATIVE SUPERAPP LAYOUT (< 768px)                           */}
+      {/* =================================================================== */}
+      <div className="md:hidden pointer-events-auto w-full h-full overflow-y-auto bg-gradient-to-b from-[#070a11]/55 via-[#070a11]/88 to-[#070a11] px-3.5 pt-3 pb-7 space-y-4">
+        {/* 1. Signature Obsidian-Gold Mobile Hero Market Pulse Card */}
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#10182b]/95 via-[#0b1120]/95 to-[#080c15]/95 backdrop-blur-md border border-[#24324d] border-t-[#d4af37]/55 p-4 space-y-3.5 shadow-2xl">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                <span>Halo, {session.traderName || 'Trader'}</span>
+                <span aria-hidden="true">·</span>
+                <span className="text-[#cbb06a] font-mono">BINANCE / BITGET</span>
+              </div>
+
+              <div className="mt-1.5 flex items-baseline gap-2.5">
+                <span className="text-[28px] leading-none font-bold font-mono tabular-nums text-white tracking-tight">
+                  {btcMetric?.price
+                    ? `$${btcMetric.price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+                    : 'BTC $—'}
+                </span>
+                {btcMetric && (
+                  <span
+                    className={`text-xs font-mono tabular-nums font-semibold ${
+                      btcMetric.change5m >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                    }`}
+                  >
+                    {btcMetric.change5m >= 0 ? '+' : ''}
+                    {btcMetric.change5m}% (5M)
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                sound.playClick();
+                onToggleSound();
+              }}
+              aria-label={soundEnabled ? 'Matikan suara alert' : 'Aktifkan suara alert'}
+              className={`min-h-[44px] min-w-[44px] rounded-2xl border flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+                soundEnabled
+                  ? 'bg-[#e7cc82]/14 border-[#d4af37]/45 text-[#e7cc82]'
+                  : 'bg-[#101727] border-[#222e46] text-slate-400'
+              }`}
+            >
+              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {/* Orbit Altcoin Breadth Ratio Bar */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-mono tabular-nums">
+              <span className="text-slate-400">Orbit Altcoins 5M</span>
+              <span>
+                <span className="text-emerald-400 font-semibold">{orbitSummary.up} Naik</span>
+                <span className="text-slate-600 mx-1.5">/</span>
+                <span className="text-rose-400 font-semibold">{orbitSummary.down} Turun</span>
+              </span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-rose-500/45 overflow-hidden flex">
+              <div
+                className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-300"
+                style={{ width: `${orbitUpPct}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Primary 3-Action Thumb Strip inside Hero */}
+          <div className="grid grid-cols-3 gap-2 pt-0.5">
+            <button
+              onClick={() => {
+                sound.playClick();
+                onNavigate('multichart');
+              }}
+              className="min-h-[44px] flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-[#e7cc82] to-[#cfa33d] text-[#070a11] text-xs font-bold shadow-lg shadow-[#d4af37]/15 cursor-pointer active:scale-[0.97] transition-transform"
+            >
+              <Sparkles className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">AI Chart</span>
+            </button>
+            <button
+              onClick={() => {
+                sound.playClick();
+                openLeftDrawer('bitcoin_cycle');
+              }}
+              className="min-h-[44px] flex items-center justify-center gap-1.5 rounded-2xl bg-[#11192b] hover:bg-[#17223a] border border-[#253350] text-slate-100 text-xs font-semibold cursor-pointer active:scale-[0.97] transition-transform"
+            >
+              <TrendingUp className="w-3.5 h-3.5 text-[#e7cc82] shrink-0" />
+              <span className="truncate">Cycle</span>
+            </button>
+            <button
+              onClick={() => {
+                sound.playClick();
+                onOpenAlerts();
+              }}
+              className="min-h-[44px] flex items-center justify-center gap-1.5 rounded-2xl bg-[#11192b] hover:bg-[#17223a] border border-[#253350] text-slate-100 text-xs font-semibold cursor-pointer active:scale-[0.97] transition-transform"
+            >
+              <BellRing className="w-3.5 h-3.5 text-[#e7cc82] shrink-0" />
+              <span className="truncate">Alerts</span>
+            </button>
+          </div>
+        </section>
+
+        {/* 2. Featured Spotlight: AI Candlestick Technical Auto-Draw */}
+        <button
+          onClick={() => {
+            sound.playClick();
+            onNavigate('multichart');
+          }}
+          className="w-full min-h-[60px] rounded-2xl bg-[#0b101d]/95 border border-[#24324e] hover:border-[#d4af37]/50 px-3.5 py-3 flex items-center justify-between gap-3 text-left cursor-pointer active:scale-[0.99] transition-transform shadow-lg"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-[#e7cc82]/12 border border-[#d4af37]/40 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4 text-[#e7cc82]" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-semibold text-[#f5e3af] truncate">
+                AI Auto-Draw Candlestick
+              </div>
+              <div className="text-[11px] text-slate-400 truncate mt-0.5">
+                Fibonacci · Elliott Wave · Trendline · ICT · SnR
+              </div>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-[#e7cc82] shrink-0" />
+        </button>
+
+        {/* 3. Universal Mobile Search Bar */}
+        <div className="relative z-30">
+          <Search
+            className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            strokeWidth={1.7}
+          />
+          <input
+            type="text"
+            value={searchQuery}
+            onFocus={() => setSearchFocused(true)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setSearchFocused(true);
+            }}
+            placeholder="Cari fitur AI, koin, atau berita..."
+            className="w-full h-11 pl-10 pr-9 rounded-2xl bg-[#0b101d] border border-[#222e46] focus:border-[#d4af37]/70 text-xs text-white placeholder:text-slate-400 outline-none transition-colors"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSearchFocused(false);
+              }}
+              aria-label="Hapus pencarian"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-white cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {searchFocused && normalizedQuery.length > 0 && (
+            <div className="absolute left-0 right-0 top-12 rounded-2xl bg-[#0b101d] border border-[#26344f] shadow-2xl p-2 space-y-1.5 z-40">
+              {searchResults.tools.length === 0 && searchResults.news.length === 0 ? (
+                <p className="text-xs text-slate-400 px-3 py-3 text-center">
+                  Tidak ada hasil untuk "{searchQuery}".
+                </p>
+              ) : (
+                <>
+                  {searchResults.tools.map((t) => {
+                    const Icon = t.icon;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => {
+                          sound.playClick();
+                          t.onSelect();
+                          setSearchFocused(false);
+                        }}
+                        className="w-full min-h-[44px] flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#141d31] text-left cursor-pointer"
+                      >
+                        <Icon className="w-4 h-4 text-[#e7cc82] shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-medium text-slate-100 truncate">{t.label}</div>
+                          <div className="text-[11px] text-slate-400 truncate">{t.subtitle}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                  {searchResults.news.map((n) => (
+                    <button
+                      key={n.id}
+                      onClick={() => {
+                        sound.playClick();
+                        onSelectNewsForAI(n);
+                        setSearchFocused(false);
+                      }}
+                      className="w-full min-h-[44px] px-3 py-2 rounded-xl hover:bg-[#141d31] text-left cursor-pointer border-t border-[#182236]"
+                    >
+                      <div className="text-xs text-slate-100 line-clamp-1">{n.title}</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">
+                        {n.source} · {n.timeAgo}
+                      </div>
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 4. SuperApp 4-Column App Launcher Grid */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-xs font-semibold text-slate-200 tracking-wide">
+              Layanan SuperApp
+            </h2>
+            <div className="flex items-center gap-0.5 p-0.5 rounded-xl bg-[#0b101d] border border-[#1d273c]">
+              {[
+                { id: 'utama', label: 'Utama' },
+                { id: 'semua', label: 'Semua' },
+                { id: 'pasar', label: 'Pasar' },
+                { id: 'riset', label: 'Riset' },
+              ].map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => {
+                    sound.playClick();
+                    setMobileGroup(g.id as any);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors cursor-pointer ${
+                    mobileGroup === g.id
+                      ? 'bg-[#192338] text-[#f5e3af]'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-x-2 gap-y-3.5">
+            {mobileGridItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    sound.playClick();
+                    item.onSelect();
+                  }}
+                  className="flex flex-col items-center gap-1.5 py-0.5 rounded-xl active:scale-95 transition-transform cursor-pointer"
+                >
+                  <div
+                    className={`relative w-12 h-12 rounded-2xl flex items-center justify-center border shadow-md ${
+                      item.featured
+                        ? 'bg-gradient-to-b from-[#1a243b] to-[#0f1627] border-[#283654] border-t-[#d4af37]/50 text-[#e7cc82]'
+                        : 'bg-[#0d1321] border-[#1f2b42] text-slate-200'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" strokeWidth={1.65} />
+                    {item.badgeText && (
+                      <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-[#e7cc82] text-[#070a11] text-[9px] font-mono font-bold tabular-nums">
+                        {item.badgeText}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] font-medium text-slate-200 truncate w-full text-center leading-tight">
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* 5. Horizontal Swipe Live 5M Coins with Sparklines */}
+        <section className="space-y-2.5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-semibold text-slate-200">Pantauan Cepat 5M</h2>
+            <button
+              onClick={() => {
+                sound.playClick();
+                onNavigate('multichart');
+              }}
+              className="text-[11px] text-[#e7cc82] font-medium cursor-pointer"
+            >
+              Semua Chart
+            </button>
+          </div>
+          <div className="flex items-center gap-2.5 overflow-x-auto pb-1">
+            {mobileOrbitCoins.map(({ sym, metric }) => {
+              const chg = metric?.change5m ?? 0;
+              const isPos = chg >= 0;
+              return (
+                <button
+                  key={sym}
+                  onClick={() => {
+                    sound.playClick();
+                    onLoadToChart(`${sym}USDT`);
+                  }}
+                  className="shrink-0 min-w-[122px] min-h-[72px] px-3 py-2.5 rounded-2xl bg-[#0c111d] border border-[#1d283e] hover:border-[#d4af37]/45 text-left cursor-pointer active:scale-[0.97] transition-transform flex flex-col justify-between"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-white">{sym}</span>
+                    <span
+                      className={`text-[10px] font-mono tabular-nums font-semibold ${
+                        isPos ? 'text-emerald-400' : 'text-rose-400'
+                      }`}
+                    >
+                      {isPos ? '+' : ''}
+                      {chg.toFixed(2)}%
+                    </span>
+                  </div>
+
+                  {/* Directional micro-sparkline */}
+                  <svg viewBox="0 0 60 16" className="w-full h-3.5 my-1 overflow-visible">
+                    <polyline
+                      fill="none"
+                      stroke={isPos ? '#10b981' : '#f43f5e'}
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      points={
+                        isPos
+                          ? '0,13 12,11 22,12 34,7 46,8 60,2'
+                          : '0,3 12,5 24,4 35,9 47,8 60,14'
+                      }
+                    />
+                  </svg>
+
+                  <div className="text-[11px] font-mono tabular-nums text-slate-200 font-medium">
+                    {metric?.price
+                      ? `$${metric.price.toLocaleString('en-US', {
+                          maximumFractionDigits: metric.price < 1 ? 4 : 2,
+                        })}`
+                      : '—'}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* 6. Breaking Headlines Mobile Feed */}
+        <section className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-semibold text-slate-200">Berita Terkini</h2>
+            <button
+              onClick={() => {
+                sound.playClick();
+                openRightDrawer('macro_terminal');
+              }}
+              className="text-[11px] text-[#e7cc82] font-medium cursor-pointer"
+            >
+              Lihat Semua
+            </button>
+          </div>
+
+          <div className="rounded-2xl bg-[#0a0f1b] border border-[#1a2337] divide-y divide-[#161f32]">
+            {newsLoading && macroNews.length === 0 ? (
+              <div className="px-4 py-4 text-xs text-slate-400">Memuat berita makro & kripto...</div>
+            ) : (
+              macroNews.slice(0, 4).map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    sound.playClick();
+                    onSelectNewsForAI(item);
+                  }}
+                  className="w-full min-h-[60px] px-3.5 py-3 flex items-center justify-between gap-3 text-left hover:bg-[#11192b] active:bg-[#141d31] transition-colors cursor-pointer"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-slate-100 line-clamp-2 leading-snug">
+                      {item.title}
+                    </p>
+                    <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-slate-400">
+                      <span
+                        className={`font-mono font-semibold ${
+                          item.impactLevel === 'HIGH' ? 'text-[#e7cc82]' : 'text-slate-400'
+                        }`}
+                      >
+                        {item.impactLevel}
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <span className="text-[#cbb06a] truncate">{item.source}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="font-mono tabular-nums shrink-0">{item.timeAgo}</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-500 shrink-0" />
+                </button>
+              ))
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* =================================================================== */}
+      {/* B. DESKTOP SUPERAPP 3D MONOLITH + WINGS LAYOUT (>= 768px)           */}
+      {/* =================================================================== */}
+      <div className="hidden md:block relative w-full h-full">
       {/* 1. TOP-CENTER FLOATING COMMAND & TELEMETRY RIBBON */}
       <div className="pointer-events-auto absolute top-3 left-1/2 -translate-x-1/2 z-20 w-[calc(100%-24px)] max-w-2xl">
         <div className="relative rounded-2xl bg-[#090d16]/88 border border-[#222d42] border-t-[#d4af37]/30 px-3 sm:px-4 py-2 flex items-center justify-between gap-3">
@@ -908,6 +1364,107 @@ export const SuperAppHome: React.FC<SuperAppHomeProps> = ({
             )}
           </div>
         </div>
+      )}
+      </div>
+
+      {/* =================================================================== */}
+      {/* C. MOBILE BOTTOM-SHEET OVERLAY WHEN ANY DRAWER TOOL IS OPEN         */}
+      {/* =================================================================== */}
+      {(activeLeftTool || activeRightTool) && (
+        <section
+          aria-label={activeLeftMeta?.label || activeRightMeta?.label || 'Panel Mobile'}
+          className="md:hidden pointer-events-auto fixed inset-x-0 top-14 bottom-[60px] z-35 rounded-t-3xl bg-[#080c15] border-t border-[#d4af37]/45 shadow-2xl flex flex-col overflow-hidden animate-content-rise"
+        >
+          <div className="w-10 h-1 rounded-full bg-slate-600/70 mx-auto mt-2 shrink-0" />
+          <div className="shrink-0 h-11 px-4 border-b border-[#1c263a] flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              {activeLeftMeta ? (
+                <activeLeftMeta.icon className="w-4 h-4 text-[#e7cc82] shrink-0" />
+              ) : activeRightMeta ? (
+                <activeRightMeta.icon className="w-4 h-4 text-[#e7cc82] shrink-0" />
+              ) : null}
+              <h2 className="text-xs font-semibold text-[#f5e3af] truncate">
+                {activeLeftMeta?.label || activeRightMeta?.label}
+              </h2>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  const target = activeLeftTool || activeRightTool;
+                  setActiveLeftTool(null);
+                  setActiveRightTool(null);
+                  if (target) onNavigate(target);
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#121a2b] border border-[#24314a] text-[11px] font-medium text-slate-200 cursor-pointer"
+              >
+                <Maximize2 className="w-3 h-3" />
+                <span>Penuh</span>
+              </button>
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setActiveLeftTool(null);
+                  setActiveRightTool(null);
+                }}
+                aria-label="Tutup panel mobile"
+                className="p-1.5 rounded-lg bg-[#121a2b] border border-[#24314a] text-slate-300 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col bg-[#070a11]">
+            {activeLeftTool === 'bitcoin_cycle' && (
+              <BitcoinCyclePanel
+                onLoadToChart={onLoadToChart}
+                onOpenAlerts={onOpenAlerts}
+              />
+            )}
+            {activeLeftTool === 'liquidity_movers' && (
+              <div className="w-full h-full overflow-y-auto p-3">
+                <CryptoLiquidityMoversPanel
+                  onLoadToChart={onLoadToChart}
+                  onOpenAlerts={onOpenAlerts}
+                />
+              </div>
+            )}
+            {activeLeftTool === 'multichart' && (
+              <MultiChartGrid
+                externalSymbol={chartTargetSymbol}
+                onOpenTA={onOpenTA}
+              />
+            )}
+            {activeRightTool === 'macro_terminal' && (
+              <MacroNewsTable
+                news={macroNews}
+                loading={newsLoading}
+                onRefresh={onRefreshNews}
+                onSelectForAI={onSelectNewsForAI}
+                wibNow={wibNow}
+              />
+            )}
+            {activeRightTool === 'narratives' && <CryptoNarrativeStream />}
+            {activeRightTool === 'high_impact' && (
+              <MacroNewsTable
+                news={highImpactNews}
+                loading={newsLoading}
+                onRefresh={onRefreshNews}
+                onSelectForAI={onSelectNewsForAI}
+                wibNow={wibNow}
+              />
+            )}
+            {activeRightTool === 'impact_matrix' && (
+              <MacroImpactMatrix
+                news={macroNews}
+                onSelectNews={onSelectNewsForAI}
+              />
+            )}
+            {activeRightTool === 'room_chat' && <RoomChatView session={session} />}
+            {activeRightTool === 'telemetry' && <MultiApiTelemetryPanel />}
+          </div>
+        </section>
       )}
     </div>
   );

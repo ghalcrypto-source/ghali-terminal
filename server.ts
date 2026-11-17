@@ -2758,12 +2758,12 @@ app.get('/api/crypto/narratives', async (req: Request, res: Response) => {
 // =========================================================================
 // PRIVATE OWNER ID & PASSWORD AUTHENTICATION (SERVER-VERIFIED)
 // =========================================================================
-const OWNER_LOGIN_PASSWORD = process.env.OWNER_LOGIN_PASSWORD || '170819@';
+const OWNER_LOGIN_PASSWORD = process.env.OWNER_LOGIN_PASSWORD || '19191204@';
 const OWNER_SESSION_SECRET =
   process.env.OWNER_SESSION_SECRET ||
   crypto
     .createHash('sha256')
-    .update(process.env.GEMINI_API_KEY || 'ghali-terminal-owner-hmac-key-v2-170819')
+    .update(process.env.GEMINI_API_KEY || 'ghali-terminal-owner-hmac-key-v3-19191204')
     .digest('hex');
 
 function sha256Equal(a: string, b: string): boolean {
@@ -2809,11 +2809,11 @@ app.post('/api/auth/owner-login', (req: Request, res: Response) => {
 
   // Check if any passed field matches the valid password
   const candidate =
-    p1 === '170819@' || p1 === OWNER_LOGIN_PASSWORD
+    p1 === '19191204@' || p1 === OWNER_LOGIN_PASSWORD
       ? p1
-      : p2 === '170819@' || p2 === OWNER_LOGIN_PASSWORD
+      : p2 === '19191204@' || p2 === OWNER_LOGIN_PASSWORD
       ? p2
-      : p3 === '170819@' || p3 === OWNER_LOGIN_PASSWORD
+      : p3 === '19191204@' || p3 === OWNER_LOGIN_PASSWORD
       ? p3
       : p1 || p2 || p3;
 
@@ -2821,7 +2821,7 @@ app.post('/api/auth/owner-login', (req: Request, res: Response) => {
     return res.status(400).json({ success: false, error: 'Password wajib diisi.' });
   }
 
-  const validPassword = sha256Equal(candidate, OWNER_LOGIN_PASSWORD) || candidate === '170819@';
+  const validPassword = sha256Equal(candidate, OWNER_LOGIN_PASSWORD) || candidate === '19191204@';
 
   if (!validPassword) {
     return res.status(401).json({ success: false, error: 'Password salah. Akses ditolak.' });
@@ -2834,10 +2834,10 @@ app.post('/api/auth/owner-login', (req: Request, res: Response) => {
     success: true,
     token,
     user: {
-      uid: 'owner-120403',
-      traderName: 'GHALI',
-      email: 'ghalcrypto@gmail.com',
-      role: 'Terminal Owner',
+      uid: 'trader-user',
+      traderName: 'Trader',
+      email: 'trader@ghalionchain.com',
+      role: 'On-Chain Trader',
     },
   });
 });
@@ -2855,9 +2855,9 @@ app.get('/api/auth/owner-session', (req: Request, res: Response) => {
     authenticated: true,
     user: {
       uid: verified.uid,
-      traderName: 'GHALI',
-      email: 'ghalcrypto@gmail.com',
-      role: 'Terminal Owner',
+      traderName: 'Trader',
+      email: 'trader@ghalionchain.com',
+      role: 'On-Chain Trader',
     },
   });
 });
@@ -3117,6 +3117,876 @@ app.delete('/api/chat/messages/:id', (req: Request, res: Response) => {
   broadcastSseEvent(roomIdParam, 'delete', { roomId: roomIdParam, id: messageId });
 
   return res.json({ success: true, deletedId: messageId });
+});
+
+// =========================================================================
+// LIVE CANDLESTICK KLINES & AI TECHNICAL AUTO-DRAWING ENGINE
+// =========================================================================
+interface ServerCandleBar {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+function mapIntervalToBinance(interval: string): string {
+  switch (String(interval)) {
+    case '1':
+      return '1m';
+    case '5':
+      return '5m';
+    case '15':
+      return '15m';
+    case '60':
+      return '1h';
+    case '240':
+      return '4h';
+    case 'D':
+    case '1D':
+      return '1d';
+    default:
+      return '15m';
+  }
+}
+
+function mapIntervalToBitget(interval: string): string {
+  switch (String(interval)) {
+    case '1':
+      return '1m';
+    case '5':
+      return '5m';
+    case '15':
+      return '15m';
+    case '60':
+      return '1H';
+    case '240':
+      return '4H';
+    case 'D':
+    case '1D':
+      return '1D';
+    default:
+      return '15m';
+  }
+}
+
+async function fetchCandlesServer(
+  rawSymbol: string,
+  exchange: string = 'BINANCE',
+  interval: string = '15',
+  isFutures: boolean = true,
+  limit: number = 180
+): Promise<{ candles: ServerCandleBar[]; source: string }> {
+  const symbol = rawSymbol.toUpperCase().replace(/[^A-Z0-9]/g, '') || 'BTCUSDT';
+  const binanceTf = mapIntervalToBinance(interval);
+  const bitgetTf = mapIntervalToBitget(interval);
+  const safeLimit = Math.min(Math.max(limit, 50), 300);
+
+  const tryFetch = async (url: string, timeoutMs = 4500) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const r = await fetch(url, { signal: controller.signal });
+      if (!r.ok) return null;
+      return await r.json();
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
+  // 1. Try Bitget if requested
+  if (exchange === 'BITGET') {
+    const bitgetUrl = isFutures
+      ? `https://api.bitget.com/api/v2/mix/market/candles?symbol=${symbol}&productType=USDT-FUTURES&granularity=${bitgetTf}&limit=${safeLimit}`
+      : `https://api.bitget.com/api/v2/spot/market/candles?symbol=${symbol}&granularity=${bitgetTf}&limit=${safeLimit}`;
+    const bgData = await tryFetch(bitgetUrl);
+    if (bgData?.code === '00000' && Array.isArray(bgData.data) && bgData.data.length > 10) {
+      const parsed: ServerCandleBar[] = bgData.data
+        .map((c: any[]) => ({
+          time: Math.floor(Number(c[0]) / 1000),
+          open: Number(c[1]),
+          high: Number(c[2]),
+          low: Number(c[3]),
+          close: Number(c[4]),
+          volume: Number(c[5] || 0),
+        }))
+        .filter((c: ServerCandleBar) => Number.isFinite(c.time) && Number.isFinite(c.close))
+        .sort((a: ServerCandleBar, b: ServerCandleBar) => a.time - b.time);
+      if (parsed.length > 10) {
+        return { candles: parsed, source: isFutures ? 'Bitget Futures' : 'Bitget Spot' };
+      }
+    }
+  }
+
+  // 2. Try Binance Futures or Spot
+  const binanceUrl = isFutures
+    ? `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${binanceTf}&limit=${safeLimit}`
+    : `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${binanceTf}&limit=${safeLimit}`;
+  const bData = await tryFetch(binanceUrl);
+  if (Array.isArray(bData) && bData.length > 10) {
+    const parsed: ServerCandleBar[] = bData
+      .map((c: any[]) => ({
+        time: Math.floor(Number(c[0]) / 1000),
+        open: Number(c[1]),
+        high: Number(c[2]),
+        low: Number(c[3]),
+        close: Number(c[4]),
+        volume: Number(c[5] || 0),
+      }))
+      .filter((c: ServerCandleBar) => Number.isFinite(c.time) && Number.isFinite(c.close))
+      .sort((a: ServerCandleBar, b: ServerCandleBar) => a.time - b.time);
+    if (parsed.length > 10) {
+      return { candles: parsed, source: isFutures ? 'Binance Futures' : 'Binance Spot' };
+    }
+  }
+
+  // 3. Fallback to Binance Spot if Futures failed
+  if (isFutures) {
+    const bSpotData = await tryFetch(
+      `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${binanceTf}&limit=${safeLimit}`
+    );
+    if (Array.isArray(bSpotData) && bSpotData.length > 10) {
+      const parsed: ServerCandleBar[] = bSpotData
+        .map((c: any[]) => ({
+          time: Math.floor(Number(c[0]) / 1000),
+          open: Number(c[1]),
+          high: Number(c[2]),
+          low: Number(c[3]),
+          close: Number(c[4]),
+          volume: Number(c[5] || 0),
+        }))
+        .sort((a: ServerCandleBar, b: ServerCandleBar) => a.time - b.time);
+      return { candles: parsed, source: 'Binance Spot Fallback' };
+    }
+  }
+
+  // 4. Fallback to OKX
+  const baseCoin = symbol.replace(/USDT$|USD$|BUSD$/i, '') || 'BTC';
+  const okxBar =
+    interval === '1'
+      ? '1m'
+      : interval === '5'
+      ? '5m'
+      : interval === '15'
+      ? '15m'
+      : interval === '60'
+      ? '1H'
+      : interval === '240'
+      ? '4H'
+      : '1D';
+  const okxData = await tryFetch(
+    `https://www.okx.com/api/v5/market/candles?instId=${baseCoin}-USDT&bar=${okxBar}&limit=${Math.min(safeLimit, 100)}`
+  );
+  if (okxData?.code === '0' && Array.isArray(okxData.data) && okxData.data.length > 10) {
+    const parsed: ServerCandleBar[] = okxData.data
+      .map((c: any[]) => ({
+        time: Math.floor(Number(c[0]) / 1000),
+        open: Number(c[1]),
+        high: Number(c[2]),
+        low: Number(c[3]),
+        close: Number(c[4]),
+        volume: Number(c[5] || 0),
+      }))
+      .sort((a: ServerCandleBar, b: ServerCandleBar) => a.time - b.time);
+    return { candles: parsed, source: 'OKX Market Feed' };
+  }
+
+  // 5. Fallback to CryptoCompare histominute/histohour/histoday
+  const ccEndpoint =
+    interval === 'D' || interval === '1D'
+      ? `https://min-api.cryptocompare.com/data/v2/histoday?fsym=${baseCoin}&tsym=USD&limit=${safeLimit}`
+      : interval === '60' || interval === '240'
+      ? `https://min-api.cryptocompare.com/data/v2/histohour?fsym=${baseCoin}&tsym=USD&limit=${safeLimit}`
+      : `https://min-api.cryptocompare.com/data/v2/histominute?fsym=${baseCoin}&tsym=USD&limit=${safeLimit}`;
+  const ccData = await tryFetch(ccEndpoint);
+  if (ccData?.Data?.Data && Array.isArray(ccData.Data.Data)) {
+    const parsed: ServerCandleBar[] = ccData.Data.Data.map((d: any) => ({
+      time: Number(d.time),
+      open: Number(d.open),
+      high: Number(d.high),
+      low: Number(d.low),
+      close: Number(d.close),
+      volume: Number(d.volumeto || 0),
+    })).filter((c: ServerCandleBar) => c.close > 0);
+    if (parsed.length > 10) {
+      return { candles: parsed, source: 'CryptoCompare Feed' };
+    }
+  }
+
+  return { candles: [], source: 'unavailable' };
+}
+
+app.get('/api/crypto/klines', async (req: Request, res: Response) => {
+  try {
+    const symbol = String(req.query.symbol || 'BTCUSDT');
+    const exchange = String(req.query.exchange || 'BINANCE').toUpperCase();
+    const interval = String(req.query.interval || '15');
+    const isFutures = String(req.query.isFutures || 'true') !== 'false';
+    const limit = parseInt(String(req.query.limit || '180'), 10) || 180;
+
+    const { candles, source } = await fetchCandlesServer(symbol, exchange, interval, isFutures, limit);
+    if (candles.length === 0) {
+      return res.status(502).json({ success: false, error: 'Gagal mengambil data candlestick live.' });
+    }
+    return res.json({ success: true, symbol, exchange, interval, source, candles });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err?.message || 'Klines error' });
+  }
+});
+
+function formatChartPrice(p: number): string {
+  if (p >= 1000) return p.toLocaleString('en-US', { maximumFractionDigits: 1 });
+  if (p >= 1) return p.toFixed(3);
+  if (p >= 0.01) return p.toFixed(5);
+  return p.toFixed(8);
+}
+
+function buildQuantitativeTechnicalDrawings(
+  candles: ServerCandleBar[],
+  categories: Array<'fibonacci' | 'elliott' | 'trendline' | 'ict' | 'snr'>,
+  symbol: string,
+  interval: string
+) {
+  const n = candles.length;
+  const firstTime = candles[0].time;
+  const lastCandle = candles[n - 1];
+  const stepSec = n > 2 ? Math.max(60, candles[n - 1].time - candles[n - 2].time) : 900;
+  const futureTime = lastCandle.time + stepSec * 14;
+
+  // Detect Swing Highs & Swing Lows (lookback window 4 bars)
+  interface SwingPivot {
+    index: number;
+    time: number;
+    price: number;
+    type: 'H' | 'L';
+  }
+  const rawPivots: SwingPivot[] = [];
+  const lookback = 4;
+  for (let i = lookback; i < n - lookback; i++) {
+    let isHigh = true;
+    let isLow = true;
+    for (let j = 1; j <= lookback; j++) {
+      if (candles[i].high <= candles[i - j].high || candles[i].high < candles[i + j].high) isHigh = false;
+      if (candles[i].low >= candles[i - j].low || candles[i].low > candles[i + j].low) isLow = false;
+    }
+    if (isHigh) rawPivots.push({ index: i, time: candles[i].time, price: candles[i].high, type: 'H' });
+    else if (isLow) rawPivots.push({ index: i, time: candles[i].time, price: candles[i].low, type: 'L' });
+  }
+
+  // Filter alternating ZigZag pivots so highs and lows alternate cleanly
+  const alternating: SwingPivot[] = [];
+  for (const p of rawPivots) {
+    if (alternating.length === 0) {
+      alternating.push(p);
+      continue;
+    }
+    const prev = alternating[alternating.length - 1];
+    if (prev.type === p.type) {
+      if ((p.type === 'H' && p.price > prev.price) || (p.type === 'L' && p.price < prev.price)) {
+        alternating[alternating.length - 1] = p;
+      }
+    } else {
+      alternating.push(p);
+    }
+  }
+
+  // Global major high/low within recent 120 candles
+  const recentStart = Math.max(0, n - 120);
+  let majorHigh = candles[recentStart];
+  let majorLow = candles[recentStart];
+  for (let i = recentStart; i < n; i++) {
+    if (candles[i].high > majorHigh.high) majorHigh = candles[i];
+    if (candles[i].low < majorLow.low) majorLow = candles[i];
+  }
+
+  const isUpImpulse = majorLow.time < majorHigh.time;
+  const priceNow = lastCandle.close;
+  const ema20 = candles.slice(-20).reduce((s, c) => s + c.close, 0) / Math.min(20, n);
+  const ema50 = candles.slice(-50).reduce((s, c) => s + c.close, 0) / Math.min(50, n);
+  const bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL' =
+    priceNow > ema20 && ema20 >= ema50 * 0.998
+      ? 'BULLISH'
+      : priceNow < ema20 && ema20 <= ema50 * 1.002
+      ? 'BEARISH'
+      : 'NEUTRAL';
+
+  const lines: any[] = [];
+  const zones: any[] = [];
+  const fibs: any[] = [];
+  const waves: any[] = [];
+  const markers: any[] = [];
+
+  // 1. FIBONACCI
+  if (categories.includes('fibonacci')) {
+    const highP = majorHigh.high;
+    const lowP = majorLow.low;
+    const range = Math.max(highP - lowP, highP * 0.001);
+    const startT = Math.min(majorHigh.time, majorLow.time);
+    const ratios = [
+      { ratio: 0, label: '0.000' },
+      { ratio: 0.236, label: '0.236' },
+      { ratio: 0.382, label: '0.382' },
+      { ratio: 0.5, label: '0.500 EQ' },
+      { ratio: 0.618, label: '0.618 GP', highlight: true },
+      { ratio: 0.65, label: '0.650 GP', highlight: true },
+      { ratio: 0.786, label: '0.786 OTE' },
+      { ratio: 1, label: '1.000' },
+      { ratio: 1.272, label: '1.272 EXT' },
+      { ratio: 1.618, label: '1.618 TP', highlight: true },
+    ];
+    const levels = ratios.map((r) => {
+      const price = isUpImpulse ? highP - range * r.ratio : lowP + range * r.ratio;
+      return {
+        ratio: r.ratio,
+        price,
+        label: r.label,
+        highlight: Boolean(r.highlight),
+      };
+    });
+    fibs.push({
+      id: 'fib-primary',
+      label: isUpImpulse ? 'Fib Retracement (Bull Swing)' : 'Fib Retracement (Bear Swing)',
+      startTime: startT,
+      endTime: futureTime,
+      highPrice: highP,
+      lowPrice: lowP,
+      direction: isUpImpulse ? 'up' : 'down',
+      levels,
+    });
+  }
+
+  // 2. ELLIOTT WAVE
+  if (categories.includes('elliott')) {
+    const waveSlice = alternating.slice(-6);
+    if (waveSlice.length >= 4) {
+      const impulseLabels = ['(0)', '(1)', '(2)', '(3)', '(4)', '(5)'];
+      const points = waveSlice.map((p, idx) => ({
+        time: p.time,
+        price: p.price,
+        waveLabel: impulseLabels[idx] || `(${idx})`,
+        isProjected: false,
+      }));
+      // Add projected next wave point
+      const lastP = waveSlice[waveSlice.length - 1];
+      const prevP = waveSlice[waveSlice.length - 2];
+      const legMove = lastP.price - prevP.price;
+      const nextWaveLabel = waveSlice.length >= 6 ? '(A)' : `(${waveSlice.length})`;
+      const projPrice =
+        waveSlice.length >= 6
+          ? lastP.price - legMove * 0.5
+          : lastP.type === 'L'
+          ? lastP.price + Math.abs(legMove) * 1.382
+          : lastP.price - Math.abs(legMove) * 1.382;
+      points.push({
+        time: lastCandle.time + stepSec * 8,
+        price: projPrice,
+        waveLabel: `${nextWaveLabel}*`,
+        isProjected: true,
+      });
+
+      waves.push({
+        id: 'elliott-primary',
+        label: 'Elliott Wave Count (Live Structure)',
+        color: '#a78bfa',
+        points,
+      });
+    } else {
+      // Fallback 5-point wave from major pivots
+      const span = Math.floor(n / 5);
+      const pts = [0, 1, 2, 3, 4].map((idx) => {
+        const c = candles[Math.min(n - 1, idx * span + 2)];
+        return {
+          time: c.time,
+          price: idx % 2 === 0 ? c.low : c.high,
+          waveLabel: `(${idx})`,
+          isProjected: false,
+        };
+      });
+      waves.push({
+        id: 'elliott-primary',
+        label: 'Elliott Wave Count',
+        color: '#a78bfa',
+        points: pts,
+      });
+    }
+  }
+
+  // 3. TRENDLINE
+  if (categories.includes('trendline')) {
+    const highs = alternating.filter((p) => p.type === 'H').slice(-3);
+    const lows = alternating.filter((p) => p.type === 'L').slice(-3);
+
+    if (highs.length >= 2) {
+      const h1 = highs[highs.length - 2];
+      const h2 = highs[highs.length - 1];
+      lines.push({
+        id: 'trend-res',
+        category: 'trendline',
+        label: 'Resistance Trendline',
+        points: [
+          { time: h1.time, price: h1.price },
+          { time: h2.time, price: h2.price },
+        ],
+        extendRight: true,
+        style: 'solid',
+        color: '#f43f5e',
+        width: 2,
+      });
+    }
+
+    if (lows.length >= 2) {
+      const l1 = lows[lows.length - 2];
+      const l2 = lows[lows.length - 1];
+      lines.push({
+        id: 'trend-sup',
+        category: 'trendline',
+        label: 'Support Trendline',
+        points: [
+          { time: l1.time, price: l1.price },
+          { time: l2.time, price: l2.price },
+        ],
+        extendRight: true,
+        style: 'solid',
+        color: '#10b981',
+        width: 2,
+      });
+    }
+  }
+
+  // 4. ICT / SMART MONEY CONCEPTS (Order Blocks, Fair Value Gaps, BOS / CHoCH, Liquidity)
+  if (categories.includes('ict')) {
+    // Find latest Fair Value Gaps (FVG)
+    let bullFvgFound = false;
+    let bearFvgFound = false;
+    for (let i = n - 2; i >= Math.max(2, n - 70); i--) {
+      const cPrev = candles[i - 1];
+      const cNext = candles[i + 1];
+      if (!bullFvgFound && cNext.low > cPrev.high && (cNext.low - cPrev.high) / cPrev.high > 0.0008) {
+        zones.push({
+          id: `ict-bull-fvg-${i}`,
+          category: 'ict',
+          label: 'Bullish FVG (BISI)',
+          startTime: candles[i].time,
+          endTime: futureTime,
+          topPrice: cNext.low,
+          bottomPrice: cPrev.high,
+          color: '#22d3ee',
+          fillAlpha: 0.16,
+        });
+        bullFvgFound = true;
+      }
+      if (!bearFvgFound && cNext.high < cPrev.low && (cPrev.low - cNext.high) / cPrev.low > 0.0008) {
+        zones.push({
+          id: `ict-bear-fvg-${i}`,
+          category: 'ict',
+          label: 'Bearish FVG (SIBI)',
+          startTime: candles[i].time,
+          endTime: futureTime,
+          topPrice: cPrev.low,
+          bottomPrice: cNext.high,
+          color: '#fb7185',
+          fillAlpha: 0.16,
+        });
+        bearFvgFound = true;
+      }
+      if (bullFvgFound && bearFvgFound) break;
+    }
+
+    // Find Bullish & Bearish Order Blocks (last opposite candle before strong move)
+    let bullObFound = false;
+    let bearObFound = false;
+    for (let i = n - 4; i >= Math.max(5, n - 80); i--) {
+      const c = candles[i];
+      const next1 = candles[i + 1];
+      const next2 = candles[i + 2];
+      if (!bullObFound && c.close < c.open && next1.close > next1.open && next2.close > c.high) {
+        zones.push({
+          id: `ict-bull-ob-${i}`,
+          category: 'ict',
+          label: 'ICT Bullish OB (+OB)',
+          startTime: c.time,
+          endTime: futureTime,
+          topPrice: c.high,
+          bottomPrice: c.low,
+          color: '#10b981',
+          fillAlpha: 0.2,
+        });
+        bullObFound = true;
+      }
+      if (!bearObFound && c.close > c.open && next1.close < next1.open && next2.close < c.low) {
+        zones.push({
+          id: `ict-bear-ob-${i}`,
+          category: 'ict',
+          label: 'ICT Bearish OB (-OB)',
+          startTime: c.time,
+          endTime: futureTime,
+          topPrice: c.high,
+          bottomPrice: c.low,
+          color: '#ef4444',
+          fillAlpha: 0.2,
+        });
+        bearObFound = true;
+      }
+      if (bullObFound && bearObFound) break;
+    }
+
+    // BOS / BSL / SSL structural levels
+    const recentHighs = alternating.filter((p) => p.type === 'H').slice(-2);
+    const recentLows = alternating.filter((p) => p.type === 'L').slice(-2);
+    if (recentHighs.length > 0) {
+      const lastH = recentHighs[recentHighs.length - 1];
+      const isBroken = priceNow > lastH.price;
+      lines.push({
+        id: 'ict-bsl-bos',
+        category: 'ict',
+        label: isBroken ? 'BOS (Bullish Break)' : 'BSL (Buy-Side Liq)',
+        points: [
+          { time: lastH.time, price: lastH.price },
+          { time: futureTime, price: lastH.price },
+        ],
+        extendRight: false,
+        style: 'dashed',
+        color: '#38bdf8',
+        width: 1.5,
+      });
+    }
+    if (recentLows.length > 0) {
+      const lastL = recentLows[recentLows.length - 1];
+      const isBroken = priceNow < lastL.price;
+      lines.push({
+        id: 'ict-ssl-choch',
+        category: 'ict',
+        label: isBroken ? 'CHoCH / Bear Break' : 'SSL (Sell-Side Liq)',
+        points: [
+          { time: lastL.time, price: lastL.price },
+          { time: futureTime, price: lastL.price },
+        ],
+        extendRight: false,
+        style: 'dashed',
+        color: '#f59e0b',
+        width: 1.5,
+      });
+    }
+  }
+
+  // 5. SUPPORT & RESISTANCE (SnR)
+  if (categories.includes('snr')) {
+    const startT = candles[Math.max(0, n - 90)].time;
+    const bandWidth = Math.max((majorHigh.high - majorLow.low) * 0.03, priceNow * 0.0025);
+
+    // Resistance Zone near majorHigh
+    zones.push({
+      id: 'snr-resistance',
+      category: 'snr',
+      label: `Key Resistance ($${formatChartPrice(majorHigh.high)})`,
+      startTime: startT,
+      endTime: futureTime,
+      topPrice: majorHigh.high,
+      bottomPrice: majorHigh.high - bandWidth,
+      color: '#f43f5e',
+      fillAlpha: 0.14,
+    });
+
+    // Mid Equilibrium Pivot
+    const midPrice = (majorHigh.high + majorLow.low) / 2;
+    lines.push({
+      id: 'snr-mid',
+      category: 'snr',
+      label: `SnR Flip / Mid ($${formatChartPrice(midPrice)})`,
+      points: [
+        { time: startT, price: midPrice },
+        { time: futureTime, price: midPrice },
+      ],
+      style: 'dotted',
+      color: '#eab308',
+      width: 1.5,
+    });
+
+    // Support Zone near majorLow
+    zones.push({
+      id: 'snr-support',
+      category: 'snr',
+      label: `Key Support ($${formatChartPrice(majorLow.low)})`,
+      startTime: startT,
+      endTime: futureTime,
+      topPrice: majorLow.low + bandWidth,
+      bottomPrice: majorLow.low,
+      color: '#10b981',
+      fillAlpha: 0.14,
+    });
+  }
+
+  // Actionable markers (Entry / SL / TP)
+  const goldenPocket = majorHigh.high - (majorHigh.high - majorLow.low) * 0.618;
+  const entryStr =
+    bias === 'BULLISH'
+      ? `$${formatChartPrice(Math.min(priceNow, goldenPocket))} - $${formatChartPrice(priceNow)}`
+      : `$${formatChartPrice(priceNow)} - $${formatChartPrice(Math.max(priceNow, goldenPocket))}`;
+  const slPrice = bias === 'BULLISH' ? majorLow.low * 0.996 : majorHigh.high * 1.004;
+  const tp1Price = bias === 'BULLISH' ? majorHigh.high : majorLow.low;
+  const tp2Price =
+    bias === 'BULLISH'
+      ? majorHigh.high + (majorHigh.high - majorLow.low) * 0.272
+      : majorLow.low - (majorHigh.high - majorLow.low) * 0.272;
+
+  markers.push({
+    id: 'marker-now',
+    category: categories[0] || 'snr',
+    time: lastCandle.time,
+    price: lastCandle.close,
+    text: bias === 'BULLISH' ? 'LONG BIAS' : bias === 'BEARISH' ? 'SHORT BIAS' : 'RANGE WAIT',
+    position: bias === 'BULLISH' ? 'below' : 'above',
+    color: bias === 'BULLISH' ? '#10b981' : bias === 'BEARISH' ? '#f43f5e' : '#eab308',
+  });
+
+  return {
+    symbol,
+    interval,
+    bias,
+    headline: `${symbol} (${interval === 'D' ? '1D' : Number(interval) >= 60 ? `${Number(interval) / 60}H` : `${interval}m`}) — Struktur ${bias}`,
+    summary: `Analisis otomatis ${categories.map((c) => c.toUpperCase()).join(' + ')}: Harga saat ini di $${formatChartPrice(
+      priceNow
+    )} dengan Swing Low $${formatChartPrice(majorLow.low)} dan Swing High $${formatChartPrice(
+      majorHigh.high
+    )}. Pantau reaksi di area entry/Golden Pocket ($${formatChartPrice(goldenPocket)}) dengan invalidasi di $${formatChartPrice(slPrice)}.`,
+    entryZone: entryStr,
+    stopLoss: `$${formatChartPrice(slPrice)}`,
+    targets: [`$${formatChartPrice(tp1Price)}`, `$${formatChartPrice(tp2Price)}`],
+    activeCategories: categories,
+    lines,
+    zones,
+    fibs,
+    waves,
+    markers,
+    firstTime,
+    lastTime: lastCandle.time,
+    majorHighPrice: majorHigh.high,
+    majorLowPrice: majorLow.low,
+    goldenPocket,
+    ema20,
+    ema50,
+    alternating,
+  };
+}
+
+app.post('/api/crypto/ai-chart-draw', async (req: Request, res: Response) => {
+  try {
+    const symbol = String(req.body?.symbol || 'BTCUSDT').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const exchange = String(req.body?.exchange || 'BINANCE').toUpperCase();
+    const interval = String(req.body?.interval || '15');
+    const isFutures = req.body?.isFutures !== false;
+    const requestedMode = String(req.body?.mode || 'all').toLowerCase();
+    const userPrompt = String(req.body?.prompt || '').trim();
+
+    // Infer requested technical tools from mode and natural-language prompt
+    const categorySet = new Set<'fibonacci' | 'elliott' | 'trendline' | 'ict' | 'snr'>();
+    const lowerPrompt = userPrompt.toLowerCase();
+    if (requestedMode === 'all') {
+      if (lowerPrompt.length === 0) {
+        categorySet.add('fibonacci');
+        categorySet.add('elliott');
+        categorySet.add('trendline');
+        categorySet.add('ict');
+        categorySet.add('snr');
+      } else {
+        if (/fib|golden|pocket|retracement/.test(lowerPrompt)) categorySet.add('fibonacci');
+        if (/elliott|eliot|wave|gelombang|abc|1-5/.test(lowerPrompt)) categorySet.add('elliott');
+        if (/trend|garis|channel|breakout|wedge/.test(lowerPrompt)) categorySet.add('trendline');
+        if (/ict|smc|order\s*block|ob|fvg|imbalance|bos|choch|liq|sweep/.test(lowerPrompt))
+          categorySet.add('ict');
+        if (/snr|support|resistan|supply|demand|s\/r/.test(lowerPrompt)) categorySet.add('snr');
+        if (categorySet.size === 0 || /semua|all|full|komplit|lengkap/.test(lowerPrompt)) {
+          categorySet.add('fibonacci');
+          categorySet.add('elliott');
+          categorySet.add('trendline');
+          categorySet.add('ict');
+          categorySet.add('snr');
+        }
+      }
+    } else if (
+      requestedMode === 'fibonacci' ||
+      requestedMode === 'elliott' ||
+      requestedMode === 'trendline' ||
+      requestedMode === 'ict' ||
+      requestedMode === 'snr'
+    ) {
+      categorySet.add(requestedMode);
+    } else {
+      categorySet.add('fibonacci');
+      categorySet.add('trendline');
+      categorySet.add('snr');
+    }
+
+    const categories = Array.from(categorySet);
+
+    let candles: ServerCandleBar[] = Array.isArray(req.body?.candles) ? req.body.candles : [];
+    if (candles.length < 30) {
+      const fetched = await fetchCandlesServer(symbol, exchange, interval, isFutures, 180);
+      candles = fetched.candles;
+    }
+
+    if (candles.length < 15) {
+      return res.status(502).json({
+        success: false,
+        error: 'Data candlestick tidak cukup untuk menggambar teknikal AI.',
+      });
+    }
+
+    const quant = buildQuantitativeTechnicalDrawings(candles, categories, symbol, interval);
+
+    // Ask Gemini 4 Hydrogen to evaluate the exact pivots, bias, key entry/SL/TP, and Indonesian narrative
+    if (apiKey) {
+      try {
+        const recentSummary = candles.slice(-24).map((c) => ({
+          t: c.time,
+          o: Number(c.open.toFixed(6)),
+          h: Number(c.high.toFixed(6)),
+          l: Number(c.low.toFixed(6)),
+          c: Number(c.close.toFixed(6)),
+        }));
+
+        const pivotSummary = quant.alternating.slice(-8).map((p) => ({
+          type: p.type,
+          time: p.time,
+          price: Number(p.price.toFixed(6)),
+        }));
+
+        const aiPrompt = `Anda adalah Senior Quantitative Chartist & Technical Analyst (ICT, Elliott Wave, Fibonacci, Trendline, SnR).
+Aset: ${symbol} (${exchange} ${isFutures ? 'PERP' : 'SPOT'}) | Timeframe: ${interval}
+Alat teknikal yang diminta user untuk digambar di chart: ${categories.join(', ')}
+Permintaan spesifik user: "${userPrompt || `Gambar teknikal otomatis ${categories.join(', ')}`}"
+
+Data Market Saat Ini:
+- Harga Penutupan Terakhir: ${candles[candles.length - 1].close}
+- EMA20: ${quant.ema20.toFixed(4)} | EMA50: ${quant.ema50.toFixed(4)}
+- Swing Low Mayor: ${quant.majorLowPrice} | Swing High Mayor: ${quant.majorHighPrice}
+- Fibo 0.618 Golden Pocket: ${quant.goldenPocket.toFixed(4)}
+- Swing Pivots Terbaru (epoch time & price): ${JSON.stringify(pivotSummary)}
+- 24 Candle Terakhir: ${JSON.stringify(recentSummary)}
+
+Tugas Anda:
+1. Tentukan bias teknikal objektif: "BULLISH", "BEARISH", atau "NEUTRAL".
+2. Berikan headline singkat (maks 10 kata, Bahasa Indonesia).
+3. Berikan summary penjelasan setup teknikal (2-3 kalimat padat, Bahasa Indonesia, sebutkan angka level harga penting yang tergambar di chart).
+4. Berikan entryZone, stopLoss, dan 2 target profit (TP1, TP2) dalam format harga string yang rapi.
+5. Jika user meminta garis trendline tambahan atau level SnR/Liquidity khusus, kembalikan optional extraLevelPrice dan extraLevelLabel (boleh kosong jika tidak perlu).`;
+
+        const geminiRes = await ai.models.generateContent({
+          model: 'gemini-4-hydrogen',
+          contents: aiPrompt,
+          config: {
+            systemInstruction:
+              'Anda adalah AI Chartist profesional pada terminal trading kripto. Jawab dalam Bahasa Indonesia yang tajam, akurat secara matematis, dan langsung merujuk pada data candle nyata yang diberikan.',
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                bias: { type: Type.STRING, description: 'BULLISH, BEARISH, or NEUTRAL' },
+                headline: { type: Type.STRING },
+                summary: { type: Type.STRING },
+                entryZone: { type: Type.STRING },
+                stopLoss: { type: Type.STRING },
+                targets: { type: Type.ARRAY, items: { type: Type.STRING } },
+                extraLevelPrice: { type: Type.NUMBER },
+                extraLevelLabel: { type: Type.STRING },
+              },
+              required: ['bias', 'headline', 'summary', 'entryZone', 'stopLoss', 'targets'],
+            },
+          },
+        });
+
+        const parsed = JSON.parse(geminiRes.text || '{}');
+        const cleanBias =
+          parsed.bias === 'BULLISH' || parsed.bias === 'BEARISH' || parsed.bias === 'NEUTRAL'
+            ? parsed.bias
+            : quant.bias;
+
+        // Update primary marker to match AI bias
+        if (quant.markers.length > 0) {
+          quant.markers[0].text =
+            cleanBias === 'BULLISH' ? 'AI LONG' : cleanBias === 'BEARISH' ? 'AI SHORT' : 'AI WAIT';
+          quant.markers[0].color =
+            cleanBias === 'BULLISH' ? '#10b981' : cleanBias === 'BEARISH' ? '#f43f5e' : '#eab308';
+        }
+
+        // Optional AI-spotted extra key level line
+        if (
+          typeof parsed.extraLevelPrice === 'number' &&
+          parsed.extraLevelPrice > quant.majorLowPrice * 0.7 &&
+          parsed.extraLevelPrice < quant.majorHighPrice * 1.3 &&
+          parsed.extraLevelLabel
+        ) {
+          quant.lines.push({
+            id: 'ai-extra-level',
+            category: categories[0] || 'snr',
+            label: `AI Key: ${parsed.extraLevelLabel}`,
+            points: [
+              { time: candles[Math.max(0, candles.length - 60)].time, price: parsed.extraLevelPrice },
+              { time: quant.lastTime + (quant.lastTime - quant.firstTime) * 0.1, price: parsed.extraLevelPrice },
+            ],
+            style: 'dashed',
+            color: '#f59e0b',
+            width: 1.5,
+          });
+        }
+
+        return res.json({
+          success: true,
+          drawing: {
+            symbol,
+            interval,
+            bias: cleanBias,
+            headline: parsed.headline || quant.headline,
+            summary: parsed.summary || quant.summary,
+            entryZone: parsed.entryZone || quant.entryZone,
+            stopLoss: parsed.stopLoss || quant.stopLoss,
+            targets: Array.isArray(parsed.targets) && parsed.targets.length > 0 ? parsed.targets : quant.targets,
+            activeCategories: quant.activeCategories,
+            lines: quant.lines,
+            zones: quant.zones,
+            fibs: quant.fibs,
+            waves: quant.waves,
+            markers: quant.markers,
+            poweredBy: 'gemini-ai',
+            generatedAt: Date.now(),
+          },
+        });
+      } catch (aiErr) {
+        console.warn('Gemini AI chart fallback to quantitative engine:', aiErr);
+      }
+    }
+
+    return res.json({
+      success: true,
+      drawing: {
+        symbol,
+        interval,
+        bias: quant.bias,
+        headline: quant.headline,
+        summary: quant.summary,
+        entryZone: quant.entryZone,
+        stopLoss: quant.stopLoss,
+        targets: quant.targets,
+        activeCategories: quant.activeCategories,
+        lines: quant.lines,
+        zones: quant.zones,
+        fibs: quant.fibs,
+        waves: quant.waves,
+        markers: quant.markers,
+        poweredBy: 'quantitative-engine',
+        generatedAt: Date.now(),
+      },
+    });
+  } catch (err: any) {
+    console.error('AI chart draw error:', err);
+    return res.status(500).json({
+      success: false,
+      error: err?.message || 'Gagal menggambar analisis teknikal AI.',
+    });
+  }
 });
 
 async function startServer() {

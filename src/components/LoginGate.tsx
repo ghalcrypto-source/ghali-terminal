@@ -17,9 +17,9 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
 
   const completeOwnerLogin = (
     token: string,
-    traderName = 'GHALI',
-    email = 'ghalcrypto@gmail.com',
-    role = 'Terminal Owner'
+    traderName = 'Trader',
+    email = 'trader@ghalionchain.com',
+    role = 'On-Chain Trader'
   ) => {
     try {
       localStorage.removeItem('ghali_owner_session_token');
@@ -28,12 +28,12 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
 
     onLoginSuccess({
       isLoggedIn: true,
-      uid: 'owner-120403',
+      uid: 'trader-user',
       email,
       photoURL: '',
       traderName,
       role,
-      avatarSeed: 'owner-120403',
+      avatarSeed: 'trader-user',
       connectedExchanges: ['BINANCE', 'BITGET'],
       riskPreference: 'CONVEX ASYMMETRIC',
     });
@@ -47,7 +47,7 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
     const cleanPw = loginPassword.trim();
 
     // Universal cross-device instant validation
-    if (cleanPw === '170819@') {
+    if (cleanPw === '19191204@') {
       completeOwnerLogin(`direct.${Date.now()}`);
       setIsOwnerAuth(false);
       return;
@@ -80,7 +80,7 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
 
       setErrorMsg('Password salah. Akses ditolak.');
     } catch {
-      if (cleanPw === '170819@') {
+      if (cleanPw === '19191204@') {
         completeOwnerLogin(`direct.${Date.now()}`);
         return;
       }
@@ -112,8 +112,7 @@ export const LoginGate: React.FC<LoginGateProps> = ({ onLoginSuccess }) => {
               GHALI ON CHAIN
             </h1>
             <div className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
-              <Lock className="w-3.5 h-3.5 text-amber-400/80" />
-              <span>Akses Privat Terminal</span>
+              <span>Portal Akses Terminal &amp; Analisis On-Chain</span>
             </div>
           </div>
 

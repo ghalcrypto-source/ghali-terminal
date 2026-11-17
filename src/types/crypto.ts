@@ -2,6 +2,8 @@ export type ExchangeId = 'BINANCE' | 'BITGET';
 
 export type ChartLayout = '1x1' | '2x1' | '2x2' | '3x1';
 
+export type ChartMode = 'ai-canvas' | 'tradingview';
+
 export interface ChartSlot {
   id: string;
   symbol: string; // e.g. BTCUSDT
@@ -9,6 +11,107 @@ export interface ChartSlot {
   interval: string; // e.g. '15', '60', '240', 'D'
   isFutures: boolean;
   indicators?: string[]; // e.g. ['EMA', 'RSI', 'StochRSI']
+  chartMode?: ChartMode;
+}
+
+export interface CandleBar {
+  time: number; // UTC epoch seconds
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export type AiDrawCategory = 'fibonacci' | 'elliott' | 'trendline' | 'ict' | 'snr' | 'all';
+
+export interface AiDrawingPoint {
+  time: number;
+  price: number;
+}
+
+export interface AiLinePrimitive {
+  id: string;
+  category: Exclude<AiDrawCategory, 'all'>;
+  label: string;
+  points: AiDrawingPoint[];
+  extendRight?: boolean;
+  style?: 'solid' | 'dashed' | 'dotted';
+  color?: string;
+  width?: number;
+}
+
+export interface AiZonePrimitive {
+  id: string;
+  category: Exclude<AiDrawCategory, 'all'>;
+  label: string;
+  startTime: number;
+  endTime: number;
+  topPrice: number;
+  bottomPrice: number;
+  color?: string;
+  fillAlpha?: number;
+}
+
+export interface AiFibLevel {
+  ratio: number;
+  price: number;
+  label: string;
+  highlight?: boolean;
+}
+
+export interface AiFibPrimitive {
+  id: string;
+  label: string;
+  startTime: number;
+  endTime: number;
+  highPrice: number;
+  lowPrice: number;
+  direction: 'up' | 'down';
+  levels: AiFibLevel[];
+}
+
+export interface AiWavePoint {
+  time: number;
+  price: number;
+  waveLabel: string;
+  isProjected?: boolean;
+}
+
+export interface AiWavePrimitive {
+  id: string;
+  label: string;
+  color?: string;
+  points: AiWavePoint[];
+}
+
+export interface AiMarkerPrimitive {
+  id: string;
+  category: Exclude<AiDrawCategory, 'all'>;
+  time: number;
+  price: number;
+  text: string;
+  position: 'above' | 'below';
+  color?: string;
+}
+
+export interface AiChartDrawingResult {
+  symbol: string;
+  interval: string;
+  bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  headline: string;
+  summary: string;
+  entryZone?: string;
+  stopLoss?: string;
+  targets?: string[];
+  activeCategories: Exclude<AiDrawCategory, 'all'>[];
+  lines: AiLinePrimitive[];
+  zones: AiZonePrimitive[];
+  fibs: AiFibPrimitive[];
+  waves: AiWavePrimitive[];
+  markers: AiMarkerPrimitive[];
+  poweredBy: 'gemini-ai' | 'quantitative-engine';
+  generatedAt: number;
 }
 
 export interface CoinInfo {

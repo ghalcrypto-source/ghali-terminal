@@ -10,9 +10,11 @@ import {
   Search,
   Eye,
   Activity,
+  Sparkles,
 } from 'lucide-react';
 import { ChartLayout, ChartSlot, ExchangeId, CRYPTO_50_COINS } from '../types/crypto';
 import { TradingViewWidget } from './TradingViewWidget';
+import { AiCandlestickChart } from './AiCandlestickChart';
 import { CoinSearchInput } from './CoinSearchInput';
 import { sound } from '../audio/soundEngine';
 
@@ -36,7 +38,9 @@ export const MultiChartGrid: React.FC<MultiChartGridProps> = ({
   externalSymbol,
   onOpenTA,
 }) => {
-  const [layout, setLayout] = useState<ChartLayout>('2x1');
+  const [layout, setLayout] = useState<ChartLayout>(() =>
+    typeof window !== 'undefined' && window.innerWidth < 768 ? '1x1' : '2x1'
+  );
 
   const [slots, setSlots] = useState<ChartSlot[]>([
     {
@@ -46,6 +50,7 @@ export const MultiChartGrid: React.FC<MultiChartGridProps> = ({
       interval: '15',
       isFutures: true,
       indicators: ['EMA', 'RSI', 'StochRSI'],
+      chartMode: 'ai-canvas',
     },
     {
       id: 'slot-2',
@@ -54,6 +59,7 @@ export const MultiChartGrid: React.FC<MultiChartGridProps> = ({
       interval: '15',
       isFutures: true,
       indicators: ['EMA', 'RSI'],
+      chartMode: 'tradingview',
     },
     {
       id: 'slot-3',
@@ -144,9 +150,9 @@ export const MultiChartGrid: React.FC<MultiChartGridProps> = ({
 
   const gridClass = (() => {
     if (layout === '1x1') return 'grid-cols-1 grid-rows-1';
-    if (layout === '2x1') return 'grid-cols-1 lg:grid-cols-2 grid-rows-1';
-    if (layout === '3x1') return 'grid-cols-1 lg:grid-cols-3 grid-rows-1';
-    return 'grid-cols-1 md:grid-cols-2 grid-rows-2'; // 2x2
+    if (layout === '2x1') return 'grid-cols-1 lg:grid-cols-2 grid-rows-2 lg:grid-rows-1';
+    if (layout === '3x1') return 'grid-cols-1 lg:grid-cols-3 grid-rows-3 lg:grid-rows-1';
+    return 'grid-cols-1 md:grid-cols-2 grid-rows-4 md:grid-rows-2'; // 2x2
   })();
 
   return (
@@ -336,8 +342,26 @@ export const MultiChartGrid: React.FC<MultiChartGridProps> = ({
                   </div>
                 </div>
 
-                {/* Right: Timeframes, Open TA Suite & Fullscreen */}
-                <div className="flex items-center gap-1">
+                {/* Right: AI Auto-Draw Toggle, Timeframes, Open TA Suite & Fullscreen */}
+                <div className="flex items-center gap-1.5">
+                  {/* AI Auto-Draw Canvas Toggle */}
+                  <button
+                    onClick={() => {
+                      sound.playClick();
+                      const nextMode = slot.chartMode === 'ai-canvas' ? 'tradingview' : 'ai-canvas';
+                      updateSlot(slot.id, { chartMode: nextMode });
+                    }}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold flex items-center gap-1 transition-all cursor-pointer border ${
+                      slot.chartMode === 'ai-canvas'
+                        ? 'bg-amber-500 text-black border-amber-400 shadow-sm'
+                        : 'bg-[#151f33] hover:bg-[#1d2a45] text-amber-300 border-amber-500/40'
+                    }`}
+                    title="Beralih ke Kanvas AI Auto-Drawing (Fibonacci, Elliott Wave, Trendline, ICT, SnR)"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span>{slot.chartMode === 'ai-canvas' ? 'AI Canvas' : 'AI Auto-Draw'}</span>
+                  </button>
+
                   {/* Slot TA button */}
                   {onOpenTA && (
                     <button
@@ -389,15 +413,24 @@ export const MultiChartGrid: React.FC<MultiChartGridProps> = ({
                 </div>
               </div>
 
-              {/* Chart Canvas with Drawing suite enabled */}
+              {/* Chart Canvas: Either AI Auto-Draw Canvas or TradingView Embed */}
               <div className="flex-1 w-full h-full relative overflow-hidden">
-                <TradingViewWidget
-                  symbol={slot.symbol}
-                  exchange={slot.exchange}
-                  interval={slot.interval}
-                  isFutures={slot.isFutures}
-                  indicators={activeIndicators}
-                />
+                {slot.chartMode === 'ai-canvas' ? (
+                  <AiCandlestickChart
+                    symbol={slot.symbol}
+                    exchange={slot.exchange}
+                    interval={slot.interval}
+                    isFutures={slot.isFutures}
+                  />
+                ) : (
+                  <TradingViewWidget
+                    symbol={slot.symbol}
+                    exchange={slot.exchange}
+                    interval={slot.interval}
+                    isFutures={slot.isFutures}
+                    indicators={activeIndicators}
+                  />
+                )}
               </div>
             </div>
           );

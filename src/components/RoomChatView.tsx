@@ -307,10 +307,10 @@ export const RoomChatView: React.FC<RoomChatViewProps> = ({ session }) => {
   }, [onlineUsers, session]);
 
   return (
-    <div className="w-full h-full flex flex-col lg:flex-row bg-[#060911] text-slate-200 overflow-hidden font-mono">
+    <div className="w-full h-full flex flex-col lg:flex-row bg-[#070a11] text-slate-200 overflow-hidden font-sans lg:font-mono">
       {/* Left Room Selector & Active Participants */}
-      <aside className="w-full lg:w-72 shrink-0 bg-[#080c16] border-b lg:border-b-0 lg:border-r border-[#182338] flex flex-col max-h-[210px] lg:max-h-full overflow-hidden">
-        <div className="p-3.5 border-b border-[#182338] flex items-center justify-between">
+      <aside className="w-full lg:w-72 shrink-0 bg-[#0a0f1c] lg:bg-[#080c16] border-b lg:border-b-0 lg:border-r border-[#182338] flex flex-col max-h-[120px] lg:max-h-full overflow-hidden">
+        <div className="hidden lg:flex p-3.5 border-b border-[#182338] items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-amber-400" />
             <span className="text-xs font-bold tracking-wider uppercase text-amber-200">
@@ -329,8 +329,8 @@ export const RoomChatView: React.FC<RoomChatViewProps> = ({ session }) => {
           </span>
         </div>
 
-        {/* Rooms List */}
-        <div className="p-2.5 flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-y-auto shrink-0">
+        {/* Rooms List (Compact Horizontal Pills on Mobile, Vertical Stack on Desktop) */}
+        <div className="px-3 py-2.5 lg:p-2.5 flex lg:flex-col gap-2 lg:gap-1.5 overflow-x-auto lg:overflow-y-auto shrink-0">
           {CHAT_ROOMS.map((room) => {
             const isActive = activeRoom === room.id;
             return (
@@ -340,19 +340,23 @@ export const RoomChatView: React.FC<RoomChatViewProps> = ({ session }) => {
                   sound.playClick();
                   setActiveRoom(room.id);
                 }}
-                className={`text-left px-3 py-2.5 rounded-xl border transition-all cursor-pointer shrink-0 min-w-[165px] lg:min-w-0 ${
+                className={`text-left px-3.5 py-2 lg:px-3 lg:py-2.5 rounded-2xl lg:rounded-xl border transition-all cursor-pointer shrink-0 min-h-[42px] lg:min-w-0 ${
                   isActive
-                    ? 'bg-amber-500/15 border-amber-400/60 text-white shadow-md'
-                    : 'bg-[#0c1220]/80 border-[#182338] text-slate-300 hover:bg-[#11192c] hover:border-[#263756]'
+                    ? 'bg-[#e7cc82] lg:bg-amber-500/15 border-[#f5e3af] lg:border-amber-400/60 text-[#080b12] lg:text-white shadow-md'
+                    : 'bg-[#070a11] lg:bg-[#0c1220]/80 border-[#1c263b] lg:border-[#182338] text-slate-300 hover:bg-[#11192c] hover:border-[#263756]'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 font-bold text-xs truncate">
-                    <Hash className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-amber-400' : 'text-slate-500'}`} />
+                  <div className="flex items-center gap-1.5 font-semibold lg:font-bold text-xs truncate">
+                    <Hash
+                      className={`w-3.5 h-3.5 shrink-0 ${
+                        isActive ? 'text-[#080b12] lg:text-amber-400' : 'text-slate-500'
+                      }`}
+                    />
                     <span className="truncate">{room.label}</span>
                   </div>
                   <span
-                    className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
+                    className={`hidden lg:inline text-[9px] px-1.5 py-0.5 rounded font-bold ${
                       isActive
                         ? 'bg-amber-400 text-black'
                         : 'bg-[#152036] text-slate-400'
@@ -430,16 +434,16 @@ export const RoomChatView: React.FC<RoomChatViewProps> = ({ session }) => {
       </aside>
 
       {/* Main Chat Area */}
-      <section className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#060911]">
+      <section className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#070a11] lg:bg-[#060911]">
         {/* Room Header */}
-        <div className="px-4 py-3 border-b border-[#182338] bg-[#090e1a] flex items-center justify-between gap-3 shrink-0">
+        <div className="px-4 py-2.5 lg:py-3 border-b border-[#182338] bg-[#0a0f1c] lg:bg-[#090e1a] flex items-center justify-between gap-3 shrink-0">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <Hash className="w-4 h-4 text-amber-400 shrink-0" />
-              <h2 className="text-sm font-bold text-white truncate">
+              <Hash className="w-4 h-4 text-[#e7cc82] shrink-0" />
+              <h2 className="text-sm font-semibold lg:font-bold text-white truncate">
                 {currentRoomMeta.label}
               </h2>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#141f35] text-amber-300 border border-amber-500/30 font-bold">
+              <span className="text-[10px] text-[#e7cc82] font-medium lg:px-1.5 lg:py-0.5 lg:rounded lg:bg-[#141f35] lg:border lg:border-amber-500/30">
                 {currentRoomMeta.tag}
               </span>
             </div>
@@ -448,7 +452,7 @@ export const RoomChatView: React.FC<RoomChatViewProps> = ({ session }) => {
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0 text-[11px]">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0d1526] border border-[#1d2c48] text-slate-200">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl lg:rounded-lg bg-[#070a11] lg:bg-[#0d1526] border border-[#1d2c48] text-slate-200 tabular-nums">
               <Users className="w-3.5 h-3.5 text-emerald-400" />
               <span className="font-bold">{effectiveOnlineList.length}</span>
               <span className="hidden sm:inline text-slate-400">Online</span>

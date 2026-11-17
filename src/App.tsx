@@ -21,6 +21,7 @@ import { PriceAlertManager } from './components/PriceAlertManager';
 import { CryptoLiquidityMoversPanel } from './components/CryptoLiquidityMoversPanel';
 import { RoomChatView } from './components/RoomChatView';
 import { SuperAppHome } from './components/SuperAppHome';
+import { PanduanVideoModal, GuideFeatureTarget } from './components/PanduanVideoModal';
 
 import { FinishId, CameraPreset } from './types/contrarian';
 import { UserSession } from './types/news';
@@ -34,6 +35,7 @@ import {
   ChevronLeft,
   TrendingUp,
   MessageSquare,
+  Sparkles,
 } from 'lucide-react';
 
 export default function App() {
@@ -121,12 +123,12 @@ export default function App() {
           if (!cancelled) {
             setSession({
               isLoggedIn: true,
-              uid: 'owner-120403',
-              email: 'ghalcrypto@gmail.com',
+              uid: 'trader-user',
+              email: 'trader@ghalionchain.com',
               photoURL: '',
-              traderName: 'GHALI',
-              role: 'Terminal Owner',
-              avatarSeed: 'owner-120403',
+              traderName: 'Trader',
+              role: 'On-Chain Trader',
+              avatarSeed: 'trader-user',
               connectedExchanges: ['BINANCE', 'BITGET'],
               riskPreference: 'CONVEX ASYMMETRIC',
             });
@@ -150,10 +152,10 @@ export default function App() {
           setSession({
             isLoggedIn: true,
             uid: data.user.uid,
-            email: data.user.email || '',
+            email: data.user.email || 'trader@ghalionchain.com',
             photoURL: '',
-            traderName: data.user.traderName || 'GHALI',
-            role: data.user.role || 'Terminal Owner',
+            traderName: data.user.traderName || 'Trader',
+            role: data.user.role || 'On-Chain Trader',
             avatarSeed: data.user.uid,
             connectedExchanges: ['BINANCE', 'BITGET'],
             riskPreference: 'CONVEX ASYMMETRIC',
@@ -177,6 +179,7 @@ export default function App() {
   // Modals state
   const [isRadarOpen, setIsRadarOpen] = useState(false);
   const [isExchangeSentimentOpen, setIsExchangeSentimentOpen] = useState(false);
+  const [isPanduanOpen, setIsPanduanOpen] = useState(false);
   const [isTopMoversOpen, setIsTopMoversOpen] = useState(false);
   const [isWhaleOpen, setIsWhaleOpen] = useState(false);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
@@ -291,6 +294,18 @@ export default function App() {
     setIsAIDrawerOpen(true);
   };
 
+  const handleLaunchGuideFeature = (target: GuideFeatureTarget) => {
+    if (target === 'exchange_ls') {
+      setIsExchangeSentimentOpen(true);
+      return;
+    }
+    if (target === 'whale') {
+      setIsWhaleOpen(true);
+      return;
+    }
+    setViewMode(target);
+  };
+
   if (!authReady) {
     return (
       <div className="w-screen h-screen bg-[#04060a] flex flex-col items-center justify-center gap-3 font-mono text-xs text-amber-300">
@@ -401,7 +416,7 @@ export default function App() {
       )}
 
       {/* 3. Main Superapp Workspace Canvas */}
-      <div className="flex-1 min-h-0 w-full relative overflow-hidden flex pb-[58px] md:pb-0">
+      <div className="flex-1 min-h-0 w-full relative overflow-hidden flex pb-[60px] md:pb-0">
         {/* LIVE 3D MONOLITH BACKGROUND (Interactive Center Stage on Home & full 3D Monolith View) */}
         {(viewMode === 'home' || viewMode === 'monolith') && (
           <div className="absolute inset-0 z-0">
@@ -443,6 +458,7 @@ export default function App() {
             onOpenRadar={() => setIsRadarOpen(true)}
             onOpenAlerts={() => setIsAlertsOpen(true)}
             onOpenExchangeSentiment={() => setIsExchangeSentimentOpen(true)}
+            onOpenPanduan={() => setIsPanduanOpen(true)}
           />
         )}
 
@@ -573,18 +589,48 @@ export default function App() {
           )}
       </div>
 
-      {/* 4. Mobile Fixed Bottom Tab Bar (China Superapp Thumb Navigation) */}
+      {/* 4. Mobile Fixed Bottom Tab Bar (Obsidian-Gold Thumb Navigation) */}
       <nav
         aria-label="Navigasi utama"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-[58px] bg-[#080c15]/95 border-t border-[#192234] grid grid-cols-4 items-center"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-[60px] bg-[#070a11]/92 backdrop-blur-xl border-t border-[#1e2940] grid grid-cols-5 items-center px-1"
       >
         {[
-          { id: 'home' as TerminalViewMode, label: 'Beranda', active: viewMode === 'home', icon: Home },
-          { id: 'bitcoin_cycle' as TerminalViewMode, label: 'Pasar', active: isMarketMode, icon: TrendingUp },
-          { id: 'macro_terminal' as TerminalViewMode, label: 'Berita', active: isNewsMode, icon: Newspaper },
-          { id: 'room_chat' as TerminalViewMode, label: 'Room Chat', active: viewMode === 'room_chat', icon: MessageSquare },
+          { id: 'home' as TerminalViewMode, label: 'Beranda', active: viewMode === 'home', icon: Home, isCenter: false },
+          { id: 'bitcoin_cycle' as TerminalViewMode, label: 'Pasar', active: isMarketMode && viewMode !== 'multichart', icon: TrendingUp, isCenter: false },
+          { id: 'multichart' as TerminalViewMode, label: 'AI Chart', active: viewMode === 'multichart', icon: Sparkles, isCenter: true },
+          { id: 'macro_terminal' as TerminalViewMode, label: 'Berita', active: isNewsMode, icon: Newspaper, isCenter: false },
+          { id: 'room_chat' as TerminalViewMode, label: 'Chat', active: viewMode === 'room_chat', icon: MessageSquare, isCenter: false },
         ].map((tab) => {
           const Icon = tab.icon;
+          if (tab.isCenter) {
+            return (
+              <button
+                key={tab.label}
+                onClick={() => {
+                  sound.playClick();
+                  setViewMode(tab.id);
+                }}
+                className="h-full min-h-[44px] flex flex-col items-center justify-center cursor-pointer active:scale-95 transition-transform"
+              >
+                <div
+                  className={`flex items-center justify-center w-10 h-7 rounded-xl border transition-colors ${
+                    tab.active
+                      ? 'bg-gradient-to-r from-[#e7cc82] to-[#cfa33d] border-[#f5e3af] text-[#070a11] shadow-md shadow-[#d4af37]/20'
+                      : 'bg-[#121a2b] border-[#d4af37]/45 text-[#e7cc82]'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" strokeWidth={2} />
+                </div>
+                <span
+                  className={`text-[10px] font-semibold tracking-tight mt-0.5 ${
+                    tab.active ? 'text-[#f5e3af]' : 'text-[#e7cc82]'
+                  }`}
+                >
+                  {tab.label}
+                </span>
+              </button>
+            );
+          }
           return (
             <button
               key={tab.label}
@@ -592,12 +638,15 @@ export default function App() {
                 sound.playClick();
                 setViewMode(tab.id);
               }}
-              className={`h-full min-h-[44px] flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer ${
+              className={`relative h-full min-h-[44px] flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer active:scale-95 ${
                 tab.active ? 'text-[#e7cc82]' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Icon className="w-[18px] h-[18px]" strokeWidth={tab.active ? 2 : 1.6} />
-              <span className="text-[11px] font-medium tracking-tight">{tab.label}</span>
+              {tab.active && (
+                <span className="absolute top-0 w-6 h-[2px] rounded-full bg-[#e7cc82]" />
+              )}
+              <Icon className="w-[18px] h-[18px]" strokeWidth={tab.active ? 2.1 : 1.6} />
+              <span className="text-[10px] font-medium tracking-tight">{tab.label}</span>
             </button>
           );
         })}
@@ -628,6 +677,14 @@ export default function App() {
       <ExchangeContrarianPanel
         isOpen={isExchangeSentimentOpen}
         onClose={() => setIsExchangeSentimentOpen(false)}
+      />
+
+      {/* 6b. Video Panduan 40 Detik Semua Fitur */}
+      <PanduanVideoModal
+        isOpen={isPanduanOpen}
+        onClose={() => setIsPanduanOpen(false)}
+        onLaunchFeature={handleLaunchGuideFeature}
+        initialBtcPrice={altcoin5mMetrics['BTC']?.price}
       />
 
       {/* 7. Top Gainers & Top Losers Modal */}

@@ -3,12 +3,8 @@ import {
   X,
   TrendingUp,
   TrendingDown,
-  ArrowUpRight,
-  Flame,
-  LayoutGrid,
   RefreshCw,
   BarChart2,
-  ShieldAlert,
 } from 'lucide-react';
 import { MarketMover } from '../types/news';
 import { sound } from '../audio/soundEngine';
@@ -27,6 +23,7 @@ export const TopMoversModal: React.FC<TopMoversModalProps> = ({
   onSelectForInversion,
 }) => {
   const [tab, setTab] = useState<'gainers' | 'losers' | 'both'>('both');
+  const [mobileTab, setMobileTab] = useState<'gainers' | 'losers'>('gainers');
   const [gainers, setGainers] = useState<MarketMover[]>([]);
   const [losers, setLosers] = useState<MarketMover[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,9 +50,147 @@ export const TopMoversModal: React.FC<TopMoversModalProps> = ({
 
   if (!isOpen) return null;
 
+  const mobileList = mobileTab === 'gainers' ? gainers : losers;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-none">
-      <div className="bg-[#0b0f18] border border-[#23314d] rounded-xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-6 bg-black/80 backdrop-blur-sm">
+      {/* =================================================================== */}
+      {/* 1. MOBILE BOTTOM-SHEET TOP MOVERS (OBSIDIAN & GOLD TOUCH UX)        */}
+      {/* =================================================================== */}
+      <div className="md:hidden w-full h-[88vh] bg-[#070a11] border-t border-[#d4af37]/50 rounded-t-3xl flex flex-col shadow-2xl overflow-hidden text-slate-100 animate-content-rise">
+        <div className="w-10 h-1 rounded-full bg-slate-600/70 mx-auto mt-2.5 shrink-0" />
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#1c263b]">
+          <div>
+            <h2 className="text-[15px] font-semibold text-[#f5e3af]">
+              Top Gainers &amp; Losers 24J
+            </h2>
+            <p className="text-[11px] text-slate-400">
+              Volatilitas Binance &amp; Bitget real-time
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => {
+                sound.playClick();
+                fetchMovers();
+              }}
+              aria-label="Segarkan Top Movers"
+              className="min-h-[40px] min-w-[40px] rounded-xl bg-[#0e1526] border border-[#1f2b44] text-[#e7cc82] flex items-center justify-center cursor-pointer"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={() => {
+                sound.playClick();
+                onClose();
+              }}
+              aria-label="Tutup"
+              className="min-h-[40px] min-w-[40px] rounded-xl bg-[#0e1526] border border-[#1f2b44] text-slate-300 flex items-center justify-center cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Thumb-Friendly 2-Way Segmented Toggle */}
+        <div className="px-4 py-2.5 bg-[#0a0f1c] border-b border-[#192338]">
+          <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-[#070a11] border border-[#1c263b]">
+            <button
+              onClick={() => {
+                sound.playClick();
+                setMobileTab('gainers');
+              }}
+              className={`min-h-[40px] rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                mobileTab === 'gainers'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                  : 'text-slate-400'
+              }`}
+            >
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>Top Gainers ({gainers.length})</span>
+            </button>
+            <button
+              onClick={() => {
+                sound.playClick();
+                setMobileTab('losers');
+              }}
+              className={`min-h-[40px] rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                mobileTab === 'losers'
+                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                  : 'text-slate-400'
+              }`}
+            >
+              <TrendingDown className="w-3.5 h-3.5" />
+              <span>Top Losers ({losers.length})</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-3">
+          {loading ? (
+            <div className="py-20 text-center text-xs text-slate-400">
+              Memindai pergerakan 24 jam...
+            </div>
+          ) : (
+            <div className="rounded-3xl bg-[#0b101d] border border-[#1d283f] divide-y divide-[#162035] overflow-hidden">
+              {mobileList.map((item, idx) => {
+                const isGainer = mobileTab === 'gainers';
+                return (
+                  <div
+                    key={`mob-mover-${item.symbol}`}
+                    className="p-3.5 flex items-center justify-between gap-2.5"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="w-7 h-7 rounded-xl bg-[#070a11] border border-[#1d283f] text-[11px] font-mono font-bold text-[#e7cc82] flex items-center justify-center shrink-0 tabular-nums">
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-semibold text-white truncate">
+                            {item.symbol}
+                          </span>
+                          <span className="text-[11px] text-slate-400 truncate">
+                            {item.exchange}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-mono tabular-nums truncate">
+                          Vol {item.volume24hUSD} · ${item.price < 1 ? item.price : item.price.toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div
+                        className={`text-xs font-mono font-bold tabular-nums ${
+                          isGainer ? 'text-emerald-400' : 'text-rose-400'
+                        }`}
+                      >
+                        {isGainer ? `+${item.change24h}%` : `${item.change24h}%`}
+                      </div>
+                      <button
+                        onClick={() => {
+                          sound.playClick();
+                          onLoadToChart(`${item.symbol}USDT`);
+                          onClose();
+                        }}
+                        className="min-h-[40px] px-3 rounded-xl bg-[#162035] border border-[#d4af37]/40 text-[#f5e3af] text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer active:scale-95 transition-transform"
+                      >
+                        <BarChart2 className="w-3.5 h-3.5 text-[#e7cc82]" />
+                        <span>Chart</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* =================================================================== */}
+      {/* 2. DESKTOP MODAL (PRESERVED INTACT)                                 */}
+      {/* =================================================================== */}
+      <div className="hidden md:flex bg-[#0b0f18] border border-[#23314d] rounded-xl w-full max-w-5xl max-h-[92vh] flex-col shadow-2xl overflow-hidden text-slate-100">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1c273e] bg-[#0e1422]">
           <div className="flex items-center gap-2.5">
@@ -64,10 +199,10 @@ export const TopMoversModal: React.FC<TopMoversModalProps> = ({
             </div>
             <div>
               <h2 className="text-sm font-mono font-bold tracking-wider text-slate-100">
-                TOP GAINERS & TOP LOSERS (24H)
+                TOP GAINERS &amp; TOP LOSERS (24H)
               </h2>
               <p className="text-[11px] font-mono text-slate-400">
-                Binance & Bitget High-Beta Volatility • Overbought Exhaustion vs Oversold Capitulation
+                Binance &amp; Bitget High-Beta Volatility • Overbought Exhaustion vs Oversold Capitulation
               </p>
             </div>
           </div>

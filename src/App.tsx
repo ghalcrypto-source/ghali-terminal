@@ -303,6 +303,22 @@ export default function App() {
       setIsWhaleOpen(true);
       return;
     }
+    if (target === 'movers') {
+      setIsTopMoversOpen(true);
+      return;
+    }
+    if (target === 'ta') {
+      setIsTAOpen(true);
+      return;
+    }
+    if (target === 'alerts') {
+      setIsAlertsOpen(true);
+      return;
+    }
+    if (target === 'radar') {
+      setIsRadarOpen(true);
+      return;
+    }
     setViewMode(target);
   };
 

@@ -11,35 +11,36 @@ import {
   Film,
   Sparkles,
   Mic,
-  Clapperboard,
 } from 'lucide-react';
 import { sound } from '../audio/soundEngine';
-
-import maleHostUrl from '../assets/images/cinema_host_male_1794929317321.jpg';
-import femaleCohostUrl from '../assets/images/cinema_cohost_female_1794929318044.jpg';
-import twoShotStudioUrl from '../assets/images/cinema_twoshot_studio_1794929319272.jpg';
-import dialogueAngleUrl from '../assets/images/cinema_dialogue_angle_1794929318795.jpg';
 
 export type GuideFeatureTarget =
   | 'monolith'
   | 'multichart'
   | 'bitcoin_cycle'
   | 'liquidity_movers'
+  | 'movers'
   | 'exchange_ls'
   | 'macro_terminal'
+  | 'narratives'
+  | 'impact_matrix'
+  | 'ta'
+  | 'alerts'
   | 'whale'
-  | 'telemetry';
+  | 'radar'
+  | 'telemetry'
+  | 'room_chat';
 
-type CameraShotKind = 'twoshot' | 'male_cu' | 'female_cu' | 'overshoulder';
+type GestureStyle = 'explain' | 'point_board' | 'compare' | 'alert_tap';
 
-interface DialogueBeat {
+interface DialogueTurn {
   speaker: 'Reza' | 'Nadia';
   role: string;
   line: string;
-  shot: CameraShotKind;
+  gesture: GestureStyle;
 }
 
-interface GuideChapter {
+interface ToolSection {
   id: string;
   index: number;
   startSec: number;
@@ -47,34 +48,34 @@ interface GuideChapter {
   title: string;
   shortTitle: string;
   subtitle: string;
-  beats: [DialogueBeat, DialogueBeat];
+  turns: [DialogueTurn, DialogueTurn];
   transitionStyle: 'iris' | 'light_leak' | 'curtain' | 'whip_pan';
   target: GuideFeatureTarget;
 }
 
-const TOTAL_DURATION = 40;
+const TOTAL_DURATION = 120; // 2 Menit (12 tools x 10 detik)
 
-const CHAPTERS: GuideChapter[] = [
+const TOOL_SECTIONS: ToolSection[] = [
   {
     id: 'home-monolith',
     index: 1,
     startSec: 0,
-    endSec: 5,
-    title: 'Adegan 1 · War Room & 3D Monolith',
+    endSec: 10,
+    title: 'Beranda SuperApp & 3D Monolith',
     shortTitle: '3D Monolith',
-    subtitle: 'Prolog · Command Center Real-Time',
-    beats: [
+    subtitle: 'Navigasi Utama · Orbit 10 Altcoin 5M',
+    turns: [
       {
         speaker: 'Reza',
         role: 'Lead Strategist',
-        line: 'Nadia, lihat Monolith pusat—BTC live bergerak cepat dan sepuluh orbit altcoin merespons seketika.',
-        shot: 'twoshot',
+        line: 'Di layar utama Ghali On Chain, 3D Monolith menampilkan denyut BTC real-time bersama sepuluh orbit altcoin tiap lima menit.',
+        gesture: 'point_board',
       },
       {
         speaker: 'Nadia',
         role: 'AI & On-Chain Quant',
-        line: 'Semua modul desktop dan SuperApp mobile kini tersinkron dalam satu layar tanpa jeda.',
-        shot: 'female_cu',
+        line: 'Klik salah satu planet orbit untuk langsung memuat aset ke grafik, atau buka menu kontrol 3D guna mengatur material dan rotasi.',
+        gesture: 'explain',
       },
     ],
     transitionStyle: 'light_leak',
@@ -83,23 +84,23 @@ const CHAPTERS: GuideChapter[] = [
   {
     id: 'ai-chart',
     index: 2,
-    startSec: 5,
-    endSec: 10,
-    title: 'Adegan 2 · AI Auto-Draw Candlestick',
+    startSec: 10,
+    endSec: 20,
+    title: 'AI Auto-Draw & Multichart Candlestick',
     shortTitle: 'AI Chart',
-    subtitle: 'Fibonacci · Elliott Wave · ICT · SnR',
-    beats: [
+    subtitle: 'Fibonacci · Elliott Wave · Trendline · ICT · SnR',
+    turns: [
       {
         speaker: 'Nadia',
         role: 'AI & On-Chain Quant',
-        line: 'Aku aktifkan AI Auto-Draw. Fibonacci retracement dan gelombang Elliott langsung tergambar di candle Binance.',
-        shot: 'female_cu',
+        line: 'Buka AI Chart untuk memantau candlestick live Binance. Ketuk tombol AI Auto-Draw lalu ketik analisa yang kamu mau.',
+        gesture: 'point_board',
       },
       {
         speaker: 'Reza',
         role: 'Lead Strategist',
-        line: 'Trendline, zona ICT, dan level SnR muncul presisi tanpa menggambar manual satu per satu.',
-        shot: 'male_cu',
+        line: 'Sistem otomatis menggambar Fibonacci retracement, gelombang Elliott, Trendline, blok likuiditas ICT, hingga garis Support Resistance.',
+        gesture: 'compare',
       },
     ],
     transitionStyle: 'whip_pan',
@@ -108,23 +109,23 @@ const CHAPTERS: GuideChapter[] = [
   {
     id: 'btc-cycle',
     index: 3,
-    startSec: 10,
-    endSec: 15,
-    title: 'Adegan 3 · Siklus Bitcoin & Pakar 2026',
+    startSec: 20,
+    endSec: 30,
+    title: 'Bitcoin Cycle & Dossier Pakar 2026',
     shortTitle: 'BTC Cycle',
-    subtitle: 'Meteran ATH Live & Dossier Global',
-    beats: [
+    subtitle: 'Meteran ATH Live · Konsensus Analis Global',
+    turns: [
       {
         speaker: 'Reza',
         role: 'Lead Strategist',
-        line: 'Bandingkan posisi harga Bitcoin live sekarang terhadap puncak ATH dan proyeksi siklus 2026.',
-        shot: 'overshoulder',
+        line: 'Tool Bitcoin Cycle mengukur jarak harga Bitcoin live saat ini terhadap puncak ATH serta memetakan fase pasar siklus empat tahunan.',
+        gesture: 'point_board',
       },
       {
         speaker: 'Nadia',
         role: 'AI & On-Chain Quant',
-        line: 'Kita bisa cek dossier Willy Woo, Arthur Hayes, PlanB, hingga Cowen dalam hitungan detik.',
-        shot: 'female_cu',
+        line: 'Di dalamnya tersedia dossier tesis 2026 dari Willy Woo, Arthur Hayes, PlanB, hingga Benjamin Cowen lengkap dengan target harga.',
+        gesture: 'explain',
       },
     ],
     transitionStyle: 'iris',
@@ -133,123 +134,223 @@ const CHAPTERS: GuideChapter[] = [
   {
     id: 'liquidity-movers',
     index: 4,
-    startSec: 15,
-    endSec: 20,
-    title: 'Adegan 4 · Likuiditas, Movers & L/S',
+    startSec: 30,
+    endSec: 40,
+    title: 'Likuiditas & Top 5 Altcoin Futures',
     shortTitle: 'Likuiditas',
-    subtitle: 'Rotasi Modal & Top 5 Altcoin Futures',
-    beats: [
+    subtitle: 'Aliran Modal Sektor · Rasio Long/Short',
+    turns: [
       {
         speaker: 'Nadia',
         role: 'AI & On-Chain Quant',
-        line: 'Arus likuiditas mulai berotasi dari Bitcoin menuju altcoin utama dengan lonjakan Top Gainers 24 jam.',
-        shot: 'twoshot',
+        line: 'Tool Likuiditas melacak perpindahan arus modal mulai dari stablecoin ke Bitcoin lalu berotasi masuk ke altcoin berkapitalisasi besar.',
+        gesture: 'compare',
       },
       {
         speaker: 'Reza',
         role: 'Lead Strategist',
-        line: 'Panel Top 5 Altcoin L/S langsung memperlihatkan di mana tekanan beli futures paling dominan.',
-        shot: 'male_cu',
+        line: 'Perhatikan panel Top 5 Altcoin Long Short untuk mengetahui di pasangan kontrak mana tekanan beli institusi sedang dominan.',
+        gesture: 'point_board',
       },
     ],
     transitionStyle: 'curtain',
     target: 'liquidity_movers',
   },
   {
-    id: 'exchange-ls',
+    id: 'top-movers',
     index: 5,
-    startSec: 20,
-    endSec: 25,
-    title: 'Adegan 5 · Radar Kontra Exchange L/S',
-    shortTitle: 'Exchange L/S',
-    subtitle: 'Deteksi Crowding Binance & Bitget',
-    beats: [
+    startSec: 40,
+    endSec: 50,
+    title: 'Top Movers (Gainers & Losers 24J)',
+    shortTitle: 'Top Movers',
+    subtitle: 'Pemindai Koin Terpanas & Lonjakan Volume',
+    turns: [
       {
         speaker: 'Reza',
         role: 'Lead Strategist',
-        line: 'Hati-hati saat mayoritas ritel di Binance dan Bitget menumpuk pada satu arah posisi.',
-        shot: 'male_cu',
+        line: 'Ketuk Top Movers untuk menyaring koin dengan kenaikan tertinggi maupun koreksi terdalam selama dua puluh empat jam terakhir.',
+        gesture: 'point_board',
       },
       {
         speaker: 'Nadia',
         role: 'AI & On-Chain Quant',
-        line: 'Radar Kontra mendeteksi skew ekstrem lebih awal sebelum terjadi liquidasi berantai.',
-        shot: 'overshoulder',
+        line: 'Cukup tap nama koin di daftar Gainers atau Losers untuk langsung membuka grafiknya di Multichart tanpa mengetik ulang simbol.',
+        gesture: 'alert_tap',
       },
     ],
     transitionStyle: 'light_leak',
-    target: 'exchange_ls',
+    target: 'movers',
   },
   {
-    id: 'news-narratives',
+    id: 'exchange-ls',
     index: 6,
-    startSec: 25,
-    endSec: 30,
-    title: 'Adegan 6 · Warta 24J, Narasi & Bedah AI',
-    shortTitle: 'Berita & AI',
-    subtitle: 'Makro · Crypto · Intelijen CoinGecko',
-    beats: [
+    startSec: 50,
+    endSec: 60,
+    title: 'Exchange L/S & Sentimen Derivatif',
+    shortTitle: 'Exchange L/S',
+    subtitle: 'Perbandingan Akun Ritel Binance & Bitget',
+    turns: [
       {
         speaker: 'Nadia',
         role: 'AI & On-Chain Quant',
-        line: 'Setiap berita makro dan warta kripto 24 jam bisa langsung dibedah oleh AI menjadi ringkasan aksi.',
-        shot: 'female_cu',
+        line: 'Exchange L/S membandingkan persentase posisi Long dan Short secara live antara bursa Binance dan Bitget dalam satu panel.',
+        gesture: 'compare',
       },
       {
         speaker: 'Reza',
         role: 'Lead Strategist',
-        line: 'Kita tahu persis narasi apa yang menggerakkan pasar tanpa membuang waktu membaca puluhan artikel.',
-        shot: 'male_cu',
+        line: 'Saat posisi ritel terlalu berat di satu sisi dengan funding rate tinggi, waspadai potensi short squeeze atau long liquidation.',
+        gesture: 'explain',
       },
     ],
     transitionStyle: 'whip_pan',
-    target: 'macro_terminal',
+    target: 'exchange_ls',
   },
   {
-    id: 'whale-alerts',
+    id: 'news-bedah-ai',
     index: 7,
-    startSec: 30,
-    endSec: 35,
-    title: 'Adegan 7 · Radar Paus & Alarm Cekring',
-    shortTitle: 'Whale & Alert',
-    subtitle: 'Dompet Smart Money & Target Real-Time',
-    beats: [
+    startSec: 60,
+    endSec: 70,
+    title: 'Berita 24J, Prioritas & Bedah AI',
+    shortTitle: 'Berita & AI',
+    subtitle: 'Macro Wire · Filter High Impact · Analisis Cepat',
+    turns: [
       {
         speaker: 'Reza',
         role: 'Lead Strategist',
-        line: 'Lihat pergerakan dompet paus smart money yang terekam live di meja Whale Desk.',
-        shot: 'overshoulder',
+        line: 'Menu Berita 24J dan Prioritas mengumpulkan rilis ekonomi makro serta berita kripto paling krusial yang berdampak tinggi ke pasar.',
+        gesture: 'explain',
       },
       {
         speaker: 'Nadia',
         role: 'AI & On-Chain Quant',
-        line: 'Pasang alarm Cekring otomatis pada harga BTC saat ini agar momentum entry tidak terlewat.',
-        shot: 'female_cu',
+        line: 'Tekan tombol Bedah AI pada berita mana pun untuk langsung memperoleh ringkasan katalis, sentimen aset, dan skenario teknikalnya.',
+        gesture: 'point_board',
       },
     ],
     transitionStyle: 'iris',
-    target: 'whale',
+    target: 'macro_terminal',
   },
   {
-    id: 'telemetry-chat',
+    id: 'narratives-matrix',
     index: 8,
-    startSec: 35,
-    endSec: 40,
-    title: 'Epilog · 8-API Telemetry & Room Chat',
-    shortTitle: '8-API & Chat',
-    subtitle: 'Arbitrase Global & Diskusi Komunitas',
-    beats: [
+    startSec: 70,
+    endSec: 80,
+    title: 'Narratives 24J & Macro Impact Matrix',
+    shortTitle: 'Impact Matrix',
+    subtitle: 'Tren Sektor CoinGecko · Korelasi DXY & Emas',
+    turns: [
       {
         speaker: 'Nadia',
         role: 'AI & On-Chain Quant',
-        line: 'Pantau selisih harga lintas 8 API bursa dunia secara real-time sekaligus verifikasi data.',
-        shot: 'male_cu',
+        line: 'Narratives 24J membaca tren token panas dari CoinGecko serta pergerakan sektor seperti AI, RWA, hingga Layer-1.',
+        gesture: 'point_board',
       },
       {
         speaker: 'Reza',
         role: 'Lead Strategist',
-        line: 'Lalu bahas setup terbaik langsung di Room Chat. Selamat datang di Ghali On Chain.',
-        shot: 'twoshot',
+        line: 'Sementara Impact Matrix memetakan hubungan langsung antara pergerakan Dolar DXY, imbal hasil obligasi, Emas, dan Bitcoin.',
+        gesture: 'compare',
+      },
+    ],
+    transitionStyle: 'curtain',
+    target: 'impact_matrix',
+  },
+  {
+    id: 'ta-radar',
+    index: 9,
+    startSec: 80,
+    endSec: 90,
+    title: 'Suite Teknikal & Radar Kontra',
+    shortTitle: 'Teknikal',
+    subtitle: 'Indikator Kuantitatif · Sinyal Dislokasi Ekstrem',
+    turns: [
+      {
+        speaker: 'Reza',
+        role: 'Lead Strategist',
+        line: 'Menu Teknikal memberi ringkasan cepat kondisi jenuh beli atau jenuh jual dari RSI, MACD, hingga tren multi-timeframe.',
+        gesture: 'explain',
+      },
+      {
+        speaker: 'Nadia',
+        role: 'AI & On-Chain Quant',
+        line: 'Padukan dengan Radar Kontra untuk mendeteksi anomali serta dislokasi makro ketika pasar bereaksi berlebihan terhadap berita.',
+        gesture: 'point_board',
+      },
+    ],
+    transitionStyle: 'light_leak',
+    target: 'ta',
+  },
+  {
+    id: 'whale-desk',
+    index: 10,
+    startSec: 90,
+    endSec: 100,
+    title: 'Whale Desk & Dompet Smart Money',
+    shortTitle: 'Whale Desk',
+    subtitle: 'Lacak Transaksi Paus & Alamat Terpantau',
+    turns: [
+      {
+        speaker: 'Nadia',
+        role: 'AI & On-Chain Quant',
+        line: 'Whale Desk memantau arus transaksi besar ke bursa maupun penarikan ke dompet dingin yang dilakukan oleh entitas smart money.',
+        gesture: 'point_board',
+      },
+      {
+        speaker: 'Reza',
+        role: 'Lead Strategist',
+        line: 'Kamu bisa melihat koin apa yang sedang diakumulasi paus lalu langsung memuat grafiknya untuk mencari titik entry terbaik.',
+        gesture: 'compare',
+      },
+    ],
+    transitionStyle: 'whip_pan',
+    target: 'whale',
+  },
+  {
+    id: 'price-alerts',
+    index: 11,
+    startSec: 100,
+    endSec: 110,
+    title: 'Price Alerts & Alarm Cekring Live',
+    shortTitle: 'Price Alerts',
+    subtitle: 'Notifikasi Suara Otomatis Saat Target Tersentuh',
+    turns: [
+      {
+        speaker: 'Reza',
+        role: 'Lead Strategist',
+        line: 'Di Price Alerts, tentukan target harga di atas maupun di bawah harga live agar kamu tidak pernah tertinggal breakout penting.',
+        gesture: 'alert_tap',
+      },
+      {
+        speaker: 'Nadia',
+        role: 'AI & On-Chain Quant',
+        line: 'Begitu harga menyentuh batas target secara real-time, alarm audio Cekring akan berbunyi dan memunculkan penanda visual instan.',
+        gesture: 'point_board',
+      },
+    ],
+    transitionStyle: 'iris',
+    target: 'alerts',
+  },
+  {
+    id: 'telemetry-chat',
+    index: 12,
+    startSec: 110,
+    endSec: 120,
+    title: '8-API Telemetry & Room Chat Komunitas',
+    shortTitle: '8-API & Chat',
+    subtitle: 'Spread 8 Bursa Dunia · Diskusi Setup Real-Time',
+    turns: [
+      {
+        speaker: 'Nadia',
+        role: 'AI & On-Chain Quant',
+        line: 'Panel 8-API Live menyinkronkan harga dan metrik on-chain dari delapan sumber data global guna memeriksa selisih spread bursa.',
+        gesture: 'point_board',
+      },
+      {
+        speaker: 'Reza',
+        role: 'Lead Strategist',
+        line: 'Terakhir, bagikan analisa maupun tangkapan chart kamu di Room Chat bersama komunitas. Semua tools kini siap kamu gunakan!',
+        gesture: 'explain',
       },
     ],
     transitionStyle: 'curtain',
@@ -285,8 +386,9 @@ function easeInOutQuad(x: number): number {
 
 function formatClock(sec: number): string {
   const clamped = Math.max(0, Math.min(TOTAL_DURATION, Math.floor(sec)));
+  const m = Math.floor(clamped / 60);
   const s = clamped % 60;
-  return `00:${s < 10 ? '0' : ''}${s}`;
+  return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
 function drawRoundedRect(
@@ -338,61 +440,464 @@ function wrapText(
 }
 
 /**
- * Draws a photorealistic film frame with object-cover scaling, Ken Burns dolly motion,
- * and subtle Steadicam breathing sway so live human actors feel cinematic and dynamic.
+ * Fully animated, volumetric 2.5D realistic human actor renderer.
+ * Both actors genuinely breathe, blink, nod while listening, rotate gaze toward partner/board,
+ * move jaw + lips + upper teeth in natural speech sync, and point/gesture with articulated arms.
  */
-function drawCinemaCameraShot(
+function drawAnimatedActor(
   ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement | undefined,
-  dx: number,
-  dy: number,
-  dw: number,
-  dh: number,
-  localTime: number,
-  tGlobal: number,
-  zoomDirection: 'in' | 'out',
-  panDirection: number,
-  alpha: number = 1
+  opts: {
+    actor: 'Reza' | 'Nadia';
+    cx: number;
+    cy: number;
+    scale: number;
+    t: number;
+    isSpeaking: boolean;
+    gesture: GestureStyle;
+    lookAtPartner: boolean;
+    activeGlow: number;
+  }
 ) {
+  const { actor, cx, cy, scale, t, isSpeaking, gesture, lookAtPartner, activeGlow } = opts;
+  const isReza = actor === 'Reza';
+
+  // Organic breathing + speech body engagement
+  const phase = isReza ? 0 : 1.7;
+  const breathe = Math.sin(t * 2.2 + phase) * 3.2;
+  const bodySway = isSpeaking ? Math.sin(t * 2.9 + phase) * 3 : Math.sin(t * 1.1 + phase) * 1.4;
+  const headNod = isSpeaking
+    ? Math.sin(t * 4.4 + phase) * 2.5
+    : Math.sin(t * 2.4 + phase) * 2.2; // reactive listening nod
+  const headTilt = isSpeaking
+    ? (isReza ? 0.035 : -0.035) + Math.sin(t * 2.1 + phase) * 0.035
+    : lookAtPartner
+    ? isReza
+      ? 0.08
+      : -0.08
+    : 0;
+
   ctx.save();
-  ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-  ctx.beginPath();
-  ctx.rect(dx, dy, dw, dh);
-  ctx.clip();
+  ctx.translate(cx + bodySway, cy + breathe);
+  ctx.scale(scale, scale);
 
-  if (img && img.complete && img.naturalWidth > 0) {
-    const progress = Math.min(1, localTime / 2.6);
-    const zoomBase = zoomDirection === 'in' ? 1.04 + progress * 0.08 : 1.12 - progress * 0.07;
-    const panX = Math.sin(tGlobal * 0.8) * 8 + panDirection * progress * 24;
-    const swayY = Math.cos(tGlobal * 1.15) * 4;
-
-    const imgRatio = img.naturalWidth / img.naturalHeight;
-    const boxRatio = dw / dh;
-
-    let drawW = dw;
-    let drawH = dh;
-    if (imgRatio > boxRatio) {
-      drawH = dh * zoomBase;
-      drawW = drawH * imgRatio;
-    } else {
-      drawW = dw * zoomBase;
-      drawH = drawW / imgRatio;
-    }
-
-    // Anchor slightly upward so faces & heads stay well-framed above cinema lower-thirds
-    const offsetX = dx + (dw - drawW) / 2 + panX;
-    const offsetY = dy + (dh - drawH) * 0.34 + swayY;
-
-    ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
-  } else {
-    const fallbackGrad = ctx.createLinearGradient(dx, dy, dx + dw, dy + dh);
-    fallbackGrad.addColorStop(0, '#0a0f1c');
-    fallbackGrad.addColorStop(1, '#05080f');
-    ctx.fillStyle = fallbackGrad;
-    ctx.fillRect(dx, dy, dw, dh);
+  // Studio Back Rim Halo behind active speaker
+  if (activeGlow > 0.05) {
+    const rim = ctx.createRadialGradient(0, -210, 15, 0, -210, 185);
+    rim.addColorStop(
+      0,
+      isReza
+        ? `rgba(231, 204, 130, ${0.28 * activeGlow})`
+        : `rgba(52, 211, 153, ${0.24 * activeGlow})`
+    );
+    rim.addColorStop(1, 'rgba(7, 10, 17, 0)');
+    ctx.fillStyle = rim;
+    ctx.beginPath();
+    ctx.arc(0, -210, 185, 0, Math.PI * 2);
+    ctx.fill();
   }
 
-  ctx.restore();
+  // --- Torso / Tailored Studio Wardrobe ---
+  const shoulderW = isReza ? 98 : 84;
+  const blazerGrad = ctx.createLinearGradient(-shoulderW, -195, shoulderW, 40);
+  if (isReza) {
+    blazerGrad.addColorStop(0, '#222d44');
+    blazerGrad.addColorStop(0.5, '#10182a');
+    blazerGrad.addColorStop(1, '#070a11');
+  } else {
+    blazerGrad.addColorStop(0, '#1d2838');
+    blazerGrad.addColorStop(0.5, '#0e1622');
+    blazerGrad.addColorStop(1, '#070b12');
+  }
+
+  ctx.fillStyle = blazerGrad;
+  ctx.beginPath();
+  ctx.moveTo(-shoulderW - 6, 40);
+  ctx.quadraticCurveTo(-shoulderW + 4, -155, -48, -182);
+  ctx.lineTo(48, -182);
+  ctx.quadraticCurveTo(shoulderW - 4, -155, shoulderW + 6, 40);
+  ctx.closePath();
+  ctx.fill();
+
+  // Warm studio rim stroke along shoulders
+  ctx.strokeStyle = isReza ? 'rgba(231, 204, 130, 0.42)' : 'rgba(110, 231, 183, 0.35)';
+  ctx.lineWidth = 2.2;
+  ctx.stroke();
+
+  if (isReza) {
+    // Crisp White Dress Shirt & Textured Gold Silk Tie
+    ctx.fillStyle = '#f1f5f9';
+    ctx.beginPath();
+    ctx.moveTo(-26, -182);
+    ctx.lineTo(26, -182);
+    ctx.lineTo(0, -76);
+    ctx.closePath();
+    ctx.fill();
+
+    const tieGrad = ctx.createLinearGradient(-10, -176, 10, -76);
+    tieGrad.addColorStop(0, '#f5e3af');
+    tieGrad.addColorStop(0.55, '#c89b2b');
+    tieGrad.addColorStop(1, '#7a5912');
+    ctx.fillStyle = tieGrad;
+    ctx.beginPath();
+    ctx.moveTo(-7, -176);
+    ctx.lineTo(7, -176);
+    ctx.lineTo(10, -104);
+    ctx.lineTo(0, -74);
+    ctx.lineTo(-10, -104);
+    ctx.closePath();
+    ctx.fill();
+
+    // Suit Lapels + Gold Pin
+    ctx.fillStyle = '#172034';
+    ctx.beginPath();
+    ctx.moveTo(-26, -182);
+    ctx.lineTo(-48, -130);
+    ctx.lineTo(-3, -74);
+    ctx.closePath();
+    ctx.moveTo(26, -182);
+    ctx.lineTo(48, -130);
+    ctx.lineTo(3, -74);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#e7cc82';
+    ctx.beginPath();
+    ctx.arc(-33, -134, 4, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // Nadia Silk Inner Blouse & Tailored Charcoal Lapels + Minimalist Gold Bar Brooch
+    ctx.fillStyle = '#131d2d';
+    ctx.beginPath();
+    ctx.moveTo(-24, -182);
+    ctx.lineTo(24, -182);
+    ctx.lineTo(0, -90);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#162030';
+    ctx.beginPath();
+    ctx.moveTo(-24, -182);
+    ctx.lineTo(-42, -132);
+    ctx.lineTo(-2, -88);
+    ctx.closePath();
+    ctx.moveTo(24, -182);
+    ctx.lineTo(42, -132);
+    ctx.lineTo(2, -88);
+    ctx.closePath();
+    ctx.fill();
+
+    // Gold vertical bar brooch
+    ctx.fillStyle = '#e7cc82';
+    drawRoundedRect(ctx, 24, -142, 4, 15, 2);
+    ctx.fill();
+  }
+
+  // --- Articulated Arms & Gesturing Hands ---
+  // Active speaker raises pointing/gesturing hand toward the holographic terminal on the right!
+  const armWave = isSpeaking ? Math.sin(t * 4.1 + phase) * 0.16 : Math.sin(t * 1.4 + phase) * 0.04;
+  let reachAngle = -0.25 + armWave;
+  let forearmAngle = -0.52 + Math.cos(t * 3.6 + phase) * 0.18;
+
+  if (isSpeaking && gesture === 'point_board') {
+    reachAngle = -0.44 + Math.sin(t * 3.5) * 0.12;
+    forearmAngle = -0.78 + Math.sin(t * 4.3) * 0.14;
+  } else if (isSpeaking && gesture === 'compare') {
+    reachAngle = -0.18 + Math.sin(t * 4.4) * 0.22;
+    forearmAngle = -0.35 + Math.cos(t * 4.4) * 0.22;
+  } else if (!isSpeaking) {
+    // Calm listening posture
+    reachAngle = 0.65 + Math.sin(t * 1.4 + phase) * 0.04;
+    forearmAngle = -0.15 + Math.cos(t * 1.4 + phase) * 0.04;
+  }
+
+  const skinBase = isReza ? '#dca684' : '#e6b798';
+  const skinHighlight = isReza ? '#f0c3a5' : '#f7d2b9';
+  const skinShadow = isReza ? '#b77d5c' : '#c48d6c';
+
+  // Right Arm (gesturing toward board/partner)
+  const srX = shoulderW - 14;
+  const srY = -160;
+  const erX = srX + Math.cos(reachAngle) * 58;
+  const erY = srY + Math.sin(reachAngle + 0.55) * 58;
+  const hrX = erX + Math.cos(forearmAngle) * 66;
+  const hrY = erY + Math.sin(forearmAngle) * 66;
+
+  ctx.strokeStyle = isReza ? '#131c2e' : '#121a26';
+  ctx.lineWidth = isReza ? 24 : 20;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(srX, srY);
+  ctx.lineTo(erX, erY);
+  ctx.lineTo(hrX, hrY);
+  ctx.stroke();
+
+  // Animated Hand & Articulated Fingers
+  ctx.fillStyle = skinBase;
+  ctx.beginPath();
+  ctx.ellipse(hrX + 6, hrY - 2, 10, 8, forearmAngle * 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (isSpeaking) {
+    ctx.strokeStyle = skinHighlight;
+    ctx.lineWidth = 4.6;
+    ctx.beginPath();
+    ctx.moveTo(hrX + 8, hrY - 4);
+    ctx.lineTo(hrX + 26, hrY - 12);
+    ctx.moveTo(hrX + 7, hrY + 1);
+    ctx.lineTo(hrX + 22, hrY - 2);
+    ctx.stroke();
+  }
+
+  // Left Arm (support gesture or holding tablet / poise)
+  const slX = -shoulderW + 14;
+  const slY = -160;
+  const leftWave = isSpeaking && gesture === 'compare' ? Math.sin(t * 4.4) * 14 : Math.sin(t * 1.8) * 3;
+  const elX = slX - 18;
+  const elY = slY + 56;
+  const hlX = -22 + leftWave * 0.5;
+  const hlY = -48 - Math.abs(leftWave);
+
+  ctx.strokeStyle = isReza ? '#0e1524' : '#0d131d';
+  ctx.lineWidth = isReza ? 23 : 19;
+  ctx.beginPath();
+  ctx.moveTo(slX, slY);
+  ctx.lineTo(elX, elY);
+  ctx.lineTo(hlX, hlY);
+  ctx.stroke();
+
+  ctx.fillStyle = skinBase;
+  ctx.beginPath();
+  ctx.arc(hlX + 4, hlY - 2, 9, 0, Math.PI * 2);
+  ctx.fill();
+
+  // --- Neck & Subsurface Shaded Head ---
+  const neckGrad = ctx.createLinearGradient(-16, -220, 16, -172);
+  neckGrad.addColorStop(0, skinShadow);
+  neckGrad.addColorStop(0.5, skinBase);
+  neckGrad.addColorStop(1, skinShadow);
+  ctx.fillStyle = neckGrad;
+  drawRoundedRect(ctx, -16, -220, 32, 46, 11);
+  ctx.fill();
+
+  // Chin occlusion shadow on neck
+  ctx.fillStyle = 'rgba(20, 10, 5, 0.25)';
+  ctx.beginPath();
+  ctx.ellipse(0, -196, 15, 7, 0, 0, Math.PI);
+  ctx.fill();
+
+  // --- Animated Head (Nod, Tilt, Gaze, Blink & Live Jaw/Lip-Sync) ---
+  ctx.save();
+  ctx.translate(0, -246 + headNod);
+  ctx.rotate(headTilt);
+
+  // Back Hair Layer for Nadia (shoulder-length layered dark hair)
+  if (!isReza) {
+    ctx.fillStyle = '#0c121e';
+    ctx.beginPath();
+    ctx.moveTo(-42, -28);
+    ctx.quadraticCurveTo(-52, 22, -46, 62);
+    ctx.lineTo(46, 62);
+    ctx.quadraticCurveTo(52, 22, 42, -28);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Ears (with warm rim highlight)
+  ctx.fillStyle = skinShadow;
+  ctx.beginPath();
+  ctx.ellipse(-40, 4, 7, 12, 0, 0, Math.PI * 2);
+  ctx.ellipse(40, 4, 7, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Wireless Studio Earpiece on Nadia
+  if (!isReza) {
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.arc(39, 6, 4.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#34d399';
+    ctx.beginPath();
+    ctx.arc(39, 6, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Subtle Jaw Drop displacement when speaking
+  const speechEnvelope = isSpeaking
+    ? Math.max(0.15, Math.abs(Math.sin(t * 13.8 + phase) * 0.65 + Math.sin(t * 7.4 + phase) * 0.35))
+    : 0;
+  const jawDrop = speechEnvelope * 4.5;
+
+  // Sculpted Face Contour with volumetric lighting gradient
+  const faceGrad = ctx.createRadialGradient(-10, -16, 6, 0, 4, 54);
+  faceGrad.addColorStop(0, skinHighlight);
+  faceGrad.addColorStop(0.62, skinBase);
+  faceGrad.addColorStop(1, skinShadow);
+  ctx.fillStyle = faceGrad;
+
+  const faceW = isReza ? 38 : 35;
+  ctx.beginPath();
+  ctx.moveTo(-faceW, -22);
+  ctx.quadraticCurveTo(-faceW - 2, 18, -22, 37 + jawDrop * 0.5);
+  ctx.quadraticCurveTo(0, 52 + jawDrop, 22, 37 + jawDrop * 0.5);
+  ctx.quadraticCurveTo(faceW + 2, 18, faceW, -22);
+  ctx.quadraticCurveTo(faceW, -54, 0, -54);
+  ctx.quadraticCurveTo(-faceW, -54, -faceW, -22);
+  ctx.closePath();
+  ctx.fill();
+
+  // Subtle Cheekbone Highlight & Jaw Contour
+  ctx.fillStyle = 'rgba(255, 224, 198, 0.14)';
+  ctx.beginPath();
+  ctx.ellipse(-18, 6, 9, 5, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(18, 6, 9, 5, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Reza short-stubble / sculpted jawline shadow
+  if (isReza) {
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.11)';
+    ctx.beginPath();
+    ctx.moveTo(-30, 14);
+    ctx.quadraticCurveTo(0, 49 + jawDrop, 30, 14);
+    ctx.quadraticCurveTo(0, 36 + jawDrop * 0.5, -30, 14);
+    ctx.fill();
+  }
+
+  // Front Hair Styling with Rim Sheen
+  ctx.fillStyle = '#0f172a';
+  if (isReza) {
+    ctx.beginPath();
+    ctx.moveTo(-40, -18);
+    ctx.quadraticCurveTo(-44, -60, -8, -65);
+    ctx.quadraticCurveTo(34, -68, 42, -20);
+    ctx.quadraticCurveTo(38, -10, 34, -18);
+    ctx.quadraticCurveTo(20, -38, -12, -35);
+    ctx.quadraticCurveTo(-32, -32, -38, -14);
+    ctx.closePath();
+    ctx.fill();
+
+    // Silver-gold rim strands
+    ctx.strokeStyle = 'rgba(231, 204, 130, 0.3)';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(-20, -50);
+    ctx.quadraticCurveTo(6, -58, 28, -42);
+    ctx.stroke();
+  } else {
+    // Sleek side-parted hair framing Nadia's face
+    ctx.beginPath();
+    ctx.moveTo(-39, -12);
+    ctx.quadraticCurveTo(-42, -58, 0, -61);
+    ctx.quadraticCurveTo(42, -58, 41, -8);
+    ctx.quadraticCurveTo(34, -28, 12, -38);
+    ctx.quadraticCurveTo(-18, -36, -34, -12);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(245, 227, 175, 0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-16, -49);
+    ctx.quadraticCurveTo(8, -55, 26, -38);
+    ctx.stroke();
+  }
+
+  // Expressive Eyebrows
+  const browLift = isSpeaking ? Math.abs(Math.sin(t * 3.4 + phase)) * 3.2 : 0.4;
+  ctx.strokeStyle = '#182030';
+  ctx.lineWidth = isReza ? 3.2 : 2.5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-24, -13 - browLift);
+  ctx.quadraticCurveTo(-16, -17 - browLift, -7, -13 - browLift);
+  ctx.moveTo(7, -13 - browLift);
+  ctx.quadraticCurveTo(16, -17 - browLift, 24, -13 - browLift);
+  ctx.stroke();
+
+  // Natural Blinking Eyes + Directional Gaze (looks at partner when listening, toward board/viewer when explaining)
+  const blinkCycle = (t + (isReza ? 0 : 1.5)) % 3.4;
+  const isBlinking = blinkCycle > 3.22 && blinkCycle < 3.36;
+  const gazeX = lookAtPartner ? (isReza ? 2.4 : -2.4) : 1.4;
+
+  [-15.5, 15.5].forEach((ex) => {
+    if (isBlinking) {
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(ex - 6.5, -2);
+      ctx.quadraticCurveTo(ex, 1.5, ex + 6.5, -2);
+      ctx.stroke();
+    } else {
+      // Sclera
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.ellipse(ex, -2, 6.8, 4.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Upper Eyelid Lash Shadow
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = isReza ? 1.8 : 2.3;
+      ctx.beginPath();
+      ctx.arc(ex, -1.5, 6.8, Math.PI * 1.1, Math.PI * 1.9);
+      ctx.stroke();
+
+      // Dark Brown/Obsidian Iris + Pupil
+      ctx.fillStyle = '#291d18';
+      ctx.beginPath();
+      ctx.arc(ex + gazeX, -2, 3.3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#090d16';
+      ctx.beginPath();
+      ctx.arc(ex + gazeX, -2, 1.6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Studio Catchlight Glint
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(ex + gazeX + 1.1, -3.1, 1.1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+
+  // Sculpted Nose Bridge & Tip
+  ctx.strokeStyle = 'rgba(138, 86, 58, 0.5)';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(0, -4);
+  ctx.lineTo(1.8, 10);
+  ctx.lineTo(-2.5, 12.5);
+  ctx.stroke();
+
+  // Dynamic Animated Talking Mouth / Lip-Sync + Upper Teeth + Smile
+  const mouthOpen = isSpeaking ? Math.max(1.2, speechEnvelope * 8.2) : 0;
+  if (mouthOpen > 2.1) {
+    // Open Talking Mouth Cavity
+    ctx.fillStyle = '#6b1822';
+    ctx.beginPath();
+    ctx.ellipse(0, 24 + jawDrop * 0.35, 8.5 + Math.sin(t * 9 + phase) * 1.8, mouthOpen, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Upper Teeth Row
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(-5.2, 24 + jawDrop * 0.35 - mouthOpen * 0.72, 10.4, 2.4);
+
+    // Lip Border
+    ctx.strokeStyle = isReza ? '#9c5b48' : '#b85d63';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+  } else {
+    // Natural Conversational Lips / Warm Smile
+    ctx.strokeStyle = isReza ? '#8a4d3d' : '#b2565e';
+    ctx.lineWidth = isReza ? 2.4 : 2.8;
+    ctx.beginPath();
+    ctx.moveTo(-9, 23);
+    ctx.quadraticCurveTo(0, 27.5, 9, 23);
+    ctx.stroke();
+  }
+
+  ctx.restore(); // End Head
+  ctx.restore(); // End Actor
 }
 
 export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
@@ -417,27 +922,10 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
   });
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const lastBeatKeyRef = useRef<string>('');
+  const lastTurnKeyRef = useRef<string>('');
   const currentTimeRef = useRef<number>(0);
   const liveBtcRef = useRef<LiveBtcSnapshot>(liveBtcHeader);
-  const shotsRef = useRef<Partial<Record<CameraShotKind, HTMLImageElement>>>({});
 
-  // Preload all 4 photorealistic cinema assets into same-origin HTMLImageElements
-  useEffect(() => {
-    const entries: [CameraShotKind, string][] = [
-      ['male_cu', maleHostUrl],
-      ['female_cu', femaleCohostUrl],
-      ['twoshot', twoShotStudioUrl],
-      ['overshoulder', dialogueAngleUrl],
-    ];
-    entries.forEach(([key, url]) => {
-      const img = new Image();
-      img.src = url;
-      shotsRef.current[key] = img;
-    });
-  }, []);
-
-  // Sync seed from App before WebSocket connects
   useEffect(() => {
     if (initialBtcPrice && initialBtcPrice > 1000 && liveBtcRef.current.lastTickMs === 0) {
       const next: LiveBtcSnapshot = {
@@ -451,7 +939,7 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
     }
   }, [initialBtcPrice]);
 
-  // Live Real-Time Bitcoin WebSocket + REST Fallback while Film Modal is Open
+  // Live Real-Time Bitcoin WebSocket + REST Feed
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
@@ -523,27 +1011,26 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
     };
   }, [isOpen]);
 
-  const activeChapter = useMemo(() => {
+  const activeSection = useMemo(() => {
     return (
-      CHAPTERS.find((c) => currentTime >= c.startSec && currentTime < c.endSec) ||
-      CHAPTERS[CHAPTERS.length - 1]
+      TOOL_SECTIONS.find((c) => currentTime >= c.startSec && currentTime < c.endSec) ||
+      TOOL_SECTIONS[TOOL_SECTIONS.length - 1]
     );
   }, [currentTime]);
 
-  const activeBeatIndex: 0 | 1 = useMemo(() => {
-    const local = currentTime - activeChapter.startSec;
-    return local < 2.45 ? 0 : 1;
-  }, [activeChapter, currentTime]);
+  const activeTurnIndex: 0 | 1 = useMemo(() => {
+    const local = currentTime - activeSection.startSec;
+    return local < 5 ? 0 : 1;
+  }, [activeSection, currentTime]);
 
-  const activeBeat = activeChapter.beats[activeBeatIndex];
+  const activeTurn = activeSection.turns[activeTurnIndex];
 
-  // Reset & autoplay on open
   useEffect(() => {
     if (isOpen) {
       currentTimeRef.current = 0;
       setCurrentTime(0);
       setIsPlaying(true);
-      lastBeatKeyRef.current = '';
+      lastTurnKeyRef.current = '';
     } else {
       setIsPlaying(false);
       try {
@@ -552,7 +1039,7 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
     }
   }, [isOpen]);
 
-  // Dual-Character Speech Synthesis + Cinema Cut Cue per Beat
+  // Dual-Voice Speech Synthesis per 5s Turn
   useEffect(() => {
     if (!isOpen || !isPlaying) {
       try {
@@ -561,20 +1048,20 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
       return;
     }
 
-    const beatKey = `${activeChapter.index}-${activeBeatIndex}`;
-    if (beatKey !== lastBeatKeyRef.current) {
-      lastBeatKeyRef.current = beatKey;
+    const turnKey = `${activeSection.index}-${activeTurnIndex}`;
+    if (turnKey !== lastTurnKeyRef.current) {
+      lastTurnKeyRef.current = turnKey;
 
-      if (audioCueEnabled && activeBeatIndex === 0) {
+      if (audioCueEnabled && activeTurnIndex === 0) {
         try {
-          sound.playClick(920 + activeChapter.index * 50);
+          sound.playClick(920 + activeSection.index * 42);
         } catch (_) {}
       }
 
       if (voiceNarrationEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
         try {
           window.speechSynthesis.cancel();
-          const utter = new SpeechSynthesisUtterance(activeBeat.line);
+          const utter = new SpeechSynthesisUtterance(activeTurn.line);
           const voices = window.speechSynthesis.getVoices();
           const idVoice =
             voices.find((v) => v.lang.toLowerCase().startsWith('id')) ||
@@ -582,16 +1069,15 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
             null;
           if (idVoice) utter.voice = idVoice;
           utter.lang = 'id-ID';
-          utter.rate = Math.min(1.6, speed * 1.18);
-          // Distinct vocal tone for Male Strategist (Reza) vs Female Quant (Nadia)
-          utter.pitch = activeBeat.speaker === 'Reza' ? 0.88 : 1.18;
+          utter.rate = Math.min(1.6, speed * 1.15);
+          utter.pitch = activeTurn.speaker === 'Reza' ? 0.88 : 1.18;
           window.speechSynthesis.speak(utter);
         } catch (_) {}
       }
     }
-  }, [activeChapter.index, activeBeatIndex, activeBeat, audioCueEnabled, voiceNarrationEnabled, isOpen, isPlaying, speed]);
+  }, [activeSection.index, activeTurnIndex, activeTurn, audioCueEnabled, voiceNarrationEnabled, isOpen, isPlaying, speed]);
 
-  // 60FPS Film Renderer (2 Photorealistic Actors + Shot/Reverse-Shot + Holographic HUD + Live BTC)
+  // 60FPS Video Canvas Frame Renderer (2 Living Moving & Talking Characters + 12 Tools + Live BTC)
   const renderFrame = useCallback((t: number, playingNow: boolean) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -600,23 +1086,23 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
 
     const W = 1280;
     const H = 720;
-    const BAR_H = 44; // 2.39:1 Anamorphic Widescreen Cinema Matte
-    const VIEW_Y = BAR_H;
-    const VIEW_H = H - BAR_H * 2;
 
-    const chapterIdx = Math.min(
-      CHAPTERS.length - 1,
-      Math.max(0, CHAPTERS.findIndex((c) => t >= c.startSec && t < c.endSec))
-    );
-    const chapter = CHAPTERS[chapterIdx === -1 ? CHAPTERS.length - 1 : chapterIdx];
-    const prevChapter = CHAPTERS[Math.max(0, chapter.index - 2)];
+    const section =
+      TOOL_SECTIONS.find((c) => t >= c.startSec && t < c.endSec) ||
+      TOOL_SECTIONS[TOOL_SECTIONS.length - 1];
+    const localSec = Math.max(0, t - section.startSec);
+    const localProgress = Math.max(0, Math.min(1, localSec / 10));
+    const turnIdx: 0 | 1 = localSec < 5 ? 0 : 1;
+    const turnLocalSec = turnIdx === 0 ? localSec : localSec - 5;
+    const turn = section.turns[turnIdx];
 
-    const localSec = Math.max(0, t - chapter.startSec);
-    const beatIdx: 0 | 1 = localSec < 2.45 ? 0 : 1;
-    const beatLocalSec = beatIdx === 0 ? localSec : localSec - 2.45;
-    const beat = chapter.beats[beatIdx];
-    const otherBeat = chapter.beats[beatIdx === 0 ? 1 : 0];
-    const localProgress = Math.max(0, Math.min(1, localSec / 5));
+    const isRezaSpeaking = playingNow && turn.speaker === 'Reza';
+    const isNadiaSpeaking = playingNow && turn.speaker === 'Nadia';
+
+    // Smooth camera focus shift between Reza and Nadia
+    const enterEase = easeOutCubic(Math.min(1, localSec / 0.72));
+    const exitEase = localSec > 9.5 ? easeInOutQuad((localSec - 9.5) / 0.5) : 0;
+    const stageAlpha = Math.max(0.12, enterEase * (1 - exitEase * 0.7));
 
     const btc = liveBtcRef.current;
     const btcPriceStr = `$${btc.price.toLocaleString('en-US', {
@@ -625,604 +1111,730 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
     })}`;
     const btcChgStr = `${btc.change24h >= 0 ? '+' : ''}${btc.change24h.toFixed(2)}%`;
     const isBtcUp = btc.change24h >= 0;
-    const tickRecently = performance.now() - btc.lastTickMs < 480;
+    const tickRecently = performance.now() - btc.lastTickMs < 460;
 
-    // 1. Base Backdrop
-    ctx.fillStyle = '#04060c';
+    // 1. Studio Obsidian Cinema Set Backdrop + Volumetric Key Light
+    const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+    bgGrad.addColorStop(0, '#05080f');
+    bgGrad.addColorStop(0.5, '#0b101d');
+    bgGrad.addColorStop(1, '#04060c');
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 
-    // 2. Main Cinema Camera Shot (Photorealistic Human Actors) with Cross-Dissolve Transition
-    const mainShotImg = shotsRef.current[beat.shot];
-    const prevShotKind: CameraShotKind =
-      beatIdx === 1 ? chapter.beats[0].shot : prevChapter.beats[1].shot;
-    const prevShotImg = shotsRef.current[prevShotKind];
-
-    const cutFadeDuration = beatIdx === 0 ? 0.55 : 0.36;
-    const cutMix = easeOutCubic(Math.min(1, beatLocalSec / cutFadeDuration));
-
-    if (cutMix < 1 && t > 0.1 && prevShotImg) {
-      drawCinemaCameraShot(
-        ctx,
-        prevShotImg,
-        0,
-        VIEW_Y,
-        W,
-        VIEW_H,
-        2.45,
-        t,
-        'in',
-        beatIdx === 0 ? -1 : 1,
-        1 - cutMix * 0.85
-      );
-    }
-
-    drawCinemaCameraShot(
-      ctx,
-      mainShotImg,
-      0,
-      VIEW_Y,
-      W,
-      VIEW_H,
-      beatLocalSec,
-      t,
-      beatIdx === 0 ? 'in' : 'out',
-      beat.speaker === 'Reza' ? 1 : -1,
-      cutMix
-    );
-
-    // 3. Cinema Color Grading Vignette & Anamorphic Atmosphere (leaves faces bright on left/center, deepens right side for HUD legibility)
-    const gradeGrad = ctx.createLinearGradient(0, VIEW_Y, W, VIEW_Y);
-    gradeGrad.addColorStop(0, 'rgba(6, 9, 16, 0.25)');
-    gradeGrad.addColorStop(0.42, 'rgba(7, 10, 17, 0.12)');
-    gradeGrad.addColorStop(0.68, 'rgba(7, 10, 17, 0.62)');
-    gradeGrad.addColorStop(1, 'rgba(5, 8, 15, 0.88)');
-    ctx.fillStyle = gradeGrad;
-    ctx.fillRect(0, VIEW_Y, W, VIEW_H);
-
-    // Bottom dark gradient for crisp film subtitle & lower-third readability
-    const subGrad = ctx.createLinearGradient(0, VIEW_Y + VIEW_H - 185, 0, VIEW_Y + VIEW_H);
-    subGrad.addColorStop(0, 'rgba(5, 8, 15, 0)');
-    subGrad.addColorStop(0.55, 'rgba(5, 8, 15, 0.68)');
-    subGrad.addColorStop(1, 'rgba(4, 6, 11, 0.94)');
-    ctx.fillStyle = subGrad;
-    ctx.fillRect(0, VIEW_Y + VIEW_H - 185, W, 185);
-
-    // Subtle Anamorphic Golden Lens Flare Streak
-    const flareY = VIEW_Y + 86 + Math.sin(t * 0.7) * 14;
-    const flareGrad = ctx.createLinearGradient(80, flareY, W - 120, flareY);
-    flareGrad.addColorStop(0, 'rgba(231, 204, 130, 0)');
-    flareGrad.addColorStop(0.35, 'rgba(245, 227, 175, 0.08)');
-    flareGrad.addColorStop(0.5, 'rgba(231, 204, 130, 0.19)');
-    flareGrad.addColorStop(0.65, 'rgba(56, 189, 248, 0.06)');
-    flareGrad.addColorStop(1, 'rgba(231, 204, 130, 0)');
-    ctx.fillStyle = flareGrad;
-    ctx.fillRect(0, flareY - 2, W, 4);
-
-    // Ambient Floating Cinema Bokeh Motes
-    for (let i = 0; i < 16; i++) {
-      const mx = ((i * 211 + t * (22 + (i % 4) * 7)) % (W + 40)) - 20;
-      const my = VIEW_Y + (((i * 97 + Math.sin(t * 0.9 + i) * 26) % VIEW_H + VIEW_H) % VIEW_H);
-      const mr = 1.4 + (i % 3) * 1.1;
-      ctx.fillStyle = `rgba(245, 227, 175, ${0.12 + (i % 3) * 0.06})`;
+    // Subtle Studio Depth Grid
+    ctx.strokeStyle = 'rgba(28, 39, 61, 0.34)';
+    ctx.lineWidth = 1;
+    const gridShift = (t * 14) % 64;
+    for (let gx = -64 + gridShift; gx < W + 64; gx += 64) {
       ctx.beginPath();
-      ctx.arc(mx, my, mr, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // 4. Dual-Character Presence: Whenever camera is in solo close-up, show the 2nd Real Actor in a Reverse-Angle Studio Monitor Card so BOTH real humans stay connected in the dialogue!
-    const isSoloCloseUp = beat.shot === 'male_cu' || beat.shot === 'female_cu';
-    if (isSoloCloseUp) {
-      const listenerShot: CameraShotKind = beat.shot === 'male_cu' ? 'female_cu' : 'male_cu';
-      const listenerName = beat.speaker === 'Reza' ? 'NADIA · MENDENGARKAN' : 'REZA · MENDENGARKAN';
-      const pipW = 196;
-      const pipH = 126;
-      const pipX = 36;
-      const pipY = VIEW_Y + 26;
-
-      ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.65)';
-      ctx.shadowBlur = 22;
-      drawRoundedRect(ctx, pipX, pipY, pipW, pipH, 16);
-      ctx.fillStyle = '#070a11';
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      // Clip image cleanly inside PIP card
-      ctx.save();
-      drawRoundedRect(ctx, pipX + 2, pipY + 2, pipW - 4, pipH - 4, 14);
-      ctx.clip();
-      drawCinemaCameraShot(
-        ctx,
-        shotsRef.current[listenerShot],
-        pipX + 2,
-        pipY + 2,
-        pipW - 4,
-        pipH - 4,
-        beatLocalSec,
-        t + 1.3,
-        'out',
-        0,
-        0.94
-      );
-      const pipTint = ctx.createLinearGradient(pipX, pipY + pipH - 40, pipX, pipY + pipH);
-      pipTint.addColorStop(0, 'rgba(7,10,17,0)');
-      pipTint.addColorStop(1, 'rgba(7,10,17,0.92)');
-      ctx.fillStyle = pipTint;
-      ctx.fillRect(pipX, pipY + pipH - 40, pipW, 40);
-      ctx.restore();
-
-      ctx.strokeStyle = 'rgba(231, 204, 130, 0.55)';
-      ctx.lineWidth = 1.6;
-      drawRoundedRect(ctx, pipX, pipY, pipW, pipH, 16);
+      ctx.moveTo(gx, 0);
+      ctx.lineTo(gx, H);
       ctx.stroke();
-
-      ctx.fillStyle = '#e7cc82';
-      ctx.font = 'bold 10px ui-monospace, monospace';
-      ctx.fillText(listenerName, pipX + 12, pipY + pipH - 12);
-      ctx.restore();
+    }
+    for (let gy = 0; gy < H; gy += 64) {
+      ctx.beginPath();
+      ctx.moveTo(0, gy);
+      ctx.lineTo(W, gy);
+      ctx.stroke();
     }
 
-    // 5. Right-Side Translucent Holographic Glass Terminal Overlay (Live BTC + Feature Scene)
-    const enterEase = easeOutCubic(Math.min(1, localSec / 0.65));
-    const exitEase = localSec > 4.6 ? easeInOutQuad((localSec - 4.6) / 0.4) : 0;
-    const cardAlpha = Math.max(0.15, enterEase * (1 - exitEase * 0.65));
+    // Sweeping Volumetric Studio Key Light
+    const spotX = turn.speaker === 'Reza' ? 210 : 410;
+    const spotGrad = ctx.createRadialGradient(spotX, 280, 20, spotX, 280, 440);
+    spotGrad.addColorStop(0, 'rgba(212, 175, 55, 0.16)');
+    spotGrad.addColorStop(0.55, 'rgba(30, 58, 138, 0.08)');
+    spotGrad.addColorStop(1, 'rgba(7, 10, 17, 0)');
+    ctx.fillStyle = spotGrad;
+    ctx.fillRect(0, 0, W, H);
 
-    const holoX = 768 + (1 - enterEase) * 42;
-    const holoY = VIEW_Y + 24 + (1 - enterEase) * 14;
-    const holoW = 476;
-    const holoH = 426;
+    // Ambient Bokeh Gold Dust Particles
+    for (let i = 0; i < 20; i++) {
+      const px = ((i * 199 + t * (16 + (i % 4) * 5)) % (W + 40)) - 20;
+      const py = ((i * 131 + Math.sin(t + i) * 26) % H + H) % H;
+      const rad = 1.2 + (i % 3) * 0.9;
+      ctx.fillStyle = `rgba(231, 204, 130, ${0.12 + (i % 3) * 0.08})`;
+      ctx.beginPath();
+      ctx.arc(px, py, rad, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
-    ctx.save();
-    ctx.globalAlpha = cardAlpha;
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-    ctx.shadowBlur = 32;
-    drawRoundedRect(ctx, holoX, holoY, holoW, holoH, 22);
-    const holoBg = ctx.createLinearGradient(holoX, holoY, holoX + holoW, holoY + holoH);
-    holoBg.addColorStop(0, 'rgba(11, 16, 29, 0.86)');
-    holoBg.addColorStop(1, 'rgba(6, 9, 16, 0.92)');
-    ctx.fillStyle = holoBg;
+    // 2. Top Real-Time BTC Telemetry Strip (clean, NO "Adegan" labels!)
+    drawRoundedRect(ctx, 32, 18, W - 64, 50, 14);
+    ctx.fillStyle = 'rgba(10, 15, 28, 0.9)';
     ctx.fill();
-    ctx.shadowBlur = 0;
-
-    ctx.strokeStyle = 'rgba(212, 175, 55, 0.52)';
-    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.42)';
+    ctx.lineWidth = 1.4;
     ctx.stroke();
 
-    // Chapter Badge + Title inside Hologram
     ctx.fillStyle = '#e7cc82';
-    ctx.font = 'bold 12px ui-monospace, monospace';
-    ctx.fillText(`0${chapter.index} · ${chapter.subtitle.toUpperCase()}`, holoX + 22, holoY + 30);
+    ctx.font = 'bold 15px ui-monospace, monospace';
+    ctx.fillText('GHALI ON CHAIN · PANDUAN LENGKAP SEMUA TOOLS', 52, 48);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 21px ui-sans-serif, system-ui, sans-serif';
-    ctx.fillText(chapter.title, holoX + 22, holoY + 58);
-
-    // Live BTC Strip embedded inside the Hologram
-    drawRoundedRect(ctx, holoX + 22, holoY + 72, holoW - 44, 42, 12);
+    // Real-Time BTC Live Pill inside Studio Top Bar
+    drawRoundedRect(ctx, 560, 25, 340, 36, 11);
     ctx.fillStyle = tickRecently
       ? btc.tickDir === 'up'
         ? 'rgba(16, 185, 129, 0.22)'
         : 'rgba(244, 63, 94, 0.22)'
-      : 'rgba(17, 25, 43, 0.9)';
+      : 'rgba(17, 25, 43, 0.95)';
     ctx.fill();
     ctx.strokeStyle = tickRecently
       ? btc.tickDir === 'up'
         ? '#34d399'
         : '#fb7185'
-      : 'rgba(231, 204, 130, 0.32)';
+      : 'rgba(231, 204, 130, 0.45)';
     ctx.stroke();
 
     ctx.fillStyle = '#34d399';
     ctx.beginPath();
-    ctx.arc(holoX + 38, holoY + 93, 4, 0, Math.PI * 2);
+    ctx.arc(579, 43, 4.2, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 12px ui-monospace, monospace';
-    ctx.fillText('BTC/USDT LIVE', holoX + 50, holoY + 97);
+    ctx.font = 'bold 13px ui-monospace, monospace';
+    ctx.fillText('BTC LIVE', 592, 48);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 17px ui-monospace, monospace';
-    ctx.fillText(btcPriceStr, holoX + 166, holoY + 98);
+    ctx.fillText(btcPriceStr, 672, 48);
 
     ctx.fillStyle = isBtcUp ? '#34d399' : '#fb7185';
     ctx.font = 'bold 13px ui-monospace, monospace';
-    ctx.fillText(btcChgStr, holoX + 324, holoY + 97);
+    ctx.fillText(btcChgStr, 804, 48);
 
-    // Interactive Scene Graphics Area inside Hologram
-    const gx = holoX + 22;
-    const gy = holoY + 128;
-    const gw = holoW - 44;
-    const gh = 274;
-    drawRoundedRect(ctx, gx, gy, gw, gh, 16);
-    ctx.fillStyle = 'rgba(5, 8, 14, 0.84)';
+    const timerText = `${formatClock(t)} / 02:00 · ${section.index < 10 ? '0' : ''}${section.index}/12`;
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '600 14px ui-monospace, monospace';
+    ctx.fillText(timerText, W - 50 - ctx.measureText(timerText).width, 48);
+
+    // 3. BOTH Moving & Talking Realistic Actors Standing Together on Studio Stage (Left Stage)
+    const focusBoostReza = turn.speaker === 'Reza' ? 1.04 : 0.94;
+    const focusBoostNadia = turn.speaker === 'Nadia' ? 1.04 : 0.94;
+
+    // Subtle glass background desk arch behind both characters
+    drawRoundedRect(ctx, 32, 92, 492, 456, 26);
+    const duoBg = ctx.createLinearGradient(32, 92, 524, 548);
+    duoBg.addColorStop(0, 'rgba(14, 21, 38, 0.72)');
+    duoBg.addColorStop(1, 'rgba(7, 10, 17, 0.88)');
+    ctx.fillStyle = duoBg;
     ctx.fill();
-    ctx.strokeStyle = '#1b263c';
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.25)';
+    ctx.lineWidth = 1.4;
     ctx.stroke();
 
-    const gcx = gx + gw / 2;
-    const gcy = gy + gh / 2;
+    // Draw listener slightly behind/smaller and active speaker subtly larger/brighter
+    if (turn.speaker === 'Reza') {
+      drawAnimatedActor(ctx, {
+        actor: 'Nadia',
+        cx: 392,
+        cy: 500,
+        scale: focusBoostNadia,
+        t,
+        isSpeaking: false,
+        gesture: turn.gesture,
+        lookAtPartner: true,
+        activeGlow: 0.15,
+      });
+      drawAnimatedActor(ctx, {
+        actor: 'Reza',
+        cx: 170,
+        cy: 512,
+        scale: focusBoostReza,
+        t,
+        isSpeaking: isRezaSpeaking,
+        gesture: turn.gesture,
+        lookAtPartner: false,
+        activeGlow: isRezaSpeaking ? 1 : 0.35,
+      });
+    } else {
+      drawAnimatedActor(ctx, {
+        actor: 'Reza',
+        cx: 162,
+        cy: 502,
+        scale: focusBoostReza,
+        t,
+        isSpeaking: false,
+        gesture: turn.gesture,
+        lookAtPartner: true,
+        activeGlow: 0.15,
+      });
+      drawAnimatedActor(ctx, {
+        actor: 'Nadia',
+        cx: 382,
+        cy: 512,
+        scale: focusBoostNadia,
+        t,
+        isSpeaking: isNadiaSpeaking,
+        gesture: turn.gesture,
+        lookAtPartner: false,
+        activeGlow: isNadiaSpeaking ? 1 : 0.35,
+      });
+    }
 
-    if (chapter.index === 1) {
-      // Holographic 3D Monolith + Live BTC Core
-      const ang = t * 1.5;
+    // Sleek Glass Studio Desk Foreground in front of Reza & Nadia
+    const deskGrad = ctx.createLinearGradient(32, 478, 524, 548);
+    deskGrad.addColorStop(0, 'rgba(15, 23, 42, 0.96)');
+    deskGrad.addColorStop(1, 'rgba(6, 9, 16, 0.98)');
+    drawRoundedRect(ctx, 32, 476, 492, 72, 20);
+    ctx.fillStyle = deskGrad;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(231, 204, 130, 0.45)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Active Speaker Voice Indicator + Cast Name Badges on Studio Desk
+    for (let b = 0; b < 5; b++) {
+      const barH = playingNow ? 5 + Math.abs(Math.sin(t * 14 + b * 1.15)) * 14 : 4;
+      ctx.fillStyle = turn.speaker === 'Reza' ? '#e7cc82' : '#34d399';
+      drawRoundedRect(ctx, 54 + b * 7, 512 - barH / 2, 4, barH, 2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = turn.speaker === 'Reza' ? '#f5e3af' : '#6ee7b7';
+    ctx.font = 'bold 14px ui-monospace, monospace';
+    ctx.fillText(
+      `${turn.speaker.toUpperCase()} · ${turn.role.toUpperCase()}`,
+      102,
+      507
+    );
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '500 12px ui-sans-serif, sans-serif';
+    ctx.fillText(
+      turn.speaker === 'Reza' ? 'Nadia mendengarkan & merespons langsung' : 'Reza menyimak & menganalisa chart',
+      102,
+      530
+    );
+
+    // 4. Right Stage: Interactive Holographic Feature Terminal (Animated per Tool Section)
+    ctx.save();
+    ctx.globalAlpha = stageAlpha;
+
+    const sx = 548;
+    const sy = 92;
+    const sw = 700;
+    const sh = 456;
+
+    // Distinct smooth non-flat transition geometry
+    let ox = 0;
+    let oy = 0;
+    let sScale = 1;
+    switch (section.index % 4) {
+      case 1:
+        sScale = 0.94 + enterEase * 0.06 - exitEase * 0.04;
+        oy = (1 - enterEase) * 24 - exitEase * 16;
+        break;
+      case 2:
+        ox = (1 - enterEase) * 76 - exitEase * 52;
+        break;
+      case 3:
+        sScale = 0.95 + enterEase * 0.05;
+        oy = (1 - enterEase) * -20;
+        break;
+      case 0:
+        ox = (1 - enterEase) * -60;
+        sScale = 0.94 + enterEase * 0.06;
+        break;
+    }
+
+    const px = sx + sw / 2;
+    const py = sy + sh / 2;
+    ctx.translate(px + ox, py + oy);
+    ctx.scale(sScale, sScale);
+    ctx.translate(-px, -py);
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.58)';
+    ctx.shadowBlur = 32;
+    drawRoundedRect(ctx, sx, sy, sw, sh, 26);
+    const boardGrad = ctx.createLinearGradient(sx, sy, sx + sw, sy + sh);
+    boardGrad.addColorStop(0, 'rgba(15, 23, 42, 0.95)');
+    boardGrad.addColorStop(1, 'rgba(7, 10, 18, 0.97)');
+    ctx.fillStyle = boardGrad;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.5)';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    // Specular Sweep across Board Glass
+    if (localSec < 1.1) {
       ctx.save();
-      ctx.translate(gcx, gcy);
-      ctx.strokeStyle = 'rgba(231, 204, 130, 0.35)';
-      ctx.lineWidth = 1.8;
+      drawRoundedRect(ctx, sx, sy, sw, sh, 26);
+      ctx.clip();
+      const sheenX = sx - 200 + (localSec / 1.1) * (sw + 400);
+      const sheen = ctx.createLinearGradient(sheenX, sy, sheenX + 150, sy + sh);
+      sheen.addColorStop(0, 'rgba(245, 227, 175, 0)');
+      sheen.addColorStop(0.5, 'rgba(245, 227, 175, 0.12)');
+      sheen.addColorStop(1, 'rgba(245, 227, 175, 0)');
+      ctx.fillStyle = sheen;
+      ctx.fillRect(sx, sy, sw, sh);
+      ctx.restore();
+    }
+
+    // Clean Tool Title & Subtitle (NO "Adegan" text!)
+    ctx.fillStyle = '#e7cc82';
+    ctx.font = 'bold 13px ui-monospace, monospace';
+    ctx.fillText(
+      `TOOL ${section.index < 10 ? '0' : ''}${section.index} · ${section.subtitle.toUpperCase()}`,
+      sx + 28,
+      sy + 36
+    );
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 26px ui-sans-serif, system-ui, sans-serif';
+    ctx.fillText(section.title, sx + 28, sy + 72);
+
+    const ix = sx + 28;
+    const iy = sy + 94;
+    const iw = sw - 56;
+    const ih = 336;
+    drawRoundedRect(ctx, ix, iy, iw, ih, 18);
+    ctx.fillStyle = 'rgba(5, 8, 15, 0.88)';
+    ctx.fill();
+    ctx.strokeStyle = '#1b263c';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    const icx = ix + iw / 2;
+    const icy = iy + ih / 2;
+
+    // 12 Distinct Animated Tool Visualizations (all using Real-Time BTC Price where applicable)
+    if (section.index === 1) {
+      // 1. 3D Monolith + 10 Orbit Altcoins
+      const ang = t * 1.35;
+      ctx.save();
+      ctx.translate(icx, icy);
+      ctx.strokeStyle = 'rgba(231, 204, 130, 0.36)';
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.ellipse(0, 0, 160, 58, -0.14, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 220, 78, -0.14, 0, Math.PI * 2);
       ctx.stroke();
 
-      const r = 56;
+      const r = 68;
       const pts = [
-        [Math.cos(ang) * r, -44],
-        [Math.cos(ang + Math.PI / 2) * r, -4],
-        [Math.cos(ang + Math.PI) * r, 40],
-        [Math.cos(ang + (3 * Math.PI) / 2) * r, -4],
+        [Math.cos(ang) * r, -54],
+        [Math.cos(ang + Math.PI / 2) * r, -6],
+        [Math.cos(ang + Math.PI) * r, 46],
+        [Math.cos(ang + (3 * Math.PI) / 2) * r, -6],
       ];
       ctx.fillStyle = 'rgba(212, 175, 55, 0.16)';
       ctx.strokeStyle = '#f5e3af';
       ctx.lineWidth = 2.4;
       ctx.beginPath();
-      pts.forEach(([px, py], i) => (i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)));
+      pts.forEach(([px0, py0], i) => (i === 0 ? ctx.moveTo(px0, py0) : ctx.lineTo(px0, py0)));
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
-      ['ETH', 'SOL', 'BNB', 'SUI', 'XRP', 'DOGE'].forEach((sym, i) => {
-        const a = ang * 0.85 + (i * Math.PI * 2) / 6;
-        const ox = Math.cos(a) * 160;
-        const oy = Math.sin(a) * 58;
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 15px ui-monospace, monospace';
+      ctx.fillText(btcPriceStr, -ctx.measureText(btcPriceStr).width / 2, 5);
+
+      ['ETH', 'SOL', 'BNB', 'XRP', 'DOGE', 'SUI', 'AVAX', 'LINK', 'TAO', 'ADA'].forEach((sym, i) => {
+        const a = ang * 0.78 + (i * Math.PI * 2) / 10;
+        const ox0 = Math.cos(a) * 220;
+        const oy0 = Math.sin(a) * 78;
         ctx.fillStyle = i % 2 === 0 ? '#34d399' : '#e7cc82';
         ctx.beginPath();
-        ctx.arc(ox, oy, 5.5, 0, Math.PI * 2);
+        ctx.arc(ox0, oy0, 6, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#e2e8f0';
         ctx.font = 'bold 11px ui-monospace, monospace';
-        ctx.fillText(sym, ox + 9, oy + 4);
+        ctx.fillText(sym, ox0 + 9, oy0 + 4);
       });
       ctx.restore();
-    } else if (chapter.index === 2) {
-      // Candlestick + Live Fibonacci + Elliott Wave
-      const bx = gx + 20;
-      const by = gy + gh - 24;
-      const candles = [
-        [0.32, 0.48], [0.47, 0.41], [0.42, 0.59], [0.58, 0.52],
-        [0.53, 0.69], [0.68, 0.63], [0.64, 0.81], [0.80, 0.74],
-        [0.75, 0.90], [0.89, isBtcUp ? 0.96 : 0.83],
+    } else if (section.index === 2) {
+      // 2. AI Auto-Draw Candlestick + Fib + Elliott Wave + SnR + ICT
+      const bx = ix + 28;
+      const by = iy + ih - 28;
+      const bars = [
+        [0.32, 0.48], [0.47, 0.41], [0.42, 0.59], [0.58, 0.52], [0.53, 0.69],
+        [0.68, 0.63], [0.64, 0.81], [0.80, 0.74], [0.75, 0.90], [0.89, 0.84],
+        [0.85, 0.95], [0.94, isBtcUp ? 0.99 : 0.88],
       ];
-      const shown = Math.max(3, Math.floor(localProgress * candles.length) + 3);
-      candles.slice(0, Math.min(candles.length, shown)).forEach(([o, c], idx) => {
-        const x = bx + idx * 38;
-        const yo = by - o * 210;
-        const yc = by - c * 210;
+      const count = Math.max(4, Math.floor(localProgress * bars.length) + 4);
+      bars.slice(0, Math.min(bars.length, count)).forEach(([o, c], idx) => {
+        const x = bx + idx * 46;
+        const yO = by - o * 246;
+        const yC = by - c * 246;
         const bull = c >= o;
         ctx.strokeStyle = bull ? '#34d399' : '#fb7185';
         ctx.fillStyle = bull ? '#34d399' : '#fb7185';
-        ctx.lineWidth = 1.8;
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(x + 9, Math.min(yo, yc) - 10);
-        ctx.lineTo(x + 9, Math.max(yo, yc) + 10);
+        ctx.moveTo(x + 10, Math.min(yO, yC) - 12);
+        ctx.lineTo(x + 10, Math.max(yO, yC) + 12);
         ctx.stroke();
-        ctx.fillRect(x, Math.min(yo, yc), 18, Math.max(8, Math.abs(yc - yo)));
+        ctx.fillRect(x, Math.min(yO, yC), 20, Math.max(9, Math.abs(yC - yO)));
       });
-      ctx.setLineDash([6, 5]);
-      ctx.strokeStyle = 'rgba(231, 204, 130, 0.82)';
+
+      // ICT Order Block Highlight
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+      ctx.fillRect(bx, by - 140, iw - 56, 28);
+      ctx.fillStyle = '#34d399';
+      ctx.font = 'bold 11px ui-monospace, monospace';
+      ctx.fillText('ICT ORDER BLOCK', bx + 8, by - 122);
+
+      ctx.setLineDash([7, 5]);
+      ctx.strokeStyle = 'rgba(231, 204, 130, 0.85)';
       [
-        { l: '0.382', p: 0.78, val: btc.price * 0.985 },
-        { l: '0.618', p: 0.5, val: btc.price * 0.958 },
+        { lvl: '0.382', pct: 0.78, p: btc.price * 0.985 },
+        { lvl: '0.618', pct: 0.52, p: btc.price * 0.958 },
       ].forEach((f) => {
-        const fy = by - f.p * 210;
+        const fy = by - f.pct * 246;
         ctx.beginPath();
         ctx.moveTo(bx, fy);
-        ctx.lineTo(gx + gw - 16, fy);
+        ctx.lineTo(ix + iw - 24, fy);
         ctx.stroke();
         ctx.fillStyle = '#f5e3af';
-        ctx.font = 'bold 11px ui-monospace, monospace';
-        ctx.fillText(`FIB ${f.l} · $${Math.round(f.val).toLocaleString()}`, gx + gw - 162, fy - 5);
+        ctx.fillText(`FIB ${f.lvl} · $${Math.round(f.p).toLocaleString()}`, ix + iw - 196, fy - 6);
       });
       ctx.setLineDash([]);
-    } else if (chapter.index === 3) {
-      // Bitcoin Cycle Live ATH Gauge + 2026 Experts
+    } else if (section.index === 3) {
+      // 3. Bitcoin Cycle Live ATH Gauge + 2026 Experts
       const ath = 108900;
       const distPct = (((btc.price - ath) / ath) * 100).toFixed(1);
       const fillPct = Math.max(0.2, Math.min(1, (btc.price / ath) * (0.65 + localProgress * 0.35)));
       ctx.fillStyle = '#e7cc82';
-      ctx.font = 'bold 12px ui-monospace, monospace';
-      ctx.fillText(`JARAK KE ATH ($108,900): ${distPct}%`, gx + 20, gy + 36);
+      ctx.font = 'bold 14px ui-monospace, monospace';
+      ctx.fillText('HARGA BITCOIN REAL-TIME & JARAK ATH', ix + 26, iy + 36);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 40px ui-monospace, monospace';
+      ctx.fillText(btcPriceStr, ix + 26, iy + 86);
+      ctx.fillStyle = isBtcUp ? '#34d399' : '#fb7185';
+      ctx.font = 'bold 16px ui-monospace, monospace';
+      ctx.fillText(`${btcChgStr} · Jarak ke ATH ($108,900): ${distPct}%`, ix + 26, iy + 116);
 
-      drawRoundedRect(ctx, gx + 20, gy + 54, gw - 40, 18, 9);
+      drawRoundedRect(ctx, ix + 26, iy + 136, iw - 52, 20, 10);
       ctx.fillStyle = '#121a2d';
       ctx.fill();
-      drawRoundedRect(ctx, gx + 20, gy + 54, (gw - 40) * fillPct, 18, 9);
+      drawRoundedRect(ctx, ix + 26, iy + 136, (iw - 52) * fillPct, 20, 10);
       ctx.fillStyle = '#e7cc82';
       ctx.fill();
 
       ['Willy Woo', 'Arthur Hayes', 'PlanB', 'B. Cowen'].forEach((exp, i) => {
         const col = i % 2;
         const row = Math.floor(i / 2);
-        const ex = gx + 20 + col * 198;
-        const ey = gy + 96 + row * 78;
-        const lit = i === Math.floor(localProgress * 4) % 4;
-        drawRoundedRect(ctx, ex, ey, 184, 64, 12);
-        ctx.fillStyle = lit ? '#16223b' : '#0d1424';
+        const bx = ix + 26 + col * 300;
+        const by = iy + 178 + row * 68;
+        const active = i === Math.floor(localProgress * 4) % 4;
+        drawRoundedRect(ctx, bx, by, 286, 56, 12);
+        ctx.fillStyle = active ? '#17233b' : '#0f1627';
         ctx.fill();
-        ctx.strokeStyle = lit ? '#e7cc82' : '#24314a';
+        ctx.strokeStyle = active ? '#e7cc82' : '#24314a';
         ctx.stroke();
         ctx.fillStyle = '#f5e3af';
-        ctx.font = 'bold 14px ui-sans-serif, sans-serif';
-        ctx.fillText(exp, ex + 14, ey + 28);
+        ctx.font = 'bold 15px ui-sans-serif, sans-serif';
+        ctx.fillText(exp, bx + 16, by + 26);
         ctx.fillStyle = '#94a3b8';
         ctx.font = '400 11px ui-sans-serif, sans-serif';
-        ctx.fillText('Proyeksi Siklus 2026', ex + 14, ey + 48);
+        ctx.fillText('Dossier Konsensus Siklus 2026', bx + 16, by + 44);
       });
-    } else if (chapter.index === 4) {
-      // Capital Rotation & Top L/S Bars
+    } else if (section.index === 4) {
+      // 4. Liquidity Flow + Top 5 Altcoin L/S
+      ['STABLECOIN', 'BITCOIN', 'ETH / SOL', 'ALTCOINS'].forEach((st, i) => {
+        const bx = ix + 22 + i * 150;
+        drawRoundedRect(ctx, bx, iy + 26, 138, 44, 10);
+        ctx.fillStyle = i <= Math.floor(localProgress * 4) ? '#1a253d' : '#0f1627';
+        ctx.fill();
+        ctx.strokeStyle = i <= Math.floor(localProgress * 4) ? '#e7cc82' : '#222f48';
+        ctx.stroke();
+        ctx.fillStyle = '#f5e3af';
+        ctx.font = 'bold 12px ui-monospace, monospace';
+        ctx.fillText(st, bx + 16, iy + 53);
+      });
+
       [
         { s: 'ETH/USDT', l: 64, sh: 36 },
         { s: 'SOL/USDT', l: 71, sh: 29 },
         { s: 'BNB/USDT', l: 58, sh: 42 },
-      ].forEach((row, idx) => {
-        const ry = gy + 44 + idx * 78;
+      ].forEach((p, idx) => {
+        const py = iy + 114 + idx * 72;
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 14px ui-monospace, monospace';
-        ctx.fillText(row.s, gx + 20, ry);
+        ctx.font = 'bold 15px ui-monospace, monospace';
+        ctx.fillText(p.s, ix + 26, py);
         ctx.fillStyle = '#34d399';
-        ctx.fillText(`LONG ${row.l}%`, gx + 140, ry);
+        ctx.fillText(`LONG ${p.l}%`, ix + 170, py);
         ctx.fillStyle = '#fb7185';
-        ctx.fillText(`SHORT ${row.sh}%`, gx + gw - 102, ry);
-        drawRoundedRect(ctx, gx + 20, ry + 12, gw - 40, 12, 6);
+        ctx.fillText(`SHORT ${p.sh}%`, ix + iw - 126, py);
+        drawRoundedRect(ctx, ix + 26, py + 12, iw - 52, 12, 6);
         ctx.fillStyle = '#fb7185';
         ctx.fill();
-        drawRoundedRect(
-          ctx,
-          gx + 20,
-          ry + 12,
-          ((gw - 40) * row.l) / 100 * Math.min(1, localProgress * 1.4 + 0.35),
-          12,
-          6
-        );
+        drawRoundedRect(ctx, ix + 26, py + 12, ((iw - 52) * p.l) / 100 * Math.min(1, localProgress * 1.4 + 0.35), 12, 6);
         ctx.fillStyle = '#34d399';
         ctx.fill();
       });
-    } else if (chapter.index === 5) {
-      // Exchange L/S Contrarian Skew Needle
+    } else if (section.index === 5) {
+      // 5. Top Movers (Gainers & Losers 24J)
+      [
+        { sym: 'SUI/USDT', chg: '+18.4%', bull: true },
+        { sym: 'TAO/USDT', chg: '+14.2%', bull: true },
+        { sym: 'SOL/USDT', chg: '+9.6%', bull: true },
+        { sym: 'DOGE/USDT', chg: '-6.8%', bull: false },
+      ].forEach((m, idx) => {
+        const my = iy + 26 + idx * 72;
+        drawRoundedRect(ctx, ix + 24, my, iw - 48, 58, 12);
+        ctx.fillStyle = '#0e1526';
+        ctx.fill();
+        ctx.strokeStyle = m.bull ? 'rgba(52, 211, 153, 0.4)' : 'rgba(251, 113, 133, 0.4)';
+        ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 16px ui-monospace, monospace';
+        ctx.fillText(m.sym, ix + 44, my + 35);
+        ctx.fillStyle = m.bull ? '#34d399' : '#fb7185';
+        ctx.fillText(m.chg, ix + 260, my + 35);
+        ctx.fillStyle = '#e7cc82';
+        ctx.font = 'bold 12px ui-monospace, monospace';
+        ctx.fillText('TAP -> BUKA CHART', ix + iw - 180, my + 34);
+      });
+    } else if (section.index === 6) {
+      // 6. Exchange L/S Binance vs Bitget
       const sweep = -Math.PI + Math.PI * (0.3 + Math.sin(localProgress * Math.PI) * 0.5);
       ctx.save();
-      ctx.translate(gcx, gcy + 34);
-      ctx.lineWidth = 18;
+      ctx.translate(icx, icy + 36);
+      ctx.lineWidth = 20;
       ctx.strokeStyle = '#34d399';
       ctx.beginPath();
-      ctx.arc(0, 0, 102, Math.PI, Math.PI * 1.35);
+      ctx.arc(0, 0, 118, Math.PI, Math.PI * 1.35);
       ctx.stroke();
       ctx.strokeStyle = '#e7cc82';
       ctx.beginPath();
-      ctx.arc(0, 0, 102, Math.PI * 1.35, Math.PI * 1.68);
+      ctx.arc(0, 0, 118, Math.PI * 1.35, Math.PI * 1.68);
       ctx.stroke();
       ctx.strokeStyle = '#fb7185';
       ctx.beginPath();
-      ctx.arc(0, 0, 102, Math.PI * 1.68, Math.PI * 2);
+      ctx.arc(0, 0, 118, Math.PI * 1.68, Math.PI * 2);
       ctx.stroke();
 
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 4.5;
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.lineTo(Math.cos(sweep) * 86, Math.sin(sweep) * 86);
+      ctx.lineTo(Math.cos(sweep) * 98, Math.sin(sweep) * 98);
       ctx.stroke();
       ctx.fillStyle = '#e7cc82';
       ctx.beginPath();
-      ctx.arc(0, 0, 8, 0, Math.PI * 2);
+      ctx.arc(0, 0, 10, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
       ctx.fillStyle = '#f5e3af';
-      ctx.font = 'bold 13px ui-monospace, monospace';
-      ctx.fillText('BINANCE & BITGET CONTRARIAN SKEW', gx + 70, gy + gh - 24);
-    } else if (chapter.index === 6) {
-      // Breaking News + Bedah AI
+      ctx.font = 'bold 15px ui-monospace, monospace';
+      ctx.fillText('BINANCE vs BITGET · SKEW & FUNDING RATE', icx - 180, iy + ih - 24);
+    } else if (section.index === 7) {
+      // 7. Berita 24J, Prioritas & Bedah AI
       [
-        { t: 'HIGH IMPACT · MAKRO', h: 'Sinyal Likuiditas Dorong Volatilitas BTC' },
-        { t: 'CRYPTO 24J · COINDESK', h: 'Arus Masuk Spot ETF Menjaga Support' },
-        { t: 'BEDAH AI · INSTAN', h: 'Ringkasan Fundamental & Bias Aset' },
-      ].forEach((item, idx) => {
-        const ny = gy + 22 + idx * 80 - localProgress * 6;
-        drawRoundedRect(ctx, gx + 18, ny, gw - 36, 66, 12);
-        ctx.fillStyle = idx === 0 ? '#151e34' : '#0d1424';
+        { t: 'HIGH IMPACT · MAKRO', h: 'Sinyal Kebijakan Bank Sentral Picu Volatilitas BTC' },
+        { t: 'CRYPTO 24J · COINDESK', h: 'Arus Masuk Spot ETF Menopang Struktur Bullish' },
+        { t: 'BEDAH AI · OTOMATIS', h: 'Ringkasan Katalis, Bias Aset & Skenario Teknikal' },
+      ].forEach((n, idx) => {
+        const ny = iy + 28 + idx * 96 - localProgress * 8;
+        drawRoundedRect(ctx, ix + 24, ny, iw - 48, 80, 14);
+        ctx.fillStyle = idx === 2 ? '#13242b' : '#0d1424';
         ctx.fill();
-        ctx.strokeStyle = idx === 0 ? '#e7cc82' : '#222f48';
+        ctx.strokeStyle = idx === 2 ? '#34d399' : '#24314a';
         ctx.stroke();
         ctx.fillStyle = idx === 2 ? '#34d399' : '#e7cc82';
-        ctx.font = 'bold 11px ui-monospace, monospace';
-        ctx.fillText(item.t, gx + 32, ny + 24);
+        ctx.font = 'bold 12px ui-monospace, monospace';
+        ctx.fillText(n.t, ix + 44, ny + 28);
         ctx.fillStyle = '#f8fafc';
-        ctx.font = '600 13px ui-sans-serif, sans-serif';
-        ctx.fillText(item.h, gx + 32, ny + 46);
+        ctx.font = '600 15px ui-sans-serif, sans-serif';
+        ctx.fillText(n.h, ix + 44, ny + 56);
       });
-    } else if (chapter.index === 7) {
-      // Whale Radar + Live BTC Cekring Alert
+    } else if (section.index === 8) {
+      // 8. Narratives 24J & Macro Impact Matrix
+      ['AI TOKENS +11.4%', 'RWA +7.8%', 'LAYER-1 +6.1%'].forEach((sec, i) => {
+        const bx = ix + 22 + i * 202;
+        drawRoundedRect(ctx, bx, iy + 24, 188, 70, 12);
+        ctx.fillStyle = '#121a2e';
+        ctx.fill();
+        ctx.strokeStyle = '#d4af37';
+        ctx.stroke();
+        ctx.fillStyle = '#34d399';
+        ctx.font = 'bold 13px ui-monospace, monospace';
+        ctx.fillText(sec, bx + 16, iy + 64);
+      });
+      [
+        { pair: 'DXY vs BTC', corr: 'NEGATIF KUAT (-0.82)', col: '#fb7185' },
+        { pair: 'EMAS vs BTC', corr: 'KONSOLIDASI (+0.44)', col: '#e7cc82' },
+        { pair: 'NASDAQ vs BTC', corr: 'RISK-ON SEJALAN (+0.78)', col: '#34d399' },
+      ].forEach((row, idx) => {
+        const ry = iy + 124 + idx * 64;
+        drawRoundedRect(ctx, ix + 22, ry, iw - 44, 52, 12);
+        ctx.fillStyle = '#0d1424';
+        ctx.fill();
+        ctx.strokeStyle = '#222f48';
+        ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 14px ui-monospace, monospace';
+        ctx.fillText(row.pair, ix + 40, ry + 31);
+        ctx.fillStyle = row.col;
+        ctx.fillText(row.corr, ix + 250, ry + 31);
+      });
+    } else if (section.index === 9) {
+      // 9. Suite Teknikal & Radar Kontra
+      [
+        { name: 'RSI (14)', val: '62.4 · BULLISH MOMENTUM', col: '#34d399' },
+        { name: 'MACD (12,26)', val: 'GOLDEN CROSS AKTIF', col: '#e7cc82' },
+        { name: 'RADAR DISLOKASI', val: 'DEVIASI MAKRO TERPANTAU', col: '#38bdf8' },
+      ].forEach((ind, idx) => {
+        const ry = iy + 32 + idx * 94;
+        drawRoundedRect(ctx, ix + 26, ry, iw - 52, 76, 14);
+        ctx.fillStyle = '#0f1627';
+        ctx.fill();
+        ctx.strokeStyle = ind.col;
+        ctx.stroke();
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 12px ui-monospace, monospace';
+        ctx.fillText(ind.name, ix + 46, ry + 28);
+        ctx.fillStyle = ind.col;
+        ctx.font = 'bold 17px ui-monospace, monospace';
+        ctx.fillText(ind.val, ix + 46, ry + 55);
+      });
+    } else if (section.index === 10) {
+      // 10. Whale Desk (Dompet Smart Money)
+      [
+        { tag: 'INFLOW BURSA', amt: '1,240 BTC -> BINANCE', bias: 'WASPADA TEKANAN JUAL', c: '#fb7185' },
+        { tag: 'OUTFLOW COLD WALLET', amt: '2,850 BTC -> COLD STORAGE', bias: 'AKUMULASI SMART MONEY', c: '#34d399' },
+        { tag: 'KOL / SMART WALLET', amt: 'AKUMULASI ETH & SOL', bias: 'KLIK UNTUK LOAD CHART', c: '#e7cc82' },
+      ].forEach((w, idx) => {
+        const wy = iy + 30 + idx * 94;
+        drawRoundedRect(ctx, ix + 24, wy, iw - 48, 76, 14);
+        ctx.fillStyle = '#0e1526';
+        ctx.fill();
+        ctx.strokeStyle = w.c;
+        ctx.stroke();
+        ctx.fillStyle = w.c;
+        ctx.font = 'bold 12px ui-monospace, monospace';
+        ctx.fillText(w.tag, ix + 42, wy + 26);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 16px ui-monospace, monospace';
+        ctx.fillText(w.amt, ix + 42, wy + 52);
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '600 12px ui-sans-serif, sans-serif';
+        ctx.fillText(w.bias, ix + iw - 230, wy + 52);
+      });
+    } else if (section.index === 11) {
+      // 11. Price Alerts (Alarm Cekring Live)
       [0, 1, 2].forEach((ring) => {
-        const rad = ((localProgress * 130 + ring * 40) % 112) + 18;
-        ctx.strokeStyle = `rgba(231, 204, 130, ${1 - rad / 132})`;
-        ctx.lineWidth = 2.2;
+        const rad = ((localProgress * 160 + ring * 45) % 130) + 18;
+        ctx.strokeStyle = `rgba(52, 211, 153, ${1 - rad / 150})`;
+        ctx.lineWidth = 2.4;
         ctx.beginPath();
-        ctx.arc(gcx, gcy - 22, rad, 0, Math.PI * 2);
+        ctx.arc(icx, icy - 26, rad, 0, Math.PI * 2);
         ctx.stroke();
       });
       ctx.fillStyle = '#e7cc82';
       ctx.beginPath();
-      ctx.arc(gcx, gcy - 22, 14, 0, Math.PI * 2);
+      ctx.arc(icx, icy - 26, 18, 0, Math.PI * 2);
       ctx.fill();
 
-      drawRoundedRect(ctx, gx + 22, gy + gh - 64, gw - 44, 46, 12);
+      drawRoundedRect(ctx, ix + 34, iy + ih - 78, iw - 68, 58, 14);
       ctx.fillStyle = '#121b30';
       ctx.fill();
       ctx.strokeStyle = '#34d399';
       ctx.stroke();
       ctx.fillStyle = '#34d399';
-      ctx.font = 'bold 13px ui-monospace, monospace';
-      ctx.fillText(`CEKRING TRIGGER · BTC ${btcPriceStr}`, gx + 48, gy + gh - 36);
+      ctx.font = 'bold 15px ui-monospace, monospace';
+      ctx.fillText(`ALARM CEKRING AKTIF · TARGET LIVE BTC ${btcPriceStr}`, ix + 64, iy + ih - 43);
     } else {
-      // 8-API Cross-Exchange Live Spread + Room Chat Finale
+      // 12. 8-API Live Telemetry + Room Chat
       [
         { n: 'BINANCE WS', p: btc.price },
         { n: 'KRAKEN SPOT', p: btc.price + 3.4 },
+        { n: 'COINBASE PRO', p: btc.price - 2.15 },
       ].forEach((ex, i) => {
-        const exX = gx + 20 + i * 198;
-        drawRoundedRect(ctx, exX, gy + 22, 184, 78, 12);
+        const exX = ix + 20 + i * 202;
+        drawRoundedRect(ctx, exX, iy + 24, 190, 86, 14);
         ctx.fillStyle = '#0e1526';
         ctx.fill();
         ctx.strokeStyle = '#24324e';
         ctx.stroke();
         ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 11px ui-monospace, monospace';
-        ctx.fillText(ex.n, exX + 14, gy + 48);
+        ctx.font = 'bold 12px ui-monospace, monospace';
+        ctx.fillText(ex.n, exX + 16, iy + 52);
         ctx.fillStyle = '#f5e3af';
         ctx.font = 'bold 18px ui-monospace, monospace';
-        ctx.fillText(`$${ex.p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, exX + 14, gy + 78);
+        ctx.fillText(`$${ex.p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, exX + 16, iy + 84);
       });
 
-      drawRoundedRect(ctx, gx + 20, gy + 118, gw - 40, 134, 14);
+      drawRoundedRect(ctx, ix + 20, iy + 132, iw - 40, 174, 16);
       ctx.fillStyle = '#121a2e';
       ctx.fill();
       ctx.strokeStyle = '#d4af37';
       ctx.stroke();
       ctx.fillStyle = '#e7cc82';
-      ctx.font = 'bold 17px ui-sans-serif, sans-serif';
-      ctx.fillText('Room Chat & Eksekusi Real-Time', gx + 38, gy + 158);
+      ctx.font = 'bold 19px ui-sans-serif, sans-serif';
+      ctx.fillText('Room Chat Komunitas · Berbagi Setup Real-Time', ix + 44, iy + 174);
       ctx.fillStyle = '#e2e8f0';
-      ctx.font = '400 13px ui-sans-serif, sans-serif';
+      ctx.font = '400 15px ui-sans-serif, sans-serif';
       wrapText(
         ctx,
-        'Bahas analisis makro, sinyal Whale Desk, dan setup AI Chart langsung bersama komunitas.',
-        gx + 38,
-        gy + 186,
-        gw - 76,
-        20
+        'Diskusikan hasil AI Chart, sinyal Whale Desk, dan berita makro langsung bersama trader lainnya di Room Chat.',
+        ix + 44,
+        iy + 210,
+        iw - 88,
+        24
       );
       ctx.fillStyle = '#34d399';
-      ctx.font = 'bold 12px ui-monospace, monospace';
-      ctx.fillText('GHALI ON CHAIN · SIAP DIGUNAKAN', gx + 38, gy + 236);
+      ctx.font = 'bold 14px ui-monospace, monospace';
+      ctx.fillText('SELURUH 12 TOOLS SIAP DIGUNAKAN', ix + 44, iy + 280);
     }
 
-    ctx.restore();
+    ctx.restore(); // End Right Stage Hologram
 
-    // 6. Active Speaker Lower-Third + Cinema Subtitle + Animated Voice Waveform
-    const subSlide = easeOutCubic(Math.min(1, beatLocalSec / 0.35));
-    const lowerX = 36;
-    const lowerY = VIEW_Y + VIEW_H - 134 + (1 - subSlide) * 14;
-
-    ctx.save();
-    ctx.globalAlpha = Math.min(1, subSlide * 1.15);
-
-    // Speaker Badge Pill + Active Waveform
-    drawRoundedRect(ctx, lowerX, lowerY, 695, 114, 18);
-    ctx.fillStyle = 'rgba(7, 10, 17, 0.86)';
+    // 5. Crisp Live Dialogue Caption Box across Bottom (Both Speakers Moving & Speaking)
+    const subSlide = easeOutCubic(Math.min(1, turnLocalSec / 0.35));
+    drawRoundedRect(ctx, 32, 566 + (1 - subSlide) * 10, W - 64, 114, 18);
+    ctx.fillStyle = 'rgba(10, 15, 28, 0.94)';
     ctx.fill();
-    ctx.strokeStyle = beat.speaker === 'Reza' ? 'rgba(231, 204, 130, 0.55)' : 'rgba(52, 211, 153, 0.55)';
+    ctx.strokeStyle = turn.speaker === 'Reza' ? 'rgba(231, 204, 130, 0.5)' : 'rgba(52, 211, 153, 0.5)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Live Audio Waveform Bars beside Speaker Tag
-    for (let b = 0; b < 6; b++) {
-      const barH = playingNow
-        ? 5 + Math.abs(Math.sin(t * 14 + b * 1.1)) * 15
-        : 4;
-      ctx.fillStyle = beat.speaker === 'Reza' ? '#e7cc82' : '#34d399';
-      drawRoundedRect(ctx, lowerX + 18 + b * 7, lowerY + 26 - barH / 2, 4, barH, 2);
-      ctx.fill();
-    }
+    ctx.fillStyle = turn.speaker === 'Reza' ? '#f5e3af' : '#6ee7b7';
+    ctx.font = 'bold 14px ui-monospace, monospace';
+    ctx.fillText(`${turn.speaker.toUpperCase()} (${turn.role.toUpperCase()}):`, 56, 598);
 
-    ctx.fillStyle = beat.speaker === 'Reza' ? '#f5e3af' : '#6ee7b7';
-    ctx.font = 'bold 13px ui-monospace, monospace';
-    ctx.fillText(
-      `${beat.speaker.toUpperCase()} · ${beat.role.toUpperCase()}`,
-      lowerX + 70,
-      lowerY + 30
-    );
-
-    ctx.fillStyle = '#64748b';
-    ctx.font = '600 12px ui-monospace, monospace';
-    const partnerTag = `BERSAMA ${otherBeat.speaker.toUpperCase()}`;
-    ctx.fillText(partnerTag, lowerX + 675 - ctx.measureText(partnerTag).width, lowerY + 30);
-
-    // Cinema Dialogue Subtitle
     ctx.fillStyle = '#f8fafc';
-    ctx.font = '500 18px ui-sans-serif, system-ui, sans-serif';
-    wrapText(ctx, `"${beat.line}"`, lowerX + 20, lowerY + 60, 655, 25);
-    ctx.restore();
+    ctx.font = '500 19px ui-sans-serif, system-ui, sans-serif';
+    wrapText(ctx, `"${turn.line}"`, 56, 630, W - 112, 27);
 
-    // 7. Elegant Non-Flat Cinema Scene Transitions (on Chapter Cut & Mid-Scene Shot Cut)
-    if (localSec < 0.52 && chapter.index > 1) {
-      const wt = easeOutCubic(localSec / 0.52);
+    // 6. Scene-Edge Non-Flat Wipe Transitions (first 0.48s of each tool section)
+    if (localSec < 0.48 && section.index > 1) {
+      const wt = easeOutCubic(localSec / 0.48);
       ctx.save();
-      if (chapter.transitionStyle === 'light_leak') {
-        const lx = -360 + wt * (W + 720);
-        const lg = ctx.createLinearGradient(lx, 0, lx + 300, H);
+      if (section.transitionStyle === 'light_leak') {
+        const lx = -320 + wt * (W + 640);
+        const lg = ctx.createLinearGradient(lx, 0, lx + 260, H);
         lg.addColorStop(0, 'rgba(212, 175, 55, 0)');
-        lg.addColorStop(0.5, `rgba(245, 227, 175, ${(1 - wt) * 0.42})`);
+        lg.addColorStop(0.5, `rgba(245, 227, 175, ${(1 - wt) * 0.34})`);
         lg.addColorStop(1, 'rgba(212, 175, 55, 0)');
         ctx.fillStyle = lg;
-        ctx.fillRect(lx, VIEW_Y, 300, VIEW_H);
-      } else if (chapter.transitionStyle === 'whip_pan') {
+        ctx.fillRect(lx, 0, 260, H);
+      } else if (section.transitionStyle === 'whip_pan') {
         ctx.fillStyle = `rgba(231, 204, 130, ${(1 - wt) * 0.22})`;
-        ctx.fillRect(W * (1 - wt), VIEW_Y, 44, VIEW_H);
-      } else if (chapter.transitionStyle === 'iris') {
-        ctx.strokeStyle = `rgba(231, 204, 130, ${(1 - wt) * 0.65})`;
-        ctx.lineWidth = 12 * (1 - wt);
+        ctx.fillRect(W * (1 - wt), 0, 40, H);
+      } else if (section.transitionStyle === 'iris') {
+        ctx.strokeStyle = `rgba(231, 204, 130, ${(1 - wt) * 0.58})`;
+        ctx.lineWidth = 10 * (1 - wt);
         ctx.beginPath();
-        ctx.arc(W / 2, H / 2, 90 + wt * 720, 0, Math.PI * 2);
+        ctx.arc(W / 2, H / 2, 100 + wt * 680, 0, Math.PI * 2);
         ctx.stroke();
       } else {
-        const curH = VIEW_H * 0.5 * (1 - wt);
+        const curH = H * 0.12 * (1 - wt);
         ctx.fillStyle = 'rgba(4, 6, 12, 0.72)';
-        ctx.fillRect(0, VIEW_Y, W, curH);
-        ctx.fillRect(0, VIEW_Y + VIEW_H - curH, W, curH);
+        ctx.fillRect(0, 0, W, curH);
+        ctx.fillRect(0, H - curH, W, curH);
       }
       ctx.restore();
     }
 
-    // 8. Top & Bottom 2.39:1 Anamorphic Letterbox Matte Bars (Film HUD integrated cleanly outside scene)
-    ctx.fillStyle = '#03050a';
-    ctx.fillRect(0, 0, W, BAR_H);
-    ctx.fillRect(0, H - BAR_H, W, BAR_H);
-
-    // Subtle Gold Hairline Border separating matte from cinema frame
-    ctx.fillStyle = 'rgba(212, 175, 55, 0.35)';
-    ctx.fillRect(0, BAR_H - 1, W, 1);
-    ctx.fillRect(0, H - BAR_H, W, 1);
-
-    // Top Matte Film Metadata
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath();
-    ctx.arc(38, BAR_H / 2, 4.5, 0, Math.PI * 2);
-    ctx.fill();
+    // 7. Bottom Master Progress Bar
+    ctx.fillStyle = '#131b2e';
+    ctx.fillRect(32, H - 20, W - 64, 5);
     ctx.fillStyle = '#e7cc82';
-    ctx.font = 'bold 13px ui-monospace, monospace';
-    ctx.fillText('GHALI ON CHAIN · FILM PANDUAN 2 KARAKTER', 52, 27);
-
-    // Live BTC Ticker in Top Letterbox Matte
-    const topBtcText = `BTC LIVE ${btcPriceStr} (${btcChgStr})`;
-    ctx.fillStyle = isBtcUp ? '#34d399' : '#fb7185';
-    ctx.font = 'bold 13px ui-monospace, monospace';
-    ctx.fillText(topBtcText, W / 2 - ctx.measureText(topBtcText).width / 2 + 40, 27);
-
-    const tcLabel = `24FPS · 0${chapter.index}/08 · ${formatClock(t)} / 00:40`;
-    ctx.fillStyle = '#cbd5e1';
-    ctx.fillText(tcLabel, W - 36 - ctx.measureText(tcLabel).width, 27);
-
-    // Bottom Matte: Cast Credit + Sleek Progress Line
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '600 12px ui-monospace, monospace';
-    ctx.fillText('PEMERAN: REZA (LEAD STRATEGIST) & NADIA (AI & ON-CHAIN QUANT)', 36, H - 17);
-
-    ctx.fillStyle = '#151f33';
-    ctx.fillRect(590, H - 23, W - 626, 4);
-    ctx.fillStyle = '#e7cc82';
-    ctx.fillRect(590, H - 23, ((W - 626) * t) / TOTAL_DURATION, 4);
+    ctx.fillRect(32, H - 20, ((W - 64) * t) / TOTAL_DURATION, 5);
   }, []);
 
-  // Continuous Cinema Loop (runs even when paused so Steadicam ambience stays responsive on seeks)
+  // 60FPS Continuous Animation Loop
   useEffect(() => {
     if (!isOpen) return;
     let rafId = 0;
@@ -1256,7 +1868,7 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
     const clamped = Math.max(0, Math.min(TOTAL_DURATION, sec));
     currentTimeRef.current = clamped;
     setCurrentTime(clamped);
-    lastBeatKeyRef.current = '';
+    lastTurnKeyRef.current = '';
     renderFrame(clamped, isPlaying);
   };
 
@@ -1265,7 +1877,7 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
     if (currentTimeRef.current >= TOTAL_DURATION) {
       currentTimeRef.current = 0;
       setCurrentTime(0);
-      lastBeatKeyRef.current = '';
+      lastTurnKeyRef.current = '';
       setIsPlaying(true);
     } else {
       setIsPlaying((p) => !p);
@@ -1276,7 +1888,7 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
     sound.playClick();
     currentTimeRef.current = 0;
     setCurrentTime(0);
-    lastBeatKeyRef.current = '';
+    lastTurnKeyRef.current = '';
     setIsPlaying(true);
   };
 
@@ -1306,7 +1918,7 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'film-panduan-ghali-on-chain-40s.webm';
+        a.download = 'panduan-lengkap-ghali-on-chain-2m.webm';
         a.click();
         URL.revokeObjectURL(url);
         setExportState('idle');
@@ -1314,7 +1926,7 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
 
       currentTimeRef.current = 0;
       setCurrentTime(0);
-      lastBeatKeyRef.current = '';
+      lastTurnKeyRef.current = '';
       setSpeed(1);
       setIsPlaying(true);
       recorder.start();
@@ -1336,15 +1948,15 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
       <div className="bg-[#070a11] border-t md:border border-[#d4af37]/50 md:border-[#253350] rounded-t-3xl md:rounded-3xl w-full md:max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden text-slate-100 animate-content-rise">
         <div className="md:hidden w-10 h-1 rounded-full bg-slate-600/70 mx-auto mt-2.5 shrink-0" />
 
-        {/* Cinema Modal Header */}
+        {/* Header */}
         <div className="px-4 sm:px-6 py-3.5 border-b border-[#1b263c] bg-[#0a0f1c] flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#f2d98a] to-[#c4972c] text-[#080b12] flex items-center justify-center shrink-0">
-              <Clapperboard className="w-4 h-4" />
+              <Film className="w-4 h-4" />
             </div>
             <div className="min-w-0">
               <h2 className="text-sm sm:text-base font-semibold text-[#f5e3af] truncate">
-                Film Panduan 40 Detik · Reza & Nadia
+                Video Panduan Lengkap 2 Menit · Semua Tools
               </h2>
               <p className="text-[11px] text-slate-400 truncate font-mono tabular-nums">
                 BTC Live: ${liveBtcHeader.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
@@ -1364,10 +1976,10 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
               <Download className="w-3.5 h-3.5" />
               <span>
                 {exportState === 'recording'
-                  ? 'Merekam 40d...'
+                  ? 'Merekam 2m...'
                   : exportState === 'unsupported'
                   ? 'Tidak Didukung'
-                  : 'Unduh Film'}
+                  : 'Unduh Video'}
               </span>
             </button>
             <button
@@ -1375,7 +1987,7 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
                 sound.playClick();
                 onClose();
               }}
-              aria-label="Tutup film panduan"
+              aria-label="Tutup panduan video"
               className="min-h-[40px] min-w-[40px] rounded-xl bg-[#121a2d] hover:bg-[#1a2540] border border-[#253350] text-slate-300 flex items-center justify-center cursor-pointer"
             >
               <X className="w-4 h-4" />
@@ -1383,7 +1995,7 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
           </div>
         </div>
 
-        {/* Scrollable Cinema Player & Scene Index */}
+        {/* Scrollable Video Player + All 12 Tools Chapters */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           <div className="rounded-2xl overflow-hidden border border-[#24314c] bg-[#04060b] shadow-2xl">
             <div className="relative w-full aspect-video bg-[#04060b]">
@@ -1396,7 +2008,7 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
               />
             </div>
 
-            {/* Film Transport Controls */}
+            {/* Transport Controls */}
             <div className="px-3.5 py-2.5 bg-[#0a0f1c] border-t border-[#1b263c] space-y-2">
               <div className="flex items-center gap-3">
                 <span className="text-[11px] font-mono tabular-nums text-[#e7cc82] w-10 shrink-0">
@@ -1409,11 +2021,11 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
                   step={0.1}
                   value={currentTime}
                   onChange={(e) => handleSeek(parseFloat(e.target.value))}
-                  aria-label="Timeline film panduan 40 detik"
+                  aria-label="Timeline video panduan 2 menit"
                   className="flex-1 accent-[#e7cc82] h-1.5 bg-[#192338] rounded-lg cursor-pointer"
                 />
                 <span className="text-[11px] font-mono tabular-nums text-slate-400 w-10 text-right shrink-0">
-                  00:40
+                  02:00
                 </span>
               </div>
 
@@ -1429,7 +2041,7 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
 
                   <button
                     onClick={handleReplay}
-                    aria-label="Ulang film dari detik ke-0"
+                    aria-label="Ulang dari detik ke-0"
                     className="min-h-[40px] min-w-[40px] rounded-xl bg-[#11192b] border border-[#24314a] text-slate-200 flex items-center justify-center cursor-pointer"
                   >
                     <RotateCcw className="w-4 h-4" />
@@ -1464,7 +2076,7 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
 
                   <button
                     onClick={() => setAudioCueEnabled((v) => !v)}
-                    aria-label="Toggle efek cut adegan"
+                    aria-label="Toggle efek transisi bab"
                     className="min-h-[40px] min-w-[40px] px-2.5 rounded-xl bg-[#11192b] border border-[#24314a] text-xs text-slate-300 inline-flex items-center justify-center cursor-pointer"
                   >
                     {audioCueEnabled ? (
@@ -1477,13 +2089,13 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
                   <button
                     onClick={() => {
                       sound.playClick();
-                      onLaunchFeature(activeChapter.target);
+                      onLaunchFeature(activeSection.target);
                       onClose();
                     }}
                     className="min-h-[40px] px-3 sm:px-3.5 rounded-xl bg-[#17223a] border border-[#d4af37]/45 text-xs font-semibold text-[#f5e3af] inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-[#e7cc82]" />
-                    <span>Buka {activeChapter.shortTitle}</span>
+                    <span>Buka {activeSection.shortTitle}</span>
                     <ArrowUpRight className="w-3.5 h-3.5 text-[#e7cc82]" />
                   </button>
                 </div>
@@ -1491,54 +2103,21 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
             </div>
           </div>
 
-          {/* Interactive Cast Bar */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <div className="rounded-2xl border border-[#1d283f] bg-[#0b101d] p-3 flex items-center gap-3">
-              <img
-                src={maleHostUrl}
-                alt="Reza - Lead Strategist"
-                referrerPolicy="no-referrer"
-                className="w-12 h-12 rounded-xl object-cover border border-[#d4af37]/50 shrink-0"
-              />
-              <div className="min-w-0">
-                <div className="text-xs font-semibold text-[#f5e3af]">Reza · Lead Macro Strategist</div>
-                <div className="text-[11px] text-slate-400 truncate">
-                  Fokus pada struktur pasar, siklus Bitcoin, & radar kontra ritel
-                </div>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-[#1d283f] bg-[#0b101d] p-3 flex items-center gap-3">
-              <img
-                src={femaleCohostUrl}
-                alt="Nadia - AI and On-Chain Quant"
-                referrerPolicy="no-referrer"
-                className="w-12 h-12 rounded-xl object-cover border border-emerald-400/50 shrink-0"
-              />
-              <div className="min-w-0">
-                <div className="text-xs font-semibold text-emerald-300">Nadia · AI & On-Chain Quant</div>
-                <div className="text-[11px] text-slate-400 truncate">
-                  Fokus pada AI Auto-Draw, rotasi likuiditas, berita AI, & alarm Paus
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Interactive 8-Scene Timeline */}
+          {/* All 12 Tools Chapters Grid (12 × 10 Detik = 2 Menit) */}
           <section className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-white flex items-center gap-1.5">
-                <Film className="w-3.5 h-3.5 text-[#e7cc82]" />
-                <span>Daftar Adegan Film (8 Adegan × 5 Detik = 40 Detik)</span>
+              <h3 className="text-xs font-semibold text-white">
+                Penjelasan Lengkap 12 Tools (Total 2 Menit · 02:00)
               </h3>
-              <span className="text-[11px] text-slate-400">Ketuk adegan untuk lompat</span>
+              <span className="text-[11px] text-slate-400">Ketuk kartu untuk lompat ke tool</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-              {CHAPTERS.map((chap) => {
-                const isActive = activeChapter.id === chap.id;
+              {TOOL_SECTIONS.map((sec) => {
+                const isActive = activeSection.id === sec.id;
                 return (
                   <div
-                    key={chap.id}
+                    key={sec.id}
                     className={`rounded-2xl border p-3 transition-all flex flex-col justify-between gap-2.5 ${
                       isActive
                         ? 'bg-[#121a2e] border-[#d4af37] shadow-lg'
@@ -1548,34 +2127,37 @@ export const PanduanVideoModal: React.FC<PanduanVideoModalProps> = ({
                     <button
                       onClick={() => {
                         sound.playClick();
-                        handleSeek(chap.startSec);
+                        handleSeek(sec.startSec);
                         setIsPlaying(true);
                       }}
                       className="text-left space-y-1 cursor-pointer"
                     >
                       <div className="flex items-center justify-between text-[10px] font-mono tabular-nums">
                         <span className={isActive ? 'text-[#e7cc82] font-bold' : 'text-slate-400'}>
-                          {formatClock(chap.startSec)}–{formatClock(chap.endSec)}
+                          {formatClock(sec.startSec)}–{formatClock(sec.endSec)}
                         </span>
-                        <span className="text-slate-500">0{chap.index}</span>
+                        <span className="text-slate-500">
+                          {sec.index < 10 ? '0' : ''}
+                          {sec.index}
+                        </span>
                       </div>
                       <div className="text-xs font-semibold text-white leading-snug">
-                        {chap.title}
+                        {sec.title}
                       </div>
                       <div className="text-[11px] text-slate-400 line-clamp-2">
-                        {chap.subtitle}
+                        {sec.subtitle}
                       </div>
                     </button>
 
                     <button
                       onClick={() => {
                         sound.playClick();
-                        onLaunchFeature(chap.target);
+                        onLaunchFeature(sec.target);
                         onClose();
                       }}
                       className="min-h-[34px] px-2.5 rounded-xl bg-[#070a11] hover:bg-[#17223a] border border-[#1f2b44] text-[11px] font-medium text-[#e7cc82] inline-flex items-center justify-between cursor-pointer"
                     >
-                      <span>Buka Fitur</span>
+                      <span>Buka Tool</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
